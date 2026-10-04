@@ -1,51 +1,60 @@
 ---
-title: Payment and Membership Domain
+title: Payment and Coin Monetization Domain
 tags:
   - domain
   - payment
-  - membership
-  - subscriptions
+  - coins
+  - wallets
   - transactions
 aliases:
   - Payment Domain
-  - Membership Domain
+  - Coin Domain
+  - Monetization Domain
 ---
 
-# Payment & Membership Domain
+# Payment & Coin Monetization Domain
 
-The **Payment & Membership Domain** manages candidate membership subscriptions, payment transactions, pricing governance, and revenue reporting.
+The **Payment & Coin Monetization Domain** manages real-money coin package purchases, personal coin wallets for Candidates and Recruiters, internal coin spending for interview simulations and avatar operations, and slot refund accounting upon recruitment completion.
 
 ---
 
 ## 1. Purpose
 
-Provide a secure, streamlined membership subscription infrastructure for Candidates and financial governance tools for Administrators. Ensures reliable payment processing, transaction auditability, and clear membership entitlement boundaries.
+Provide a transparent, reliable coin-based monetization infrastructure. Candidates and Recruiters purchase coin packages using real money to fund their respective platform activities. Ensures rigorous ledger auditability, clean separation between external real-money transactions and internal coin movements, and deterministic charging and refund boundaries.
 
 ---
 
 ## 2. Core Concepts
 
-* **Membership Subscription (`membership_subscriptions`):**
-  A subscription record owned by a Candidate granting access to platform interview practice capabilities. Tracks subscription start date, expiration/renewal date, and status (`ACTIVE`, `CANCELLED`, `EXPIRED`).
-* **Membership Options:**
-  Platform-defined subscription choices and access entitlements presented to Candidates.
-* **Membership Status:**
-  The current entitlement state evaluated by the system before granting access to interview creation and simulation execution.
-* **Payment Transaction (`payment_transactions`):**
-  An immutable financial ledger entry recording payment intents and outcomes:
-  * Attributes: User ID, Order Reference, Amount, Currency (e.g., VND), Gateway Reference, Payment Status (`PENDING`, `SUCCESS`, `FAILED`), Timestamp.
-* **Membership Price:**
-  The active monetary price for candidate membership subscriptions, governed and updated by Administrators.
-* **Revenue Report:**
-  Aggregated financial reporting compiled from recorded payment transactions for administrative oversight.
+* **Coin (`coins`):**
+  The standard internal digital currency of RoleCue. Coins are purchased in packages using real money via external payment gateways and spent internally on platform capabilities.
+* **Personal Wallet (`wallets`):**
+  An internal digital coin ledger owned individually by an authenticated **Candidate** or **Recruiter**. Tracks current available balance and append-only transaction history.
+  * **Role Restriction Invariant:** Only Candidates and Recruiters hold personal coin wallets. **Administrators do NOT have a wallet.**
+* **Payment Order / External Transaction (`payment_orders`):**
+  An immutable record of an external real-money purchase processed through a third-party Payment Gateway to acquire a coin package. Verified cryptographically via signed webhooks before coins are minted into the user's wallet.
+* **Coin Transaction (`coin_transactions`):**
+  An immutable internal ledger entry recording an internal debit or credit of coins within a personal wallet:
+  * Types: `PACKAGE_PURCHASE_CREDIT`, `PRACTICE_INTERVIEW_DEBIT`, `INTERVIEW_SLOT_PURCHASE_DEBIT`, `AVATAR_GENERATION_DEBIT`, `AVATAR_SLOT_PURCHASE_DEBIT`, `END_RECRUITMENT_SLOT_REFUND_CREDIT`.
+* **Interview Slot Capacity Funding:**
+  Recruiter uses coins from their personal wallet to purchase/fund **Interview Slots** for an approved Job Posting. An interview slot represents interview capacity, not an application or CV review.
+* **Avatar Operations Funding:**
+  Coins fund two distinct avatar operations:
+  1. *Generation Fee:* Charged strictly upon successful VRM persistence in RoleCue.
+  2. *Capacity Purchase:* Buys an additional avatar storage slot when inventory is full.
+* **End Recruitment Slot Refund:**
+  When a Recruiter executes **End Recruitment**, eligible unused funded interview slots are refunded as coins back into the owning Recruiter's personal coin wallet.
+* **Unconfirmed Commercial Parameters:**
+  Package pricing, coin conversion rates, coin precision, package sizes, and initial free avatar capacities remain unconfirmed product decisions. No hypothetical prices, exchange ratios, or gateway brand constraints are locked as global defaults.
 
 ---
 
 ## 3. Actors Involved
 
-* **Candidate:** Subscribes to membership, unsubscribes from membership, and views own transaction history.
-* **Administrator:** Views payment transactions, generates revenue reports, and updates membership prices.
-* **Payment Gateway (External Boundary):** Processes payment checkouts and provides cryptographically signed webhook notifications confirming payment outcomes.
+* **Candidate:** Purchases coin packages using real money; maintains a personal wallet; spends coins to start practice interview sessions and perform personal avatar operations.
+* **Recruiter:** Purchases coin packages using real money; maintains a personal wallet; spends coins to fund Job Posting interview slots and perform avatar operations; receives internal coin refunds for eligible unused interview slots upon End Recruitment.
+* **Administrator:** Audits external payment orders and internal coin transactions; generates platform revenue reports. (Administrative management of coin package pricing remains awaiting confirmation).
+* **Payment Gateway (External Boundary):** Ingests checkout intents for coin packages and delivers cryptographically signed webhooks confirming real-money transaction status.
 
 ---
 
@@ -54,70 +63,99 @@ Provide a secure, streamlined membership subscription infrastructure for Candida
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Candidate
+    actor User as Candidate / Recruiter
     participant Pay as Payment Domain
     participant DB as Financial Ledger
     participant Gateway as Payment Gateway
     actor Admin as Administrator
 
-    Note over Candidate,Gateway: 1. Candidate Subscription Checkout
-    Candidate->>Pay: Subscribe to Membership
-    Pay->>DB: Create Payment Transaction (Status: PENDING)
+    Note over User,Gateway: 1. Coin Package Purchase (Real-Money)
+    User->>Pay: Purchase Coin Package
+    Pay->>DB: Create Payment Order (Status: PENDING)
     Pay->>Gateway: Initialize Checkout Session
     Gateway-->>Pay: Checkout URL
-    Pay-->>Candidate: Redirect to Gateway Portal
-    Candidate->>Gateway: Complete Payment
-    Gateway->>Pay: POST /payments/webhook (Signed Payload)
-    Pay->>Pay: Verify Cryptographic Signature
-    Pay->>DB: Update Transaction (Status: SUCCESS) & Activate Membership
-    Pay-->>Candidate: Membership Active Confirmation
+    Pay-->>User: Redirect to Gateway Portal
+    User->>Gateway: Complete Real-Money Payment
+    Gateway->>Pay: POST /payments/webhook (Cryptographically Signed)
+    Pay->>Pay: Verify Webhook Signature
+    Pay->>DB: Mark Payment Order SUCCESS
+    Pay->>DB: Credit Coins to User Personal Wallet (CoinTransaction)
+    Pay-->>User: Coin Balance Updated
 
-    Note over Candidate,DB: 2. Candidate Unsubscribe Flow
-    Candidate->>Pay: Unsubscribe Membership
-    Pay->>DB: Update Membership Subscription (Status: CANCELLED)
-    Pay-->>Candidate: Unsubscribe Confirmed
+    Note over User,DB: 2. Internal Coin Spending (No Gateway Call)
+    opt Candidate Starts Practice Interview
+        User->>Pay: Start Practice Interview
+        Pay->>DB: Debit Practice Fee from Candidate Wallet (Session Start)
+        Pay-->>User: Interview Authorized
+    end
+    opt Recruiter Funds Interview Slots
+        User->>Pay: Fund Interview Slots for Job Posting
+        Pay->>DB: Debit Slot Fee from Recruiter Wallet & Allocate Slots
+        Pay-->>User: Slots Funded
+    end
+    opt Avatar Generation Fee
+        User->>Pay: Confirm Successful VRM Persistence
+        Pay->>DB: Debit Generation Fee from User Wallet
+        Pay-->>User: Generation Fee Paid
+    end
 
-    Note over Admin,DB: 3. Admin Financial Governance
-    Admin->>Pay: View Payment Transactions
-    Pay->>DB: Query Transaction Records
-    Admin->>Pay: Generate Revenue Report
-    Pay->>DB: Aggregate Financial Metrics
-    Admin->>Pay: Update Membership Price (New Price)
-    Pay->>DB: Store Updated Membership Price
+    Note over User,DB: 3. End Recruitment Slot Refund (Internal Coin Movement)
+    opt Recruiter Ends Recruitment
+        User->>Pay: Trigger End Recruitment
+        Pay->>DB: Calculate Eligible Unused Interview Slots
+        Pay->>DB: Credit Refund as Coins to Recruiter Wallet (No Gateway Call)
+        Pay-->>User: Refund Coins Credited to Wallet
+    end
+
+    Note over Admin,DB: 4. Financial Audit & Governance
+    Admin->>Pay: Inspect Payment Orders & Coin Transactions
+    Pay->>DB: Query Financial Ledgers
+    Admin->>Pay: Generate Platform Revenue Reports
+    Pay->>DB: Aggregate Financial Performance Metrics
 ```
 
 ---
 
 ## 5. Business Rules & Invariants
 
-1. **Transactional Idempotency:**
-   Payment webhooks must be strictly idempotent. Receiving duplicate webhook events for the same order reference must never result in duplicate membership extensions or erroneous state transitions.
-2. **Membership Entitlement Gate:**
-   Candidates must have an `ACTIVE` membership status to configure and launch live interview practice sessions.
-3. **No Practice Credit Accounts or Packages:**
-   RoleCue does **NOT** operate a practice credit ledger, credit wallet, per-interview credit deductions, or credit bundle packages. Access is governed through Candidate Membership.
-4. **No Recruiter Subscriptions or Corporate Invoicing:**
-   Recruiter accounts do not require paid membership tiers, corporate subscription packages, or digital VAT tax invoices.
-5. **No Refund Dispute Queue:**
-   RoleCue does not model refund dispute workflows, refund request forms, or administrative refund adjudication queues.
-6. **Immutability of Payment Transactions:**
-   Financial ledger records are append-only. Once recorded, transaction history cannot be modified or deleted.
-7. **Cryptographic Webhook Verification:**
-   Every payment callback must be cryptographically verified against the gateway's shared secret or public key before updating transaction or membership status.
+1. **Separation of External Payments and Internal Coins:**
+   Real-money transactions occur exclusively through external Payment Gateways to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar storage slot purchases) and internal refunds (unused interview slots upon End Recruitment) execute purely within the internal coin ledger. Internal coin spending and refunds are **not** external payment gateway transactions.
+2. **Wallet Scope & Role Boundaries:**
+   Personal coin wallets belong exclusively to **Candidates** and **Recruiters**. Administrators do **NOT** have a wallet. Registered User inheritance does not grant an Admin wallet capabilities.
+3. **Practice Interview Start Charging Boundary:**
+   A practice interview is debited from the Candidate's coin wallet **at session start**, not when it concludes. If a session experiences a network disconnect or is paused, reconnecting to or resuming the same session incurs **no second charge**.
+4. **Recruitment Interview Slot Consumption:**
+   A recruitment interview consumes one prepaid interview slot funded by the Recruiter upon session start. The Candidate is **not** charged. Reconnecting to or resuming that active recruitment session does not consume an additional slot.
+5. **Avatar Generation Charging Boundary:**
+   The avatar generation fee is debited in coins **only after successful VRM persistence** in RoleCue. Opening the avatar creator, uploading photos, generating an Avaturn GLB, or initiating conversion does **not** incur a generation fee.
+6. **Avatar Inventory Capacity vs. Generation Fee:**
+   Avatar storage slots represent storage capacity, not generation credits. Purchasing additional storage capacity and paying a generation fee are distinct operations.
+7. **End Recruitment vs. Close Intake Refund Boundary:**
+   Only **End Recruitment** calculates eligible unused funded interview slots and refunds them as coins back into the owning Recruiter's personal wallet. **Close intake does NOT refund interview slots.**
+8. **No Cash Refund Dispute Queues:**
+   RoleCue does not operate external gateway refund queues, cash dispute adjudication forms, or administrative chargeback workflows. Unused slot refunds upon End Recruitment execute automatically as internal ledger credits.
+9. **Webhook Idempotency & Cryptographic Verification:**
+   Payment webhooks must be cryptographically verified against the gateway's shared secret or public key. Handlers must be strictly idempotent; duplicate webhooks for the same order reference must never result in duplicate coin credits.
+10. **Ledger Immutability:**
+    Payment orders and internal coin transaction ledgers are append-only. Once recorded, entries cannot be modified or deleted.
 
 ---
 
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Verifies active candidate membership status prior to session initialization and launch.
+  Verifies Candidate wallet balance and debits coins at practice session start. For recruitment interviews, verifies that the Job Posting has an available funded interview slot and consumes it upon session start.
+* **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
+  Debits Recruiter wallet coins to fund interview slots. Upon End Recruitment, calculates eligible unused slots and credits coin refunds to the Recruiter's wallet.
+* **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
+  Debits the avatar generation fee upon successful VRM persistence. Debits coins when a Candidate or Recruiter purchases additional avatar storage slots.
 * **[[01_Domains/Auth/README|Auth Domain]]:**
-  Associates membership subscriptions and payment transactions with the authenticated Candidate `user_id`.
+  Associates personal coin wallets and transaction records with authenticated Candidate and Recruiter `user_id`s.
 * **[[01_Domains/Administration/README|Administration Domain]]:**
-  Administrators audit payment transactions, generate revenue reports, and manage membership pricing.
+  Administrators audit external payment orders, inspect internal coin transactions, and generate revenue reports. (Coin pricing updates flagged as awaiting confirmation).
 
 ---
 
 ## 7. External Integrations
 
-* **Payment Gateway:** External electronic payment processors (e.g., VNPay, MoMo, PayOS, Stripe) facilitating candidate membership checkouts and delivering signed status webhooks.
+* **Payment Gateway:** External electronic payment processors facilitating real-money checkout for coin packages and delivering cryptographically signed webhooks confirming transaction status.

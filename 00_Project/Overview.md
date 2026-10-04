@@ -48,13 +48,13 @@ RoleCue is designed for four primary user groups:
 
 | Actor | Profile | Primary Motivation |
 | :--- | :--- | :--- |
-| **Candidate** | Software engineers, students, career switchers | Prepare for specific technical job interviews, assess technical readiness, configure and conduct mock interviews, create a personal 3D avatar through Avaturn, manage membership, and discover matching job postings. |
-| **Recruiter** | Tech talent acquisition, hiring managers, company reps | Publish company Job Postings to attract qualified candidates and screen incoming applications. |
+| **Candidate** | Software engineers, students, career switchers | Prepare for specific technical job interviews, assess technical readiness, configure and conduct mock interviews (funded via personal coin wallet), create a personal 3D avatar through Avaturn and manage avatar inventory, manage personal coin wallet, discover matching job postings, and apply with CV. |
+| **Recruiter** | Tech talent acquisition, hiring managers, company reps | Publish company Job Postings to attract qualified candidates, purchase interview slots using personal coin wallet, screen incoming candidate CVs, manage application intake (Open/Close) and recruitment completion, review interview recordings and results, render final Approve/Reject decisions, and manage avatar inventory. |
 | **Guest** | Unauthenticated visitors, prospective users | View the public landing page and register for an account. |
-| **Administrator** | Platform operators, technical governance | Maintain account security, approve/reject job postings, oversee interview sessions, calibrate AI behavior and evaluation criteria, curate TTS voice profiles, track membership revenue, and update membership prices. |
+| **Administrator** | Platform operators, technical governance | Maintain account security, approve/reject job postings, oversee interview sessions, calibrate TTS voice profiles, and audit payment transactions and revenue reports. (Global AI behavior/evaluation calibration and coin pricing administration remain awaiting confirmation). Admin has no personal wallet or avatar inventory. |
 
 > [!NOTE]
-> System semantics also recognize **Registered User** (the shared authentication and profile base for Candidates and Recruiters) and **System Handler** (the internal automated handler responsible for terminating a candidate's abandoned session). Neither is an external actor.
+> System semantics also recognize **Registered User** (the shared authentication and profile base for Candidates and Recruiters) and **System Handler** (the internal automated handler responsible for terminating a candidate's abandoned session). Neither is an external actor. Registered User inheritance does **NOT** grant Admin a personal wallet or personal avatar inventory.
 
 ---
 
@@ -67,49 +67,53 @@ flowchart TD
     subgraph Ingestion["1. JD Ingestion & Refinement"]
         JD1["Raw Target JD (Text/PDF)"] --> JD2["AI Competency Extraction"]
         JD2 --> JD3["Candidate Review & Refinement Notes"]
-        JD3 --> JD4["Approved Extracted JD"]
+        JD3 --> JD4["Approved Requirements Confirmation"]
     end
 
     subgraph Planning["2. Assessment Planning"]
-        JD4 --> BP1["Internal Interview Blueprint Generation<br/>(Hidden from Candidate)"]
-        CFG["Composite Interview Configuration"] --> BP1
+        JD4 --> BP1["Single Question-Bank Blueprint<br/>(Hidden from Candidate; Recruiter-Editable)"]
+        CFG["Evaluation Settings & Configuration"] -.-> BP1
     end
 
     subgraph Simulation["3. Virtual Simulation"]
         BP1 --> SIM1["3D Virtual Interviewer (WebGL)"]
         SIM1 <--> SIM2["Real-Time Speech Interaction (STT / TTS)"]
-        SIM2 <--> SIM3["LLM-Determined Question Loop"]
+        SIM2 <--> SIM3["Question Loop: Random x Core + Bounded Follow-ups"]
     end
 
     subgraph Evaluation["4. Multi-Dimensional Evaluation"]
-        SIM3 --> EV1["Automated Turn Grading"]
-        EV1 --> EV2["5-Competency Radar & Score"]
+        SIM3 --> EV1["Automated Turn Grading (Session Snapshot)"]
+        EV1 --> EV2["Competency Breakdown & Score"]
         EV2 --> EV3["Actionable Learning Roadmap"]
     end
 
-    subgraph Board["5. Lightweight Job Board"]
-        REC["Approved Recruiter Job Postings"] <--> APP["Candidate Applications<br/>(CV + Interview Result)"]
-        APP --> DEC["Approve / Reject Decision"]
+    subgraph Board["5. Lightweight Job Board & CV-First Workflow"]
+        REC["Approved Recruiter Job Postings<br/>(Open/Close Intake, Funded Slots)"] --> APP["Candidate Application & CV Submission"]
+        APP --> SCREEN["Recruiter Screens CV (Pass/Reject)"]
+        SCREEN -->|Passed| INT_RUN["Interview using Funded Slot"]
+        INT_RUN --> RES["Result & Recordings Attached"]
+        RES --> DEC["Recruiter Final Decision (Approve/Reject)"]
     end
 
-    subgraph Identity["6. 3D Identity & Membership"]
-        AVATURN["Embedded Avaturn Experience"] --> AVA["RoleCue VRM Personal Avatar"]
-        PAY["Candidate Membership Subscription"] --> TRANS["Payment Transactions & Governance"]
+    subgraph Identity["6. 3D Identity & Coin Monetization"]
+        AVATURN["Embedded Avaturn Experience"] --> AVA["RoleCue VRM Avatar (Candidate & Recruiter)"]
+        COIN["Real-Money Coin Packages"] --> WALLET["Personal Coin Wallets (Candidate & Recruiter)"]
+        WALLET --> USAGE["Practice Debits, Slot Funding, Avatar Fees & Capacity"]
     end
 ```
 
 1. **Job Description Extraction & Refinement:**
-   Ingests raw text or multi-page PDF documents. Extracts normalized technical competencies (languages, frameworks, databases, tools, domain knowledge, seniority). Empowers the candidate to review extracted tags and provide natural-language refinement notes (e.g., *"Exclude C# from the interview"*).
-2. **Internal Interview Blueprint Generation:**
-   Translates the approved JD, candidate refinement notes, and interview configuration into a comprehensive, structured assessment plan. Specifies topic matrices, question slots, depth thresholds, and rubrics. **The blueprint remains strictly internal and hidden from the candidate.**
+   Ingests raw text or multi-page PDF documents. Extracts normalized technical competencies (languages, frameworks, databases, tools, domain knowledge, seniority). Empowers the candidate to review extracted tags and provide natural-language refinement notes (e.g., *"Exclude C# from the interview"*). Human review and confirmation of extracted requirements must occur *before* question-bank Blueprint generation.
+2. **Internal Question-Bank Blueprint Generation:**
+   Generates a single comprehensive core-question bank Blueprint per JD following confirmed requirements. Specifies a large pool of core questions and topics. **Strictly hidden from the candidate.** For Job Postings, the owning Recruiter can view and edit core questions for their own posting. Evaluation configuration settings are maintained separately from the question bank.
 3. **Real-Time 3D Virtual Interview Simulation:**
-   Renders a 3D animated avatar in the browser via WebGL. The system obtains the next Question, TTS delivers it with synchronized blend-shape viseme lip-sync, STT transcribes the Candidate's answer, and the LLM uses that Answer with the internal Interview Context to determine the next Question. For MVP, the LLM makes this decision; there is no separate Decision Layer.
+   Renders a 3D animated avatar in the browser via WebGL. The simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups. Spoken interaction is delivered via TTS with synchronized blend-shape visemes, while STT transcribes responses. Practice interviews are debited from the Candidate's coin wallet upon start (reconnect/resume of the same session is not recharged). Recruitment interviews consume a prepaid Recruiter slot. Follow-up decision logic and question wording generation remain decoupled without premature vendor lock-in.
 4. **Automated Multi-Dimensional Evaluation:**
-   Grades completed sessions across 5 core competencies: *Technical Accuracy*, *Depth of Understanding*, *Problem-Solving*, *Answer Relevance*, and *Communication Clarity*. Generates comprehensive performance reports with radar charts and personalized improvement roadmaps.
-5. **Lightweight Job Posting & Application:**
-   Enables Recruiters to create, update, and archive Job Postings (company JDs), select a company 3D interviewer model and Voice Profile, and submit postings for Admin approval. Candidates can browse approved postings, upload a CV/resume, complete the required technical interview using the locked company configuration, and submit an Application containing the resulting Interview Result. Recruiters search applications and render a final **Approve** or **Reject** decision.
-6. **Personal 3D Avatar Generation & Customization:**
-   RoleCue embeds the free Avaturn iframe experience, where Avaturn handles three-photo capture, validation, preview generation, and customization before returning the final GLB. RoleCue converts that GLB to VRM, persists the Candidate-owned personal avatar, and uses VRM as the production artifact. For Target JD interviews, Candidates can choose an available system 3D interviewer or eligible personal 3D model, an available Voice Profile, and a 3D environment. Job Posting interviews use the company-defined model and Voice Profile without Candidate override.
+   Grades completed sessions across technical competencies against the session's immutable blueprint snapshot and configured evaluation weights. Recruiters can adjust evaluation weights at the posting level. Generates comprehensive performance reports with radar charts and personalized improvement roadmaps. Evaluation scores provide evidence for human review, not automated hiring authority.
+5. **Lightweight Job Posting & CV-First Application:**
+   Recruiters publish Job Postings (company JDs) subject to Admin approval, lock the company 3D interviewer model and Voice Profile, control intake (Open/Close), and fund interview slots using coins. Candidates submit applications with a CV/resume. Submitted applications and CVs are immediately visible to the owning Recruiter. The Recruiter conducts CV screening; approved applicants become eligible to interview using a funded slot. Recruitment interviews capture audio/video recordings and transcripts for the owning Recruiter's review. Candidates view their evaluation score, but cannot view recruitment transcripts or recordings during recruitment. Recruitment terminates at final **Approve** or **Reject**. Ending recruitment refunds eligible unused interview slots as coins to the Recruiter's wallet.
+6. **Personal 3D Avatar Inventory & Coin Wallets:**
+   Candidates and Recruiters maintain personal avatar inventories with storage slot capacity. RoleCue embeds the free Avaturn iframe experience (capture, validation, preview, customization, final GLB); RoleCue receives the GLB, converts it to VRM, and persists it. A generation fee is charged only upon successful VRM persistence in RoleCue. Coin wallets for Candidates and Recruiters (replacing memberships) manage internal coin transactions and real-money package orders.
 
 ---
 

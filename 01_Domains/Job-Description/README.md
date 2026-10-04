@@ -35,13 +35,13 @@ Transform unstructured, heterogeneous job postings (provided by Candidates) into
   * `technologies`: Specific software packages, libraries, or runtimes (e.g., "Kafka", "Docker", "Redis").
   * `domain_knowledge`: Specialized industry domains (e.g., "Fintech", "Distributed Systems").
 * **Candidate Refinement Notes:** Natural-language instructions provided by the candidate during review (e.g., *"Exclude C# from the interview"*, *"Focus on distributed caching and concurrency"*). Stored alongside the reviewed requirements.
-* **Approved Extracted JD:** The final, candidate-verified requirements state. Serves as the input to internal Interview Blueprint generation.
+* **Confirmed Technical Requirements:** The final, candidate-verified requirements state. Human confirmation of extracted requirements authorizes internal question-bank Blueprint generation.
 
 ---
 
 ## 3. Actors Involved
 
-* **Candidate:** Ingests raw target JD text or PDF files; reviews and modifies extracted skill tags; provides natural-language refinement notes; approves finalized requirements; manages their personal Target JD library.
+* **Candidate:** Ingests raw target JD text or PDF files; reviews and modifies extracted skill tags; provides natural-language refinement notes; confirms finalized requirements; manages their personal Target JD library.
 
 ---
 
@@ -54,8 +54,8 @@ flowchart TD
     C --> D["Deterministic Validation<br/>(Schema checks, tag deduplication, category validation)"]
     D --> E["Candidate Interactive Review<br/>(Adjust seniority, edit tags, toggle required/preferred)"]
     E --> F["Candidate Refinement Notes<br/>(Natural-language instructions: e.g., 'Exclude C#')"]
-    F --> G["Candidate Approval<br/>(Persist Approved JD as 'customized')"]
-    G --> H["Trigger Internal Blueprint Generation<br/>(Hand off to Interview Domain — Hidden from Candidate)"]
+    F --> G["Candidate Confirms Requirements<br/>(Persist Confirmed Requirements)"]
+    G --> H["Trigger Internal Blueprint Generation<br/>(Single Core-Question Bank — Hidden from Candidate)"]
 ```
 
 ### Flow Details:
@@ -67,8 +67,8 @@ flowchart TD
    * Soft skills (interpersonal traits, punctuality) are explicitly stripped or rejected.
 4. **Interactive Candidate Review:** The candidate inspects extracted skills, changes the seniority badge, deletes unneeded items, and adds missing technologies.
 5. **Refinement Notes:** The candidate supplies free-form natural language notes to steer the upcoming interview focus.
-6. **Approval & Persistence:** The candidate approves the requirements. The record transitions to approved status, ready for interview session configuration.
-7. **Blueprint Generation Handoff:** The approved extracted JD and refinement notes are combined with candidate interview configuration to generate the internal Interview Blueprint, which remains strictly hidden from the candidate.
+6. **Requirement Confirmation:** The candidate explicitly confirms the reviewed requirements. Confirmation is the mandatory gate before question-bank generation.
+7. **Single Question-Bank Blueprint Generation:** The confirmed requirements and refinement notes are used to generate the internal Interview Blueprint (the core-question bank). Exactly one current Blueprint exists per JD, which remains strictly hidden from the candidate.
 
 ---
 
@@ -82,11 +82,13 @@ flowchart TD
    A role's `seniority_level` (`intern` to `lead`) describes job seniority, **not** mock interview session difficulty (`easy`, `medium`, `hard`). A candidate preparing for a `senior` JD can configure an `easy` diagnostic warm-up or a `hard` high-stress simulation.
 4. **Technical Competencies Exclusivity:**
    Extraction and interview planning focus exclusively on technical domain skills. Behavioral attributes and soft skills are out of scope.
-5. **Refinement Notes Precede Blueprint Generation:**
-   Candidate natural-language refinement notes must be captured and committed *before* the system generates the Interview Blueprint. Once the Blueprint is generated, candidate refinement notes are frozen for that blueprint.
-6. **Hidden Blueprint Rule:**
-   The Candidate **never** views, edits, or confirms the Interview Blueprint. There is no blueprint preview capability.
-7. **Deletion Safety:**
+5. **Human Confirmation Precedes Blueprint Generation:**
+   Candidate review and explicit confirmation of extracted requirements and refinement notes must occur *before* the system generates the Interview Blueprint. Once generated, the requirements snapshot is locked for that bank.
+6. **Hidden Blueprint Rule (Candidate Confirms Requirements, Not Blueprint):**
+   The Candidate **never** views, edits, or confirms the Interview Blueprint. There is no blueprint preview capability. The Candidate confirms only the extracted requirements.
+7. **Single Current Blueprint per JD:**
+   A Target JD possesses at most **one current Blueprint** containing its core-question bank (it is absent until generated). Do not generate multiple current banks just because session configuration or difficulty differs.
+8. **Deletion Safety:**
    Deleting a Target JD from the library must not corrupt historical completed interview sessions or performance reports associated with it.
 
 ---
@@ -94,7 +96,7 @@ flowchart TD
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  The Approved Extracted JD and Candidate Refinement Notes serve as the direct input to internal **Interview Blueprint generation**. One Target JD can spawn multiple Interview Blueprints across different configurations.
+  The Confirmed Requirements and Refinement Notes serve as the direct input to internal **Interview Blueprint generation**. Exactly one current core-question bank Blueprint exists per Target JD (absent until generated); changing session configuration or difficulty does not create multiple current banks.
 * **[[01_Domains/Auth/README|Auth Domain]]:**
   Every Target JD references `user_id` to establish candidate ownership.
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
