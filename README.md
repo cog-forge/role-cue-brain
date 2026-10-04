@@ -68,7 +68,7 @@ role-cue-brain/
 │   ├── Job-Posting-Application/README.md # Recruiter job postings, intake management, CV screening, and candidate applications
 │   ├── Interview/README.md     # Real-time simulation, configuration, and question-bank blueprint engine
 │   ├── Avatar-Voice/README.md  # 3D avatar rendering, Candidate/Recruiter avatar inventory, and TTS voices
-│   ├── Evaluation/README.md    # Core competencies, scoring rubrics, posting-level weights, and roadmaps
+│   ├── Evaluation/README.md    # Technical competencies, posting-level weights, evaluation settings, and roadmaps
 │   ├── Payment/README.md       # Coin packages, wallets, transactions, and interview/avatar slot funding
 │   └── Administration/README.md # Platform governance, moderation, voice profiles, payment audits, and operational oversight
 ├── 02_System/                  # System-level models and architectural boundaries

@@ -88,7 +88,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * **Structured JD Extraction:** Parses unstructured job description text into validated JSON technical competencies (title, seniority, categorized skills, technologies).
   * **Question-Bank Blueprint Generation:** Autonomously builds the internal core-question bank Blueprint from confirmed requirements and refinement notes.
   * **Adaptive Questioning Dialogue:** Analyzes candidate answers against the interview context to evaluate turns and generate bounded follow-up questions.
-  * **Multi-Dimensional Evaluation:** Evaluates full session transcripts against snapshot rubrics across core technical competencies.
+  * **Multi-Dimensional Evaluation:** Evaluates full session transcripts against the session snapshot's evaluation configuration across technical competencies.
 * **Unresolved Decision Provider / Jev Status:**
   * Deciding whether to ask a follow-up and generating follow-up question wording are distinct responsibilities.
   * **Jev/TypeSafe is tentative, NOT selected.** No specific external vendor or standalone decision service has been ratified. The integration layer does not mandate a dedicated decision-provider SDK or lock follow-up decisions to a single vendor.

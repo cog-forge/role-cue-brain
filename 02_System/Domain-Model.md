@@ -46,7 +46,7 @@ classDiagram
     class CoinWallet {
         +UUID id
         +UUID user_id
-        +Integer coin_balance
+        +CoinAmount coin_balance
         +Timestamp updated_at
     }
 
@@ -64,7 +64,7 @@ classDiagram
         +UUID id
         +UUID wallet_id
         +CoinTxType type
-        +Integer amount
+        +CoinAmount amount
         +String reference_id
         +Timestamp created_at
     }
@@ -210,16 +210,16 @@ classDiagram
 * **`UserAccount`:** Root authentication record. Holds system role (`Candidate`, `Recruiter`, `Admin`) and status (`ACTIVE`, `LOCKED`).
 * **`CandidateProfile`:** Profile metadata specific to candidates.
 * **`RecruiterProfile`:** Employer identity metadata attached to a Recruiter account. Stores basic company identification without multi-tenant architecture.
-* **`CoinWallet`:** Personal coin ledger owned individually by an authenticated **Candidate** or **Recruiter**. Tracks current balance and append-only internal transactions. Administrators do **NOT** have a wallet.
+* **`CoinWallet`:** Personal coin ledger owned individually by an authenticated **Candidate** or **Recruiter**. Holds `coin_balance` represented as abstract `CoinAmount` (currency precision and minimum fractional unit remain unresolved product decisions). Administrators do **NOT** have a wallet.
 * **`PaymentOrder`:** Real-money checkout record processed via external Payment Gateways to acquire coin packages.
-* **`CoinTransaction`:** Immutable ledger entry recording internal credits/debits (practice interview starts, interview slot funding, avatar generation fees, avatar capacity purchases, and End Recruitment unused slot refunds).
+* **`CoinTransaction`:** Immutable ledger entry recording internal credits/debits with `CoinAmount` values (practice interview starts, interview slot funding, avatar generation fees, avatar capacity purchases, and End Recruitment unused slot refunds).
 
 ### 2.2. Practice & Simulation Pipeline
 * **`TargetJD`:** The candidate's personal practice JD. Stores raw text, AI-extracted technical competencies, and natural-language `refinement_notes`.
-* **`InterviewBlueprint`:** The internal assessment plan and **core-question bank**. Contains topic coverage matrices, a comprehensive bank of core questions, depth milestones, and grading rubrics.
+* **`InterviewBlueprint`:** The persistent **core-question bank**. Contains exclusively the bank of core questions generated from confirmed skills, requirements, and seniority/refinement context. Does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices (evaluation configuration is handled separately).
   * **Invariant:** Exactly **at most one current Blueprint** exists per Target JD or Job Posting (absent until generated). Hidden from Candidates; Recruiter can view and edit core questions for their own Job Posting.
 * **`PostingEvaluationSettings`:** Recruiter posting-level settings and weights across technical competencies, stored **separately** from the question bank Blueprint.
-* **`InterviewSession`:** Concrete interview execution. Records whether the session originated from a Target JD (debited from Candidate wallet) or a Job Posting (consumes prepaid Recruiter interview slot). Preserves the source's execution context and `blueprint_snapshot`.
+* **`InterviewSession`:** Concrete interview execution. Records whether the session originated from a Target JD (debited from Candidate wallet) or a Job Posting (consumes prepaid Recruiter interview slot). Preserves the source's exact question-bank context AND the evaluation configuration actually used within an immutable session snapshot (without modeling evaluation criteria as part of the current Blueprint).
 * **`SessionTurn`:** Granular dialogue unit within a session. Captures interviewer questions, candidate transcripts, audio timing, and real-time response analysis.
 * **`PerformanceReport`:** Authoritative evaluation artifact produced from completed sessions. Holds overall score, competency breakdown, turn critiques, and learning roadmap.
 

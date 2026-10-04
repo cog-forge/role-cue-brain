@@ -172,10 +172,9 @@ classDiagram
   * **Account Governance:** View and filter user accounts; lock and unlock accounts.
   * **Job Posting Moderation:** View and filter submitted Job Postings; approve and reject Job Postings.
   * **Interview Session Oversight:** Search and filter interview sessions; inspect operational session details.
-  * **Interview Feature Configuration:** Configure platform interview features and runtime toggles.
   * **Voice Profile Catalog Management:** View voice profiles, fetch voice profiles from external TTS providers, and delete obsolete profiles.
   * **Financial Audit & Reporting:** View payment transactions and orders; generate revenue reports.
-  * **Capabilities Awaiting Confirmation:** Global AI behavior prompt calibration, global evaluation criteria editing, and coin package price management remain open product decisions awaiting formal confirmation.
+  * **Capabilities Awaiting Confirmation:** Global AI behavior prompt calibration, global evaluation criteria/rubrics editing, Interview Feature Configuration / runtime toggle authority, and coin package price management remain open product decisions awaiting formal confirmation.
 * **Boundary Invariant:**
   * **Admin DOES manage:** Provider-sourced Voice Profiles (viewing, fetching, deleting), account locks, posting moderation, and financial audits.
   * **Admin does NOT manage:** 3D avatar meshes or 3D background presets (built-in platform presets).
@@ -294,7 +293,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * View and filter user accounts; lock and unlock accounts
   * View and filter job postings; approve and reject job postings
   * Search and filter interview sessions; inspect session details
-  * Configure interview features and runtime toggles
+  * Configure interview features and runtime toggles [Awaiting Confirmation]
   * Manage Voice Profiles (view, fetch from TTS providers, delete)
   * Manage AI behavior prompt templates [Awaiting Confirmation]
   * Edit global evaluation criteria and rubrics [Awaiting Confirmation]
@@ -306,7 +305,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 1. **No ATS Progression:**
    Recruitment scope strictly terminates at `Approve / Reject Application`. There are no capabilities for multi-stage hiring pipelines, panel scheduling, interview scorecards, offer management, or employee onboarding.
 2. **Blueprint Access Invariant:**
-   Candidates **never** view, edit, or confirm an Interview Blueprint. Blueprints are internal question banks generated after requirement confirmation. Recruiters **can** view and edit core questions in the question bank for their own Job Postings.
+   Candidates **never** view, edit, or confirm an Interview Blueprint. Blueprints are ONLY the persistent core-question banks generated after requirement confirmation (evaluation configuration is a separate concern). Recruiters **can** view and edit core questions in the question bank for their own Job Postings.
 3. **No Multi-Tenancy Architecture:**
    Recruiters manage their Job Postings directly. There are no company tenants, company workspaces, tenant-specific schemas, or tenant isolation middleware.
 4. **No 3D Marketplace:**

@@ -33,8 +33,6 @@ Empower platform administrators with centralized governance tools to enforce acc
 * **Interview Session Operational Oversight:**
   Supervisory access to interview session records. Enables searching, filtering, and inspecting operational session metadata and diagnostics.
   * **Privacy Invariant:** Operational oversight does **not** grant Administrators access to recruitment audio/video recordings or conversational transcripts.
-* **Interview Feature Configuration:**
-  System-wide configuration of interview features, parameter boundaries, and operational toggles.
 * **Voice Profile Catalog Management:**
   Administrative management of Text-to-Speech (TTS) voice profiles made available during session configuration. Supports viewing voice profiles, fetching new voice profiles from TTS providers, and deleting obsolete voice profiles.
 * **Financial Audit & Reporting:**
@@ -42,6 +40,7 @@ Empower platform administrators with centralized governance tools to enforce acc
 * **Capabilities Awaiting Confirmation:**
   * *Global AI Behaviour Management:* Admin prompt engineering and conversational AI calibration templates remain open product decisions awaiting formal ratification.
   * *Global Evaluation Criteria Calibration:* Admin editing of global evaluation rubrics, criteria, and weights remains an open scope question awaiting confirmation.
+  * *Interview Feature Configuration / Runtime Toggles:* System-wide configuration of interview features, parameter boundaries, and operational toggles is NOT confirmed and remains an open scope question awaiting formal confirmation.
   * *Coin Package Pricing Administration:* Administrative updating of coin package pricing tiers remains awaiting confirmation.
 
 ---
@@ -64,7 +63,7 @@ flowchart TD
     CONSOLE --> SESS["Session Operational Oversight<br/>(Search/Filter Sessions, Inspect Metadata)"]
     CONSOLE --> VOICE["Voice Profile Management<br/>(View Profiles, Fetch from TTS Provider, Delete)"]
     CONSOLE --> FIN["Financial Audit<br/>(Inspect Orders & Coins, Generate Revenue Report)"]
-    CONSOLE -.-> OPEN["Capabilities Awaiting Confirmation<br/>(Global AI Prompts, Rubric Calibration, Coin Pricing)"]
+    CONSOLE -.-> OPEN["Capabilities Awaiting Confirmation<br/>(Global AI Prompts, Rubric Calibration, Feature Toggles, Coin Pricing)"]
 ```
 
 ---
@@ -97,7 +96,7 @@ flowchart TD
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
   Enables administrative review, filtering, and approval/rejection of submitted Job Postings.
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Allows Administrators to search, filter, and inspect operational interview session details and configure system toggles.
+  Allows Administrators to search, filter, and inspect operational interview session metadata and diagnostics. (Interview feature configurations and runtime toggles remain awaiting confirmation).
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
   Maintains the active catalog of Voice Profiles sourced from TTS providers.
 * **[[01_Domains/Payment/README|Payment Domain]]:**

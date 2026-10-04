@@ -63,7 +63,7 @@ flowchart TD
 #### 4. Autonomous Question-Bank Blueprint Generation (INTERNAL & HIDDEN)
 * Following requirements confirmation, the system generates a single **Interview Blueprint** serving as the core-question bank:
   $$\text{Interview Blueprint} = \text{Confirmed Requirements} + \text{Candidate Refinement Notes}$$
-* The blueprint contains a comprehensive bank of core questions, topic matrices, depth benchmarks, and rubrics.
+* The blueprint is ONLY the persistent/current core-question bank/list generated from confirmed skills, requirements, and seniority/refinement context. It contains exclusively the bank of core questions. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices; evaluation configuration is a separate concern.
 * Exactly **one current Blueprint** exists per JD (it is absent until generated; changing configuration or difficulty does not spawn multiple current banks).
 * > [!IMPORTANT]
   > **The Blueprint is strictly INTERNAL and HIDDEN from Candidates.** Candidates **never view, edit, or confirm the Blueprint**. They interact exclusively through the live simulation.
@@ -81,7 +81,7 @@ flowchart TD
 * If a session experiences a network disconnect or is paused, reconnecting or resuming the same session incurs **no second charge**.
 
 #### 7. Live Virtual Interview Simulation
-* The session initializes an immutable `blueprint_snapshot` capturing the question bank and grading context.
+* The session initializes an immutable snapshot capturing the exact question-bank/question selection context AND the evaluation configuration actually used (without modeling evaluation criteria as part of the current Blueprint).
 * The simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups based on the candidate's answers and interview context.
 * Execution loop:
   1. The interviewer articulates the question via TTS with synchronized blend-shape visemes.
@@ -92,7 +92,7 @@ flowchart TD
 * If client hardware cannot sustain WebGL 3D rendering, the interface gracefully degrades to a 2D animated waveform display without dropping voice dialogue.
 
 #### 8. Evaluation & Learning Roadmap
-* Upon session completion, the turn transcript is graded against the session snapshot rubrics across core technical competencies.
+* Upon session completion, the turn transcript is graded against the session snapshot's evaluation configuration across technical competencies.
 * An immutable Performance Report is stored and displayed on the candidate's dashboard, featuring an overall score (0–100), competency breakdown, radar chart, turn-by-turn critiques with model answers, and a prioritized study roadmap.
 
 ---

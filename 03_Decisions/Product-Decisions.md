@@ -17,9 +17,9 @@ This document records the ratified, long-lived product decisions that govern the
 ---
 
 ## 1. Blueprint Access Invariant: Hidden from Candidate, Recruiter-Editable
-* **Decision:** The Interview Blueprint is an internal assessment plan and core-question bank.
-* **Rationale:** Exposing the blueprint (with its question pool, benchmarks, and rubrics) to candidates would turn the mock interview into an artificial memorization exercise rather than an authentic, adaptive simulation. Conversely, Recruiters need agency to tailor interview content for their specific company openings.
-* **Rule:** Candidates **never** view, edit, or confirm an Interview Blueprint. There is no candidate blueprint preview capability. Recruiters **can** view and edit core questions within the Blueprint generated for their own Job Postings.
+* **Decision:** The Interview Blueprint is ONLY the persistent/current core-question bank/list generated from confirmed skills, requirements, and seniority/refinement context. It contains exclusively the bank of core questions. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices; evaluation configuration is a separate concern.
+* **Rationale:** Exposing the blueprint (with its core-question pool) to candidates would turn the mock interview into an artificial memorization exercise rather than an authentic, adaptive simulation. Conversely, Recruiters need agency to tailor interview content for their specific company openings.
+* **Rule:** Candidates **never** view, edit, or confirm an Interview Blueprint. There is no candidate blueprint preview capability. Recruiters **can** view and edit core questions within the Blueprint generated for their own Job Postings. Evaluation configuration and weights are handled separately.
 
 ---
 
@@ -166,13 +166,13 @@ The following operational, numerical, and architectural parameters remain unreso
    * Dedicated follow-up decision mechanism, vendor selection, and fallback behaviors.
    * Rules regarding whether and how Recruiters may edit question bank items during active recruitment.
 4. **Evaluation Dimensions & Formulas:**
-   * Finalized technical competency dimensions, criteria definitions, and default weight distribution.
-   * Validation rules, constraints, and score passing/failing thresholds.
+   * Finalized technical competency dimensions, criteria definitions, and default weight distribution (existing five dimensions remain an illustrative/baseline set only and are NOT an immutable platform contract).
+   * Exact criteria, defaults, formulas, validation rules, constraints, and score passing/failing thresholds.
 5. **Recruitment Recording Retention & Post-Recruitment Policies:**
    * Audio/video recording retention periods and automated lifecycle purge schedules.
    * Physical cloud storage architecture and candidate recording consent workflows.
    * Post-recruitment transcript access policies (whether transcripts remain permanently restricted or unlock upon recruitment termination).
    * Session recovery timeout window (older conflicting reports cite 10 minutes vs. 15 minutes; unresolved).
 6. **Global Administrative Management:**
-   * Whether platform Administrators have authority to manage global AI prompt templates and evaluation criteria.
+   * Whether platform Administrators have authority to manage global AI prompt templates, global evaluation criteria, and Interview Feature Configuration / runtime toggles (all remain unconfirmed product decisions awaiting formal ratification).
    * Administrative management and editing of global coin package pricing tiers.

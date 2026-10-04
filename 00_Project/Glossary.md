@@ -46,18 +46,18 @@ The execution parameters that determine an interview's presentation and runtime 
 * **Recruiter Job Posting:** The Recruiter selects the company 3D interviewer model and Voice Profile before Admin approval. Candidates must use those settings and cannot override them.
 
 ### Interview Blueprint
-The first-class internal assessment plan and **core-question bank** generated following human confirmation of extracted requirements. Exactly **one current Blueprint** exists per JD (absent until generated). It defines a comprehensive pool of core questions, topic matrices, depth milestones, and rubrics.
-* **Evaluation Configuration Separation:** Posting-level evaluation weights and scoring settings are configured separately by Recruiters and are not part of the question bank Blueprint.
+The first-class persistent **core-question bank** generated following human confirmation of extracted requirements, skills, and seniority context. Exactly **one current Blueprint** exists per JD (absent until generated). It defines ONLY the persistent/current core-question bank/list. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
+* **Evaluation Configuration Separation:** Evaluation criteria, competency weights, and scoring settings are a separate concern from the question bank Blueprint. Recruiters can configure posting-level evaluation weights on their Job Postings separately.
 * **Access Boundary:** Strictly **internal and hidden from the Candidate**. Candidates never view, edit, or directly confirm an Interview Blueprint. Recruiters **can** view and edit core questions within the Blueprint generated for their own Job Postings.
 
 ### Interview Session
-A single concrete execution attempt of an interview executing from an Interview Blueprint. It may originate from a Candidate Target JD (practice) or a Recruiter Job Posting (recruitment). Tracks real-time conversational turns, candidate speech transcripts, Question delivery, audio playback, and (for recruitment) video/audio recordings. Holds an immutable `blueprint_snapshot` and execution context.
+A single concrete execution attempt of an interview executing from an Interview Blueprint. It may originate from a Candidate Target JD (practice) or a Recruiter Job Posting (recruitment). Tracks real-time conversational turns, candidate speech transcripts, Question delivery, audio playback, and (for recruitment) video/audio recordings. Holds an immutable snapshot preserving the historical question-bank context and evaluation configuration used.
 
 ### Question
 The generic runtime unit spoken by the 3D interviewer during an Interview Session. An interview conducts a random selection of $x$ core questions from the question bank Blueprint, with bounded follow-ups determined by candidate answers and interview context. Deciding whether to follow up and generating follow-up wording are decoupled responsibilities without premature vendor lock-in.
 
-### Blueprint Snapshot
-An immutable snapshot of the originating Interview Blueprint captured at the moment an Interview Session is initialized. Ensures that historical evaluations, scoring, and performance reports remain 100% reproducible and tamper-proof even if the parent JD, question bank, or system prompts evolve.
+### Blueprint Snapshot / Session Historical Context
+An immutable snapshot captured at the moment an Interview Session is initialized. Preserves the exact question-bank/question selection context AND the evaluation configuration actually used by the historical session. Ensures that historical evaluations, scoring, and performance reports remain 100% reproducible and tamper-proof even if the parent JD, question bank, or evaluation settings later evolve, without modeling evaluation criteria as part of the current Blueprint.
 
 ### Application
 A candidate submission to a Recruiter's Job Posting containing Candidate application information and an uploaded CV/resume.
