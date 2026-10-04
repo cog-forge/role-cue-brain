@@ -19,7 +19,7 @@ This document establishes unambiguous, locked definitions for core concepts acro
 
 > [!IMPORTANT]
 > ### Critical Distinction: Target JD vs. Job Posting
-> * **`Job Posting` = The Company's Job Description.** It is created, updated, and archived by a **Recruiter** to advertise an open position at an employer, then submitted for Admin approval before public availability. Candidates browse approved Job Postings and submit Applications to them.
+> * **`Job Posting` = The Company's Job Description.** It is created, updated, and managed throughout its intake lifecycle by a **Recruiter** to advertise an open position at an employer, then submitted for Admin approval before public availability. Candidates browse approved Job Postings and submit Applications to them.
 > * **`Target JD for Practice` = The Candidate's Practice Input.** It is pasted or uploaded by a **Candidate** strictly to drive their own personalized technical mock interview simulations. It is private to that candidate.
 > 
 > A Candidate may copy the text of a Job Posting to create a Target JD for Practice, but they represent **two distinct domain entities with different owners, lifecycles, and database storage**.

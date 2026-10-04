@@ -63,7 +63,7 @@ classDiagram
     class Recruiter {
         +createJobPosting()
         +updateJobPosting()
-        +archiveJobPosting()
+        +deleteJobPosting()
         +viewOwnJobPostings()
         +searchFilterOwnJobPostings()
         +editOwnPostingQuestionBank()
@@ -153,8 +153,9 @@ classDiagram
   * **Configure Job Posting Interview:** Select the company 3D interviewer model and Voice Profile that Candidates must use for that Job Posting's interview.
   * **Manage Question Bank (Blueprint):** View and edit core questions within the question bank generated for own Job Postings.
   * **Configure Evaluation Weights:** Adjust posting-level evaluation weights across technical competencies (separate from the question bank).
-  * **Update & Archive Job Posting:** Modify requirements or archive inactive Job Postings.
-  * **Control Application Intake:** Open or Close intake for applications. Close temporarily halts new applications while allowing already-screened applicants to interview.
+  * **Update Job Posting:** Modify requirements or description for submitted or active Job Postings.
+  * **Delete Job Posting:** Delete an eligible Job Posting where supported by Use Case V2 (distinct from End Recruitment and does not trigger slot refunds).
+  * **Control Application Intake:** Open or Close intake for applications (and reopen intake later). Close temporarily halts new applications while allowing already-screened applicants to interview without refunding slots.
   * **End Recruitment & Reclaim Slots:** Formally end recruitment on a posting; eligible unused interview slots are refunded as coins back to the Recruiter's personal wallet.
   * **View & Search Own Postings:** Inspect, filter, and search own Job Postings.
   * **CV-First Application Screening:** Search and filter incoming applications; view candidate application details and uploaded CV/resume immediately upon submission; render CV screening decision (`Pass` or `Reject` CV screening).
@@ -258,9 +259,10 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 * **Capabilities:**
   * Create Job Posting from JD-like content; review and confirm extracted technical requirements
   * Select company 3D interviewer model and Voice Profile before submitting for Admin approval
-  * Update and archive Job Postings
+  * Update Job Postings (modify requirements or description)
+  * Delete Job Postings (where supported by Use Case V2; separate from End Recruitment)
   * View and search own Job Postings
-  * Control intake: Open intake or Close intake
+  * Control intake: Open intake, Close intake, and Reopen intake
   * Fund interview slots for Job Posting using coins from personal wallet
   * End Recruitment: formally finish recruitment and receive coin refund for eligible unused interview slots
 

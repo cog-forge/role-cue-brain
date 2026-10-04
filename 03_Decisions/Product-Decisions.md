@@ -121,6 +121,7 @@ This document records the ratified, long-lived product decisions that govern the
   * **End Recruitment:** Formally finishes recruitment on a posting. Only ending recruitment refunds eligible unused interview slots as coins back into the Recruiter's personal wallet.
   * **Evaluation Settings:** Posting-level evaluation weights are configured by the Recruiter separately from the question bank Blueprint.
   * **Recruitment Recordings:** Audio/video recordings and transcripts are retained exclusively for the owning Recruiter. Candidates view their evaluation score, but cannot view recruitment transcripts or recordings during recruitment. Admin does not have recording access by inference.
+  * **Archive Job Posting (Removed):** `Archive Job Posting` is **not** part of RoleCue's current product contract. Terminology from earlier drafts referring to archiving Job Postings is obsolete. The current Recruiter operational lifecycle uses Open Intake, Close Intake, Reopen Intake, and End Recruitment only. `Delete Job Posting` remains available where supported by the Use Case V2 but is a distinct destructive action and does not inherit Archive semantics or trigger any slot refund.
 
 ---
 

@@ -31,8 +31,9 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * **Canonical Equivalence:** `Job Posting` **is** the company's Job Description. There is no separate "Corporate JD" entity or company-tenant system.
   * **Question Bank & Settings:** Generates a single internal core-question bank Blueprint. The owning Recruiter can view and edit core questions for their own posting. The Recruiter also configures posting-level evaluation weights separately from the question bank.
   * **Interview Presentation:** Company 3D interviewer model and Voice Profile selected by the Recruiter before Admin approval. Candidates cannot override either setting for a recruitment interview.
-  * **Lifecycle Status:** `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `ARCHIVED`, `RECRUITMENT_ENDED`.
+  * **Lifecycle Status:** `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `RECRUITMENT_ENDED`.
   * **Intake Control (`intake_status`):** `OPEN` or `CLOSED`.
+  * **Removal of Archive:** `Archive Job Posting` is removed from RoleCue's current product contract. It is not a supported capability or lifecycle state.
 * **Application Intake (Open vs. Close):**
   * `Open intake`: Actively accepts new candidate applications and CV submissions.
   * `Close intake`: Temporarily stops accepting new applications. **Critical distinction:** Applicants who already passed CV screening prior to closing intake can still conduct their interview. Close intake does **not** refund interview slots or terminate recruitment. The Recruiter can reopen intake at any time.
