@@ -93,7 +93,7 @@ sequenceDiagram
 3. **Immediate Lock Enforcement:** When an Administrator marks an account as `LOCKED`, subsequent token refresh requests and authenticated actions must fail immediately.
 4. **Email Uniqueness:** Email addresses are normalized to lowercase and must be strictly unique across all accounts.
 5. **No Anonymous Privilege Escalation:** Guests have zero access to authenticated candidate, recruiter, or admin operations.
-6. **Role Isolation:** A Candidate cannot access Recruiter management endpoints; a Recruiter cannot access Candidate practice resources or submit mock interview configurations without an authorized Candidate account.
+6. **Role Isolation & Ownership Boundaries:** A Candidate cannot access Recruiter management endpoints; a Recruiter cannot access Candidate practice resources without an authorized Candidate account. Candidates and Recruiters hold personal coin wallets and avatar inventories; Administrators have neither. Recruitment recordings and transcripts are private to the owning Recruiter; Candidates cannot access recruitment transcripts during recruitment, and Administrators do not have access by inference.
 7. **Password Recovery:** `Forgot Password` is the single password-recovery capability. It includes issuing and validating a recovery link or token and setting a replacement password; `Reset Password` is not a separate formal capability. `Change Password` remains the authenticated-user capability for replacing a known password.
 
 ---
@@ -104,8 +104,8 @@ sequenceDiagram
   * [[01_Domains/Job-Description/README|Job-Description]] (`job_descriptions.user_id`)
   * [[01_Domains/Job-Posting-Application/README|Job-Posting-Application]] (`job_postings.recruiter_id`, `applications.candidate_id`)
   * [[01_Domains/Interview/README|Interview]] (`interview_sessions.user_id`)
-  * [[01_Domains/Avatar-Voice/README|Avatar-Voice]] (`personal_avatars.candidate_id`)
-  * [[01_Domains/Payment/README|Payment]] (`membership_subscriptions.candidate_id`, `payment_transactions.user_id`)
+  * [[01_Domains/Avatar-Voice/README|Avatar-Voice]] (`personal_avatars.user_id` for Candidates and Recruiters)
+  * [[01_Domains/Payment/README|Payment]] (`wallets.user_id`, `payment_orders.user_id`)
 * **[[01_Domains/Administration/README|Administration]]:** Admin user governance operates directly on user accounts (viewing, filtering, locking/unlocking).
 
 ---
@@ -113,3 +113,4 @@ sequenceDiagram
 ## 7. External Integrations
 
 * **Email Provider:** Dispatches account verification emails, password recovery links, and security alert notifications.
+

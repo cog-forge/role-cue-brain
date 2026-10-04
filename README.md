@@ -40,12 +40,13 @@ This repository is intentionally maintained as a **durable domain knowledge base
 
 **RoleCue** is an AI-powered virtual technical interview simulation platform. It delivers realistic, personalized technical interview practice tailored to target Job Descriptions through:
 * **AI-based JD Extraction & Refinement:** Ingestion of text or PDF job descriptions, deterministic validation of technical competencies, and natural-language candidate refinement.
-* **Internal Interview Blueprint Generation:** Autonomous generation of comprehensive assessment plans hidden from the candidate.
+* **Internal Interview Blueprint Generation:** Autonomous generation of a single core-question bank Blueprint per JD following human confirmation of extracted requirements; hidden from Candidates, but editable by Recruiters for their own Job Postings.
 * **Real-Time 3D Virtual Interviewer:** Interactive WebGL avatar with real-time speech-to-text (STT), text-to-speech (TTS), and synchronized blend-shape viseme lip-sync.
-* **Adaptive Technical Questioning:** An LLM-determined Question loop that uses each Candidate Answer and immutable Interview Context.
-* **Post-Interview Evaluation:** Automated multi-dimensional scoring across 5 core competencies with actionable gap analysis.
-* **Lightweight Job Posting & Application:** A Recruiter company-JD board with Admin approval, locked company interview presentation, and completed Applications containing CV/resume and the associated Interview Result; recruitment remains bounded at Application Approve/Reject.
-* **Personal 3D Avatar:** An embedded free Avaturn iframe experience whose final GLB is converted by RoleCue to a persisted Candidate-owned VRM avatar.
+* **Adaptive Technical Questioning:** Simulation conducts a random selection of core questions from the bank with bounded follow-ups; question-loop decisions and follow-up generation remain decoupled without premature vendor or single-model lock-in.
+* **Post-Interview Evaluation:** Automated multi-dimensional scoring across core technical competencies with actionable gap analysis; recruiter-configurable weights for job postings.
+* **Lightweight Job Posting & CV-First Application:** A Recruiter company-JD board with Admin approval, locked company interview presentation, and CV-first application screening. The Recruiter reviews submitted applications and CVs before an interview occurs; passed applicants interview using Recruiter-funded interview slots; recruitment remains bounded at Application Approve/Reject.
+* **Personal 3D Avatar Inventory:** An embedded free Avaturn iframe experience whose final GLB is converted by RoleCue to a persisted VRM avatar. Both Candidates and Recruiters maintain personal avatar inventories with storage slot capacity and generation fees charged upon successful VRM persistence.
+* **Coin Wallets & Slot Funding:** Coin wallets for Candidates and Recruiters (replacing memberships and subscriptions). Coins fund Candidate practice interviews (debited upon start), Recruiter interview slots, avatar generation, and avatar inventory capacity.
 
 ---
 
@@ -54,7 +55,7 @@ This repository is intentionally maintained as a **durable domain knowledge base
 The knowledge base is structured into four core directories:
 
 ```text
-ai-interview-practice-brain/
+role-cue-brain/
 ├── README.md
 ├── 00_Project/                 # Product definition, actors, flows, and terminology
 │   ├── Overview.md             # Core problem, value proposition, and boundaries
@@ -64,19 +65,19 @@ ai-interview-practice-brain/
 ├── 01_Domains/                 # Deep domain specifications & invariants
 │   ├── Auth/README.md          # Identity, credentials, and access control
 │   ├── Job-Description/README.md # Ingestion, extraction, review, and refinement
-│   ├── Job-Posting-Application/README.md # Recruiter job postings & candidate applications
-│   ├── Interview/README.md     # Real-time simulation, configuration, and blueprint engine
-│   ├── Avatar-Voice/README.md  # 3D avatar rendering, personal photo avatars, and TTS voices
-│   ├── Evaluation/README.md    # 5 core competencies, scoring rubrics, and roadmaps
-│   ├── Payment/README.md       # Candidate membership subscriptions, transactions, and pricing
-│   └── Administration/README.md # Platform governance, AI behaviour, rubrics, and voice profiles
+│   ├── Job-Posting-Application/README.md # Recruiter job postings, intake management, CV screening, and candidate applications
+│   ├── Interview/README.md     # Real-time simulation, configuration, and question-bank blueprint engine
+│   ├── Avatar-Voice/README.md  # 3D avatar rendering, Candidate/Recruiter avatar inventory, and TTS voices
+│   ├── Evaluation/README.md    # Core competencies, scoring rubrics, posting-level weights, and roadmaps
+│   ├── Payment/README.md       # Coin packages, wallets, transactions, and interview/avatar slot funding
+│   └── Administration/README.md # Platform governance, moderation, voice profiles, payment audits, and operational oversight
 ├── 02_System/                  # System-level models and architectural boundaries
 │   ├── Context.md              # External actors and service boundaries
 │   ├── Domain-Model.md         # Conceptual entity-relationship diagram
 │   ├── Integrations.md         # LLM, STT, TTS, Payment Gateway, and Email integration
 │   └── Data-Relationships.md   # Cardinalities, ownership, and cascading rules
 └── 03_Decisions/               # Long-lived product and architectural decisions
-    └── Product-Decisions.md    # Ratified foundational decisions
+    └── Product-Decisions.md    # Ratified foundational decisions and unresolved rules
 ```
 
 ---
