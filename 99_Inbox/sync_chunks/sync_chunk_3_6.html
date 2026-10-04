@@ -1,0 +1,86 @@
+<h2 style="font-family: Calibri, Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #2E74B5; margin-top: 16pt; margin-bottom: 4pt;">3.6 Membership & Payment Management</h2>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;">This section defines the functional requirements for candidate subscription billing, secure third-party payment gateway checkout, financial transaction audit ledgering, platform revenue analytics, and administrative subscription tier pricing governance.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.6.1 Candidate Membership Subscription & Cancellation</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate clicks "Upgrade to Pro" or "Manage Subscription" on the Membership & Billing screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function manages the Candidate membership subscription lifecycle, directing the user to a secure payment gateway for checkout, activating premium membership benefits upon successful payment confirmation, and processing voluntary cancellation requests.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate, External Payment Gateway</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To provide candidates with premium platform access (unlimited JD imports, advanced diagnostics) through secure subscription transactions.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Membership & Billing, Payment Gateway Checkout Redirect, Unsubscribe Confirmation Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Selected membership tier/plan, billing cycle, payment gateway callback payload, cancellation confirmation.</li>
+<li><b>Output data:</b> Initialized checkout session URL, updated membership status (Active / Free / Canceled), billing renewal date.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> In alignment with ratified domain decisions, RoleCue operates strictly on a recurring subscription membership model. Paid membership benefits are strictly activated only after the payment gateway confirms successful transaction completion (BR-42). If a payment is pending or fails, benefits are not granted (BR-43). When a Candidate cancels their subscription, benefits remain active until the end of the paid billing period.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-42 (A paid Membership state must be activated or updated only after the associated payment transaction succeeds), BR-43 (A failed or pending payment must not grant paid Membership benefits, and the same payment attempt cannot activate benefits more than once).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate navigates to the Membership & Billing screen and selects a subscription plan.</li>
+<li>The system initializes a transaction record and redirects the Candidate via the Payment Gateway Checkout Redirect screen to the external payment gateway.</li>
+<li>The Candidate completes payment authorization on the secure provider portal.</li>
+<li>The payment gateway returns a verified success callback to RoleCue.</li>
+<li>The system confirms the transaction, activates the "Pro" membership state on the Candidate's account (BR-42), and updates the billing dashboard.</li>
+<li>(Cancellation) An active subscriber clicks "Cancel Subscription" on the Membership & Billing screen.</li>
+<li>The Unsubscribe Confirmation Dialog appears, outlining benefit expiration details at the end of the billing term.</li>
+<li>The Candidate confirms cancellation; the system updates the renewal status, preventing future renewals while maintaining access until period end.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Payment declined or canceled by user: The payment gateway returns a failure/cancel callback; the system leaves the account in the free tier (BR-43) and displays a payment failed message.</li>
+<li>Duplicate callback / replay: The system detects that the transaction has already been settled and ignores redundant activations (BR-43).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Membership & Billing, Payment Gateway Checkout Redirect, Unsubscribe Confirmation Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.6.2 Financial Transactions Audit & Revenue Reporting</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator navigates to "Payment Transactions Ledger" or "Revenue Report Generator", or a Candidate views their personal payment history.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function maintains an immutable audit ledger of all platform membership payment transactions, allows searching and filtering transactions by date and status, and generates aggregated financial revenue reports.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator (for global ledger and revenue reports), Candidate (for personal transaction history)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To ensure financial transparency, audit payment gateway reconciliation, and analyze recurring platform revenue.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Payment Transactions Ledger, Revenue Report Generator, Payment Transaction History</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Date range filters, transaction status filters (Success, Failed, Refunded), report grouping parameters (Monthly, Quarterly).</li>
+<li><b>Output data:</b> Filtered transaction ledger table, aggregated revenue figures, exportable revenue summary reports.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Administrators have access to view all payment transactions across the platform and generate executive revenue summaries (BR-41). Candidates can view their own personal historical transactions via Payment Transaction History. All transaction records are read-only and reconciled against external gateway reference identifiers.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-41 (Only Administrators can update Membership pricing and view platform Payment Transactions or generate Revenue Reports).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator navigates to the Payment Transactions Ledger in the governance console.</li>
+<li>The system renders all platform payment transactions with user email, gateway transaction ID, amount, and status (UC 52, BR-41).</li>
+<li>The Administrator filters records by date range or transaction status.</li>
+<li>The Administrator opens the Revenue Report Generator (UC 53).</li>
+<li>The Administrator selects reporting parameters (e.g., Monthly revenue breakdown) and clicks "Generate Report".</li>
+<li>The system calculates total gross revenue, transaction counts, and churn rates, displaying the interactive summary with export options.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Non-admin user attempts to access administrative revenue reports: Access is denied (BR-41).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Payment Transactions Ledger, Revenue Report Generator, Payment Transaction History. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.6.3 Membership Pricing Governance</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator clicks "Update Pricing" on the membership configuration view within the governance console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function allows administrators to update the subscription fee and billing terms for platform membership tiers, establishing new baseline pricing for upcoming subscriber sign-ups.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To manage platform commercial packaging and adjust subscription price points in accordance with business strategy.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Membership & Billing, Update Membership Price Modal</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Membership plan ID, new subscription price, effective currency, administrative confirmation.</li>
+<li><b>Output data:</b> Updated membership pricing schedule, pricing audit log record.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Only Administrators possess the authority to modify membership prices (BR-41). Updating a plan's price applies to new subscription checkouts; existing active recurring subscriptions follow standard grandfathering rules unless grandfathering is explicitly updated via payment gateway policies.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-41 (Only Administrators can update Membership pricing and view platform Payment Transactions or generate Revenue Reports).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator opens the membership configuration panel and selects "Update Membership Price".</li>
+<li>The Update Membership Price Modal opens, displaying current pricing tiers.</li>
+<li>The Administrator enters the new subscription fee and clicks "Save Changes".</li>
+<li>The system verifies administrator authorization (BR-41), validates that the price is a positive monetary value, and persists the new price.</li>
+<li>The updated price is immediately reflected on public subscription displays and checkout flows.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Invalid or negative price input: The system rejects the value and prompts for a valid numerical price.</li>
+<li>Unauthorized user attempt: Access blocked with permission violation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Membership & Billing, Update Membership Price Modal. Visual layout to be produced during the dedicated UI design phase.</p>

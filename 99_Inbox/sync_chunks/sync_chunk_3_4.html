@@ -1,0 +1,190 @@
+<h2 style="font-family: Calibri, Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #2E74B5; margin-top: 16pt; margin-bottom: 4pt;">3.4 Recruitment & Application Management</h2>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;">This section defines the functional requirements for corporate recruitment and candidate job applications, covering job posting creation with mandatory 3D interviewer configuration, recruiter posting administration, candidate vacancy discovery, application submission with integrated interview gateway, candidate application tracking, recruiter application screening, and binary adjudication.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.1 Recruiter Job Posting Creation & AI Configuration</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Recruiter clicks "Create Job Posting" from the Recruiter Dashboard or My Job Postings Management screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function facilitates authoring a new corporate job opening, utilizing AI extraction from raw job description text to parse requirements, and configuring mandatory interview parameters including the company's designated 3D virtual interviewer persona and Voice Profile before submitting for platform moderation.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To establish standardized corporate job openings with mandatory AI interview criteria tailored to company hiring standards.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Create Job Posting, AI Extraction Review & Confirmation, Configure Company 3D Interviewer & Voice</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Job opening title, department, employment type, location, raw job description text, confirmed competency taxonomy, selected company 3D interviewer avatar, selected provider Voice Profile.</li>
+<li><b>Output data:</b> Staged corporate Job Posting record with "Pending Moderation" status, configured interview specifications.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The Recruiter enters raw job description details, which the AI extraction service parses into structured competencies. The Recruiter reviews and confirms the extracted data (BR-44). Next, the Recruiter selects the specific 3D interviewer avatar and Voice Profile that will conduct all candidate screening interviews for this role (BR-45). Upon final submission, the posting is placed in the moderation queue for Administrator approval (BR-46).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-44 (A Recruiter must review and confirm the extracted Job Posting information before submitting it for moderation), BR-45 (A Recruiter must select an available company 3D interviewer model and an available Voice Profile for a Job Posting before submitting it for moderation), BR-46 (A Job Posting must not be publicly available while its moderation status is pending or rejected).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Recruiter navigates to the Create Job Posting screen and inputs role details and raw JD text.</li>
+<li>The system performs AI extraction and routes the Recruiter to the AI Extraction Review & Confirmation screen.</li>
+<li>The Recruiter reviews and approves the extracted skills, responsibilities, and qualifications (BR-44).</li>
+<li>On the Configure Company 3D Interviewer & Voice screen, the Recruiter selects the designated company interviewer avatar and Voice Profile (BR-45).</li>
+<li>The Recruiter clicks "Submit for Approval".</li>
+<li>The system records the Job Posting in "Pending Moderation" status and submits it to the platform governance moderation queue (BR-46).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Submission without selecting interviewer avatar or voice: The system prevents submission and highlights missing selections (BR-45).</li>
+<li>Missing mandatory job details: The system validates required text fields before extraction.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Create Job Posting, AI Extraction Review & Confirmation, Configure Company 3D Interviewer & Voice. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.2 Recruiter Job Posting Administration</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Recruiter navigates to "My Job Postings" from the navigation header or selects an action on a specific posting.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function provides administrative management of the Recruiter's owned job postings, allowing searching, filtering by publication status, viewing details, updating posting content, and archiving inactive vacancies.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To maintain and manage the lifecycle of corporate job vacancies published by the recruiting organization.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Recruiter Dashboard, My Job Postings Management, Edit Job Posting, Archive Job Posting Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Filter criteria (Status: Pending, Approved, Archived; Date), search query, modified posting fields, archive confirmation.</li>
+<li><b>Output data:</b> Filtered list of owned job postings, detailed posting record, updated posting state, archived status timestamp.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Recruiters are strictly restricted to managing job postings owned by their account (BR-29, BR-30, BR-31). When a posting is archived, it is immediately withdrawn from the public Job Board, preventing new candidate applications (BR-32), while all existing received applications and attached interview results remain accessible for historical review.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-29 (A Recruiter can only view Job Postings they own within recruiter-management functions), BR-30 (A Recruiter can only update Job Postings they own), BR-31 (A Recruiter can only archive Job Postings they own), BR-32 (Candidates must not be allowed to apply to archived Job Postings).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Recruiter opens the My Job Postings Management screen.</li>
+<li>The system lists all postings owned by the Recruiter with active application counts and status badges (UC 33, UC 35, BR-29).</li>
+<li>The Recruiter selects a posting and clicks "Edit" to modify vacancy details on the Edit Job Posting screen (UC 36, BR-30).</li>
+<li>The Recruiter saves changes; the system updates the posting record.</li>
+<li>(Optional) The Recruiter selects "Archive", confirms the Archive Job Posting Dialog prompt, and the system transitions the posting to "Archived" status (UC 37, BR-31, BR-32).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Attempt to edit or archive a posting owned by another user: Access is forbidden with an authorization violation error (BR-29, BR-30, BR-31).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Recruiter Dashboard, My Job Postings Management, Edit Job Posting, Archive Job Posting Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.3 Candidate Job Board Discovery & Vacancy Inspection</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate navigates to the "Job Board" from the top navigation bar.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function enables candidates to browse, search, and filter approved and active corporate job vacancies, and view comprehensive job details, company descriptions, and interview requirements.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To discover verified employment opportunities and understand mandatory screening interview parameters before applying.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Job Board (Browse Postings), Job Posting Detail</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Search keywords (job title, skill tags, company), department/location filters, selected Job Posting ID.</li>
+<li><b>Output data:</b> Filtered grid of active corporate job postings, comprehensive Job Posting Detail view.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The Job Board only exposes Job Postings that have received formal Administrator moderation approval and remain in active status (BR-33, BR-46). Archived or pending postings are excluded from search results. The detailed view displays role requirements, company info, and informs the Candidate that a standardized AI screening interview is required upon submission.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-32 (Candidates must not be allowed to apply to archived Job Postings), BR-33 (Only approved and active Job Postings can be publicly available for Candidate applications), BR-46 (A Job Posting must not be publicly available while its moderation status is pending or rejected).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate navigates to the Job Board (Browse Postings) screen.</li>
+<li>The system queries and displays approved and active job postings (UC 26, UC 27, BR-33).</li>
+<li>The Candidate filters by keyword or skill tag.</li>
+<li>The Candidate clicks a job card to open the Job Posting Detail screen (UC 28).</li>
+<li>The system displays full vacancy responsibilities, requirements, and mandatory interview prerequisites.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Candidate navigates via direct URL to an archived or pending posting: The system prevents viewing and displays an "Opportunity Unavailable" notice (BR-32, BR-33, BR-46).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Job Board (Browse Postings), Job Posting Detail. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.4 Job Application Submission & Mandatory Interview Gateway</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate clicks "Apply Now" on the Job Posting Detail screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function manages the multi-step job application process: capturing the Candidate's CV/resume, verifying application uniqueness, launching the mandatory company-configured AI technical interview, and attaching the finalized interview result directly to the application dossier upon completion.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To provide an objective screening gateway where candidate resumes are paired with standardized AI interview assessments for recruiter review.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Job Posting Detail, Job Application & CV Upload, Application Submitted Confirmation, Configure Interview Session, Live 3D Interview Room</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Job Posting ID, uploaded CV document (PDF), contact details, screening interview responses.</li>
+<li><b>Output data:</b> Staged application record, initialized company interview session, completed application dossier with attached Interview Result.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> A Candidate may submit at most one application per Job Posting (BR-25). Uploading a CV is mandatory before proceeding (BR-49). In contrast to practice interviews, the Candidate cannot alter the interviewer avatar or voice; the interview automatically enforces the Recruiter's designated persona and voice (BR-47, BR-48). The application is held in a "Pending Interview" state and is not released to the Recruiter until the interview is completed (BR-50). Upon conclusion, the system automatically links the evaluation report to the application (BR-51, BR-52).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-25 (A Candidate can only submit at most one Application for the same Job Posting), BR-26 (A Candidate must provide all required Application information before submitting an Application), BR-47 (A Candidate interviewing for a Recruiter Job Posting must use the 3D interviewer model specified by the Recruiter), BR-48 (A Candidate interviewing for a Recruiter Job Posting must use the Voice Profile specified by the Recruiter), BR-49 (A Candidate must upload the required CV or resume information before proceeding to the required interview), BR-50 (A completed Application must not be made available to the Recruiter until the Candidate finishes the required interview), BR-51 (The Interview Result attached to an Application must belong to the same Candidate and correspond to the required Job Posting interview), BR-52 (When the required interview is completed, the system must attach its Interview Result to the pending Application).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate clicks "Apply Now" on an active Job Posting Detail screen.</li>
+<li>The system displays the Job Application & CV Upload screen.</li>
+<li>The Candidate uploads their CV, fills required contact fields (BR-26, BR-49), and submits.</li>
+<li>The system verifies no prior application exists for this posting from this Candidate (BR-25), stages the application, and transitions directly to the company-configured interview gateway.</li>
+<li>The interview launches using the Recruiter's mandatory 3D avatar and Voice Profile (BR-47, BR-48).</li>
+<li>The Candidate completes the live interview simulation.</li>
+<li>Upon interview completion, the evaluation engine scores the session and automatically attaches the Interview Result to the application (BR-51, BR-52).</li>
+<li>The system updates the application status to "Submitted" (making it available to the Recruiter per BR-50) and renders the Application Submitted Confirmation screen.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Duplicate application: If the Candidate has already applied to this posting, the system alerts the Candidate (BR-25) and prevents re-submission.</li>
+<li>Candidate abandons the interview before completion: The application remains in "Incomplete / Pending Interview" state and is hidden from the Recruiter (BR-50).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Job Posting Detail, Job Application & CV Upload, Application Submitted Confirmation, Configure Interview Session, Live 3D Interview Room. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.5 Candidate Application Tracking & Dossier Viewer</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate selects "My Applications" from the user navigation menu.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function allows candidates to track the status of all submitted job applications (e.g., Pending Review, Approved, Rejected) and inspect their submitted application dossier, including their uploaded CV and attached interview performance summary.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To provide transparency regarding application progress and allow candidates to review their submitted materials.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: My Applications Tracking, Application Dossier & Result Viewer</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Candidate ID, selected Application ID.</li>
+<li><b>Output data:</b> List of submitted applications with status badges, detailed application dossier view including attached interview evaluation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Candidates can only view their own applications (BR-27). The interface avoids multi-stage pipeline jargon, presenting clear binary lifecycle statuses (Pending, Approved, or Rejected). Candidates can inspect their attached interview score to understand how they performed on the screening assessment.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-27 (A Candidate can only view their own submitted Application details and statuses).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate navigates to the My Applications Tracking screen.</li>
+<li>The system lists all applications submitted by the Candidate along with job titles, companies, submission dates, and current statuses (UC 31, BR-27).</li>
+<li>The Candidate clicks an application to view details.</li>
+<li>The Application Dossier & Result Viewer screen opens, displaying the uploaded CV, submission timestamp, and the attached Interview Result summary (UC 30).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Unauthorized URL access to another candidate's application: Access is forbidden with a permission error (BR-27).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: My Applications Tracking, Application Dossier & Result Viewer. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.6 Recruiter Application Screening & Attached Result Inspection</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Recruiter navigates to "Received Applications" or selects an application from My Job Postings.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function allows recruiters to search, filter, and inspect completed candidate applications submitted to their owned job postings, providing access to candidate CVs and the attached standardized AI interview results.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To enable recruiters to screen applicants efficiently using objective AI interview scores alongside traditional resumes.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Received Applications List, Application Detail & Review, Attached Interview Result Viewer</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Job Posting filter, candidate name search, score threshold filter, selected Application ID.</li>
+<li><b>Output data:</b> Filtered list of candidate applications, detailed candidate dossier, rendered attached interview report.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Recruiters are strictly limited to reviewing applications submitted to job postings owned by their account (BR-28). Applications whose mandatory interviews were abandoned or remain incomplete are excluded from the list (BR-50). The Recruiter can inspect the full candidate CV and view the attached Interview Result, including competency scores and turn-by-turn critiques (BR-51).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-28 (A Recruiter can only view Applications when they were submitted to Job Postings owned by that Recruiter), BR-50 (A completed Application must not be made available to the Recruiter until the Candidate finishes the required interview), BR-51 (The Interview Result attached to an Application must belong to the same Candidate and correspond to the required Job Posting interview).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Recruiter navigates to the Received Applications List screen.</li>
+<li>The system renders submitted applications for the Recruiter's postings, displaying candidate names, application dates, and overall interview scores (UC 38, BR-28, BR-50).</li>
+<li>The Recruiter filters by job opening or minimum interview score.</li>
+<li>The Recruiter clicks an applicant row to open Application Detail & Review (UC 39).</li>
+<li>The Recruiter reviews the Candidate's CV and opens the Attached Interview Result Viewer to inspect detailed performance metrics (BR-51).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Attempt to view an application for another company's posting: The system rejects the request with an access denial (BR-28).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Received Applications List, Application Detail & Review, Attached Interview Result Viewer. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.4.7 Recruiter Definitive Binary Adjudication</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Recruiter clicks "Approve" or "Reject" within the Application Detail & Review interface.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function records the Recruiter's definitive hiring decision on a completed candidate application, updating the application status to Approved or Rejected and capturing optional decision feedback.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To conclude the screening review process with a clear, definitive adjudication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Application Detail & Review, Application Adjudication Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Application ID, decision action (Approve or Reject), optional recruiter decision notes.</li>
+<li><b>Output data:</b> Updated application status (Approved / Rejected), adjudication timestamp, notification event dispatched to the Candidate.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> In strict accordance with platform scope, recruitment adjudication is binary: Approve or Reject. Complex multi-stage applicant tracking (such as scheduling multi-round live interviews, offer letters, or onboarding workflows) is excluded. The decision updates the application status visible to the Candidate and seals the application record.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-34 (A Recruiter can only approve or reject Applications submitted to Job Postings owned by that Recruiter).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>While reviewing an application on the Application Detail & Review screen, the Recruiter decides on the applicant.</li>
+<li>The Recruiter clicks "Approve" or "Reject".</li>
+<li>The Application Adjudication Dialog prompts for confirmation and optional notes.</li>
+<li>The Recruiter confirms the decision.</li>
+<li>The system records the status as "Approved" or "Rejected" (BR-34), logs the adjudication timestamp, updates the Candidate's tracking dashboard, and locks the application.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Attempt to adjudicate an application belonging to an unowned job posting: Request is rejected (BR-34).</li>
+<li>Attempting to re-adjudicate an already finalized application: System indicates the application status is final.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Application Detail & Review, Application Adjudication Dialog. Visual layout to be produced during the dedicated UI design phase.</p>

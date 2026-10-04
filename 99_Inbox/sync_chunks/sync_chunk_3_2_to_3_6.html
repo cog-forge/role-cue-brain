@@ -1,0 +1,884 @@
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 13pt; font-weight: bold; color: #1F4D78; margin-top: 14pt; margin-bottom: 4pt;">3.2 Account & Access Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;">This section defines the functional requirements for user registration, identity authentication, credential recovery, user profile management, credential security, and multi-factor authentication across all platform user roles.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.1 Platform Public Exploration & Value Proposition</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Guest accesses the platform root URL via a web browser.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function renders the public marketing and platform introduction portal, showcasing the RoleCue value proposition, technical interview simulation capabilities, supported industry domains, and navigation paths for account registration and authentication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Guest</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To introduce prospective candidates and recruiters to the platform's AI-driven technical interview features and facilitate user onboarding.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Public Landing Page</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Public catalog highlights, feature overview assets.</li>
+<li><b>Output data:</b> Rendered public landing view, product overview summaries, navigation links to registration and login.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The interface operates publicly without requiring prior authentication. It presents overview highlights regarding real-time 3D interviewer interaction, job description analysis, automated rubric-based scoring, and recruiting capabilities.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features; unauthenticated guests may only view public marketing content and entry points).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Guest navigates to the platform base URL.</li>
+<li>The system loads and displays the Public Landing Page with feature highlights, value propositions, and role-based onboarding calls to action.</li>
+<li>The Guest clicks the registration or login call to action to transition to the respective authentication interface.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Network connectivity failure prevents assets from loading; the client renders an offline retry notice.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Public Landing Page. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.2 User Registration & Role Selection</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Guest clicks the "Sign Up" or "Register" button on the Public Landing Page or login view.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function captures account registration credentials, validates email uniqueness and password complexity, establishes the initial user identity record, and dispatches an email verification notice.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Guest</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To allow new candidates and recruiters to establish authenticated accounts with verified identities and defined roles.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Account Registration, Email Verification Notice</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Full name, email address, password, password confirmation, desired account role (Candidate or Recruiter).</li>
+<li><b>Output data:</b> Newly created user account record with pending verification status, dispatched verification token, and confirmation screen.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Registration validates that the provided email is not already associated with an existing account. The system validates password strength according to platform security policy. Better Auth manages the underlying credential generation and token creation, while the interface transitions the user to the Email Verification Notice screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-01 (An account must have a unique email address), BR-02 (An account password must be between 8 and 32 characters long), BR-03 (An account password must contain at least one lowercase letter, one uppercase letter, one number, and one special character).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Guest navigates to the Account Registration screen.</li>
+<li>The Guest inputs their full name, email address, password, password confirmation, and selects their role.</li>
+<li>The system validates that the email address is unique and the password complies with security rules.</li>
+<li>The system registers the account in a pending verification state and sends an email containing an activation link.</li>
+<li>The system redirects the user to the Email Verification Notice screen with instructions to check their inbox.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Duplicate email address: The system informs the user that an account with this email already exists and offers a link to login or recover the password (BR-01).</li>
+<li>Password complexity violation: The system indicates the specific unmet requirements (length, case, numeric, or special character) and prevents submission (BR-02, BR-03).</li>
+<li>Confirmation password mismatch: The system flags the mismatch and prompts the user to re-enter matching passwords.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Account Registration, Email Verification Notice. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.3 User Authentication & Session Resolution</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A user submits login credentials on the Account Login screen, or clicks the "Sign Out" action from the authenticated navigation bar.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function verifies user identity via email and password credentials, checks account status against governance restrictions, prompts for two-factor authentication if enabled, resolves an authenticated session, and terminates active sessions upon logout.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Registered User (Candidate, Recruiter, Administrator)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To authenticate valid users, establish role-based access to protected workspaces, and cleanly invalidate sessions upon departure.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Account Login</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Email address, password, optional two-factor one-time verification code (if 2FA is active).</li>
+<li><b>Output data:</b> Authenticated user session, role-scoped routing redirect (Candidate Dashboard, Recruiter Dashboard, or Admin Governance Console), or invalidated session state.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The system handles credential verification, authentication, and secure session persistence. When an account has two-factor authentication enabled, the system enforces a secondary verification challenge before issuing the session. If an account is locked by platform administration, authentication is blocked immediately.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features), BR-05 (A locked account must not be allowed to log in or access protected functions), BR-08 (When two-factor authentication is enabled for an account, authentication is not complete until the two-factor challenge is verified).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The user navigates to the Account Login screen and enters their email and password.</li>
+<li>The system verifies that the credentials are valid and confirms the account is not locked (BR-05).</li>
+<li>(If 2FA is enabled) The system prompts for the two-factor authentication code and verifies it (BR-08).</li>
+<li>The system establishes an authenticated session (BR-04) and redirects the user to their respective role dashboard.</li>
+<li>(Upon Logout) The authenticated user clicks the Logout action; the system invalidates the session and redirects to the Public Landing Page.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Invalid credentials: The system displays an authentication error without revealing whether the email or password was incorrect.</li>
+<li>Locked account: The system denies access and informs the user that the account has been suspended by platform administration (BR-05).</li>
+<li>Invalid 2FA code: The system notifies the user of an invalid verification code and permits retry within rate-limiting boundaries.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Account Login. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.4 Forgot Password & Credential Recovery</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An unauthenticated user clicks the "Forgot Password?" link on the Account Login screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function coordinates the self-service credential recovery process by validating the registered email address, issuing a single-use time-limited reset token, and providing a secure interface to establish a new password compliant with platform complexity standards.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Registered User</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To allow users who have forgotten their credentials to regain secure access to their accounts without administrative intervention.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Forgot Password Request, Password Reset Link Dispatched Notice, Set New Password</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Registered email address, single-use reset token, new password, new password confirmation.</li>
+<li><b>Output data:</b> Password reset notification email, verified reset authorization, updated password hash.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> In accordance with canonical specifications, password reset does not form an independent Use Case but represents the completion flow of the Forgot Password capability. The recovery token expires after a predefined security duration and is invalidated immediately upon first use.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-02 (An account password must be between 8 and 32 characters long), BR-03 (An account password must contain at least one lowercase letter, one uppercase letter, one number, and one special character), BR-06 (A user must verify their identity before resetting a forgotten password), BR-07 (A password reset token can only be used only once).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The user navigates to the Forgot Password Request screen and enters their account email address.</li>
+<li>The system checks if the email exists in the registry and generates a cryptographically secure, single-use reset token (BR-06).</li>
+<li>The system dispatches an email containing the reset link and displays the Password Reset Link Dispatched Notice.</li>
+<li>The user clicks the link from their email and arrives at the Set New Password screen.</li>
+<li>The user enters a new password conforming to complexity requirements and confirms it.</li>
+<li>The system verifies token validity, consumes the token so it cannot be reused (BR-07), updates the password (BR-02, BR-03), and confirms success.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Email not found: The system displays a generic confirmation message to prevent user enumeration attacks.</li>
+<li>Expired or previously consumed token: The system informs the user that the reset link is no longer valid (BR-07) and prompts them to request a new recovery link.</li>
+<li>New password does not meet complexity requirements: The system displays validation errors and requires correction.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Forgot Password Request, Password Reset Link Dispatched Notice, Set New Password. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.5 Profile Inspection & Update</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An authenticated user clicks on their user avatar or selects "Profile" from the top navigation header.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function presents the user's personal identity and contact details, and enables self-service editing of editable profile attributes such as display name, headline, phone number, bio, and avatar portrait.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Registered User (Candidate, Recruiter, Administrator)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To allow users to maintain up-to-date personal and professional identity information across the platform.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: User Profile</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Updated display name, phone number, professional title/headline, biographical summary, profile image upload.</li>
+<li><b>Output data:</b> Refreshed user profile record, persisted profile image asset, updated display in the application shell.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Users can only view and update their own personal profile records. Read-only fields include account creation timestamp, verified email address (managed through dedicated security workflows), and assigned platform role.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The user navigates to the User Profile screen (UC 5).</li>
+<li>The system displays current profile information, including name, email, role, and profile portrait.</li>
+<li>The user modifies editable fields (e.g., changes display name or uploads a new portrait) and clicks "Save Changes" (UC 6).</li>
+<li>The system validates the inputs, updates the profile in the user repository, and displays a success notification.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Invalid file format or oversized avatar image: The system rejects the upload with an informative validation message.</li>
+<li>Missing mandatory field: The system flags required fields that have been cleared and prevents submission.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: User Profile. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.6 Credential Security & Password Modification</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An authenticated user clicks the "Change Password" button within the Account Security & Password management settings.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function enables authenticated users to proactively change their account password by verifying their existing current password and providing a new password meeting all complexity criteria.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Registered User</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To allow users to maintain account hygiene, satisfy security rotation policies, or mitigate potential credential compromise.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Account Security & Password, Change Password Modal</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Current password, new password, new password confirmation.</li>
+<li><b>Output data:</b> Updated password credential hash, audit timestamp of password modification.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The system re-authenticates the user's current password before allowing the update. The new password cannot be identical to the current password and must comply strictly with length and character composition rules.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-02 (An account password must be between 8 and 32 characters long), BR-03 (An account password must contain at least one lowercase letter, one uppercase letter, one number, and one special character), BR-04 (A user must be authenticated before accessing registered-user features).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The user navigates to Account Security & Password and selects "Change Password".</li>
+<li>The Change Password Modal appears.</li>
+<li>The user inputs their current password, desired new password, and confirms the new password.</li>
+<li>The system validates the current password, verifies new password strength (BR-02, BR-03), and persists the new credential hash.</li>
+<li>The modal closes and a confirmation banner is displayed.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Incorrect current password: The system rejects the change with an authentication failure message.</li>
+<li>New password matches current password: The system prompts the user to select a distinct new password.</li>
+<li>New password violates complexity requirements: The system highlights failing criteria.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Account Security & Password, Change Password Modal. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.2.7 Two-Factor Authentication Management</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An authenticated user clicks "Set Up 2FA" or "Manage 2FA" in the Account Security & Password interface.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function manages the configuration of time-based one-time password (TOTP) two-factor authentication, generating a secret seed, rendering a QR code for authenticator application onboarding, and verifying a test code before activating multi-factor enforcement.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Registered User</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To provide enhanced account protection against unauthorized access through two-factor authentication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Account Security & Password, Two-Factor Authentication Setup Modal</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> TOTP secret registration request, 6-digit confirmation verification code.</li>
+<li><b>Output data:</b> Rendered TOTP QR code, secret key display, 2FA status flag (Enabled/Disabled), backup recovery codes.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> To prevent lockout, 2FA is not permanently activated until the user enters a valid 6-digit code generated from their newly paired authenticator application. Once active, all subsequent logins require passing the 2FA challenge.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features), BR-08 (When two-factor authentication is enabled for an account, authentication is not complete until the two-factor challenge is verified).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The user navigates to Account Security & Password and clicks "Enable Two-Factor Authentication".</li>
+<li>The Two-Factor Authentication Setup Modal opens, displaying a QR code and secret text key.</li>
+<li>The user scans the QR code with their TOTP authenticator application (e.g., Google Authenticator).</li>
+<li>The user inputs the 6-digit token displayed in their authenticator app and clicks "Verify and Enable".</li>
+<li>The system confirms code validity, marks 2FA as active on the user's account (BR-08), and presents one-time backup recovery codes.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Invalid verification code: The system displays a mismatch error and instructs the user to check their device time synchronization and re-enter the code.</li>
+<li>Modal cancellation before verification: The unconfirmed 2FA configuration is discarded; 2FA remains disabled.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Account Security & Password, Two-Factor Authentication Setup Modal. Visual layout to be produced during the dedicated UI design phase.</p>
+
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 13pt; font-weight: bold; color: #1F4D78; margin-top: 14pt; margin-bottom: 4pt;">3.3 Candidate Interview Practice Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;">This section defines the functional requirements for candidate practice interview operations, encompassing target job description ingestion and AI competency extraction, personal 3D avatar generation, simulation parameter configuration, hardware readiness testing, real-time 3D AI interview execution, session resumption, multi-dimensional diagnostic evaluation, and longitudinal history archiving.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.1 Target JD Ingestion & AI Extraction</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate clicks "Add Target JD" or "Import Job Description" from the Target JD Library.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function accepts raw job description text or document uploads from the Candidate, validates the content, triggers an asynchronous AI extraction process to parse structured competency requirements, and stages the draft for Candidate review.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To ingest real-world job postings into the platform so that tailored technical interview simulations can be dynamically structured.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Add Target JD</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Raw job description text (pasted text) or uploaded JD document (PDF), target job title.</li>
+<li><b>Output data:</b> Validated ingestion payload, staged draft JD record.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Candidates maintain complete private ownership over their imported Target JDs. The ingestion module ensures the provided content contains sufficient textual depth for competency parsing before submitting it to the LLM extraction pipeline.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-09 (Candidates can only access and manage their own Target JD for practice), BR-10 (A Candidate must review and confirm the AI-extracted Job Description before the system uses it to generate an Interview Blueprint), BR-13 (A Candidate Target JD for Practice is private Candidate data and is distinct from a Recruiter Job Posting).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate navigates to the Add Target JD screen.</li>
+<li>The Candidate inputs a job title, and pastes the raw job description text or uploads a JD file.</li>
+<li>The Candidate submits the form for extraction.</li>
+<li>The system validates text content, invokes AI extraction to identify core requirements, tech stacks, and seniority levels, and automatically routes the Candidate to the Review & Refine Extracted JD screen.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Empty or insufficiently informative JD text (under minimum length threshold): The system prompts the Candidate that the text is too brief to extract technical competencies.</li>
+<li>Unsupported file upload format: The system alerts the user and limits uploads to supported text/document formats.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Add Target JD. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.2 Review, Refine & Confirm Extracted Target JD</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> The AI extraction completes, or the Candidate opens an existing unconfirmed Target JD from their library.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function allows the Candidate to inspect the structured competencies extracted by AI, adjust technical domains, add custom refinement notes (such as excluding specific libraries or emphasizing architectural concepts), and formally approve the finalized JD for interview generation.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To ensure human verification of AI-extracted technical requirements and allow personalized customization before interview simulations are generated.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Review & Refine Extracted JD, Refinement Notes Panel</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Candidate edits to job title, role level, core skills, responsibilities, optional refinement notes (exclusions/emphases).</li>
+<li><b>Output data:</b> Approved Target JD record with finalized competency taxonomy, internal Interview Blueprint readiness trigger.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Human review is mandatory. Once the Candidate clicks "Approve and Confirm", the Target JD status transitions from Staged to Approved. System internal processes subsequently derive the internal Interview Blueprint (BR-11, BR-12) used by the interview simulator. Per ratified domain rules, the Interview Blueprint remains internal and hidden from the Candidate.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-09 (Candidates can only access and manage their own Target JD for practice), BR-10 (A Candidate must review and confirm the AI-extracted Job Description before the system uses it to generate an Interview Blueprint), BR-11 (Interview Blueprint generation must use the approved Extracted Job Description, interview configuration, and global Evaluation Criteria), BR-12 (The Interview Blueprint is an internal system artifact and must not be exposed to the Candidate as a visible screen, preview, or manual builder step), BR-13 (A Candidate Target JD for Practice is private Candidate data and is distinct from a Recruiter Job Posting).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate views the extracted job title, technical stack, core responsibilities, and competencies on the Review & Refine Extracted JD screen.</li>
+<li>(Optional) The Candidate opens the Refinement Notes Panel and adds specific guidance (e.g., "Exclude Angular; focus on React and micro-frontends").</li>
+<li>The Candidate edits any extracted fields if necessary to match their practice goals.</li>
+<li>The Candidate clicks "Approve and Confirm" (BR-10).</li>
+<li>The system persists the confirmed Target JD, triggers background preparation of the internal Interview Blueprint (BR-11, BR-12), and presents options to configure a practice session.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Candidate cancels the review: The system retains the draft Target JD in unconfirmed state; no internal blueprint is generated until approval is given.</li>
+<li>All competencies cleared: The system prevents approval if the competency taxonomy is completely emptied.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Review & Refine Extracted JD, Refinement Notes Panel. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.3 Target JD Library Management</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate navigates to the Target JD Library from the main navigation sidebar.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function provides a dedicated repository for Candidates to search, filter, inspect details of, and delete their privately imported Target Job Descriptions.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To organize and manage the Candidate's collection of practice target vacancies over time.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Target JD Library</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Search keywords (title, company, skills), status filter (Draft, Approved), JD identifier for deletion.</li>
+<li><b>Output data:</b> Filtered list of private Target JDs, detailed view of JD attributes, deletion confirmation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Candidates can only access their own private JDs. Deletion removes the Target JD record from the library, but in accordance with data integrity rules (BR-14), all previously completed interview sessions and performance reports linked to that JD remain fully intact and accessible in the Candidate's history.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-09 (Candidates can only access and manage their own Target JD for practice), BR-13 (A Candidate Target JD for Practice is private Candidate data and is distinct from a Recruiter Job Posting), BR-14 (Deleting a saved Target JD must not invalidate historical completed Interview Sessions or their attached Performance Reports).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate accesses the Target JD Library.</li>
+<li>The system renders the Candidate's saved Target JDs with search and filtering controls (UC 23).</li>
+<li>The Candidate searches by keyword or filters by status.</li>
+<li>The Candidate clicks a JD card to inspect its details (UC 24).</li>
+<li>(Optional) The Candidate clicks "Delete" on a JD card and confirms the prompt (UC 25).</li>
+<li>The system removes the JD from the active library while preserving any historical interview reports linked to it (BR-14).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Unauthorized access attempt: The system enforces user-scoping; requests for JDs belonging to other candidates are rejected (BR-09).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Target JD Library. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.4 Personal 3D Avatar Generation</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate clicks "Create 3D Avatar" or "Generate Personal Avatar" within the Personal 3D Avatar Studio.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function integrates an embedded Avaturn web experience allowing the Candidate to capture photos, preview and customize a personal 3D avatar, and hand off the generated GLB asset to RoleCue for conversion to VRM and private candidate storage.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To enable candidates to embody a realistic personal 3D avatar during interactive interview simulations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Personal 3D Avatar Studio, Avaturn Embedded Experience, Personal Avatar Confirmation & Preview</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Captured user photo, user hairstyle/clothing selections within Avaturn iframe, generated GLB export payload.</li>
+<li><b>Output data:</b> Processed and validated VRM avatar model, avatar metadata record, updated candidate avatar library.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> As ratified in architectural decisions, the personal avatar flow utilizes the free embedded Avaturn iframe rather than a paid Pro API. Avaturn handles image capture, photo quality checks, facial reconstruction, and GLB export. When Avaturn completes generation, RoleCue receives the GLB file, converts it into a standard VRM avatar model with facial blendshapes, and binds it strictly to the owning Candidate. If conversion fails, the avatar is not made available.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-18 (A Personal 3D Avatar generated from a Candidate's photo belongs to that Candidate and is private Candidate data), BR-53 (Photo capture, photo validation, avatar preview, customization, and GLB generation are handled by the embedded Avaturn experience), BR-54 (The Personal 3D Avatar generation flow must not depend on Avaturn Pro API orchestration), BR-55 (RoleCue may persist a newly generated Personal 3D Avatar only after receiving the completed GLB asset from the embedded Avaturn flow), BR-56 (If GLB-to-VRM conversion fails, the Personal 3D Avatar must not be marked as available for Candidate use), BR-57 (A Candidate-owned Personal 3D Avatar must only be accessible to its owning Candidate).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate navigates to the Personal 3D Avatar Studio and clicks "Generate Avatar".</li>
+<li>The system loads the Avaturn Embedded Experience within a secure iframe (BR-53, BR-54).</li>
+<li>The Candidate follows Avaturn's instructions to take or upload a front-facing selfie.</li>
+<li>Avaturn reconstructs the 3D head mesh and allows the Candidate to select clothing and hairstyles.</li>
+<li>The Candidate confirms the avatar, and Avaturn exports the final GLB asset.</li>
+<li>RoleCue captures the GLB payload (BR-55), converts it to VRM format, verifies facial blendshapes, and saves it to the Candidate's profile (BR-18, BR-57).</li>
+<li>The system redirects to the Personal Avatar Confirmation & Preview screen where the Candidate inspects the interactive 3D model.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Poor photo quality / face not recognized: Avaturn prompts the user within the iframe to re-capture under better lighting (BR-53).</li>
+<li>Conversion failure (corrupt GLB or invalid blendshapes): RoleCue detects the conversion failure (BR-56), discards the invalid asset, and notifies the Candidate to retry.</li>
+<li>Candidate closes the iframe before completing export: The session terminates cleanly without persisting an incomplete avatar.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Personal 3D Avatar Studio, Avaturn Embedded Experience, Personal Avatar Confirmation & Preview. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.5 Interview Session Configuration & Preflight Inspection</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate selects an approved Target JD (or applies to a Recruiter Job Posting) and clicks "Start Interview" or "Configure Practice Session".</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function configures the interview runtime parameters—including 3D interviewer avatar selection, provider voice selection, virtual room environment, and difficulty tier—and creates the formal Interview Session entity.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To customize the simulation environment for personal practice or initialize the standardized interview environment for job applications.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Candidate Dashboard, Configure Interview Session</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Target JD ID (or Job Posting ID), selected 3D interviewer model, selected Voice Profile, room/environment theme, interview difficulty.</li>
+<li><b>Output data:</b> Initialized Interview Session record in "Configured" state, interview preparation parameters.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> For Candidate Target JD practice, the Candidate has freedom to choose any available 3D interviewer persona, provider voice, virtual room, and practice difficulty (BR-16, BR-17, BR-59). For Recruiter Job Postings, the company interviewer model and voice profile are pre-locked by the Recruiter and cannot be overridden by the Candidate (BR-47, BR-48). The Candidate can preview the selected 3D interviewer avatar in real time before launching. The system verifies that the underlying JD is approved before creating the session (BR-15).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-11 (Interview Blueprint generation must use the approved Extracted Job Description, interview configuration, and global Evaluation Criteria), BR-12 (The Interview Blueprint is an internal system artifact), BR-15 (An Interview Session can only start only after the relevant Extracted Job Description is approved and confirmed), BR-16 (A Candidate can select only Voice Profiles currently made available by the system), BR-17 (A Candidate can select only 3D interviewer avatars currently made available by the system), BR-59 (For an interview based on a Candidate's own Target JD, the Candidate may choose any available interviewer persona, Voice Profile, room, and difficulty).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate selects an approved Target JD and clicks "Practice Interview".</li>
+<li>The system displays the Configure Interview Session screen.</li>
+<li>The Candidate selects an interviewer persona (previewing the 3D model and voice sample via UC 9), chooses a room theme, and sets difficulty (UC 13, BR-59).</li>
+<li>The Candidate clicks "Create Session" (UC 10).</li>
+<li>The system validates availability of the selected voice and avatar (BR-16, BR-17), creates the Interview Session record (BR-15), triggers background compilation of the internal blueprint (BR-11, BR-12), and routes the Candidate to the readiness check.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Attempting to start an interview with an unconfirmed JD: System blocks creation and redirects to review (BR-15).</li>
+<li>Selected voice profile deactivated or unavailable: System flags the item and prompts the Candidate to select an active voice profile.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Candidate Dashboard, Configure Interview Session. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.6 Audio & Hardware Readiness Check</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> The Candidate proceeds from session configuration toward the live interview room.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function performs a local preflight check of the Candidate's microphone, speaker/headphone output, and WebGL rendering capabilities, verifying hardware readiness before admitting the user into the real-time simulation.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To prevent technical disruptions during live interview simulations by ensuring audio capture, playback, and 3D rendering are functional.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Test Audio & Interview Readiness, Readiness Device Error Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Selected microphone device, speaker test playback trigger, user voice test sample, WebGL context status.</li>
+<li><b>Output data:</b> Audio input level metering, audio loopback playback confirmation, hardware readiness verification flag.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The interface captures a brief voice snippet, plays it back to the Candidate to confirm auditory clarity, checks microphone input gain levels, and verifies WebGL GPU acceleration for 3D avatar rendering. If any hardware prerequisite fails, admission to the live session is held.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-15 (An Interview Session can only start only after the relevant Extracted Job Description is approved and confirmed, and prerequisite readiness checks are satisfied).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate arrives at the Test Audio & Interview Readiness screen.</li>
+<li>The system requests browser microphone permissions; the Candidate grants access.</li>
+<li>The Candidate speaks into the microphone; the visual input meter responds dynamically.</li>
+<li>The Candidate clicks "Test Speaker"; the system plays an audio sample, and the Candidate confirms hearing it clearly.</li>
+<li>The system confirms WebGL 3D capability and enables the "Enter Interview Room" button.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Microphone permission denied or no audio device found: The Readiness Device Error Dialog appears with instructions on granting browser permissions and connecting an audio input.</li>
+<li>WebGL unsupported or disabled: The system warns the Candidate and prepares the 2D Waveform Fallback View for lower-end devices.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Test Audio & Interview Readiness, Readiness Device Error Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.7 Interactive 3D AI Interview Simulation</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> The Candidate passes the readiness preflight and clicks "Join Interview Room".</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function conducts the real-time technical interview simulation. It renders the 3D virtual interviewer avatar in the selected room environment, orchestrates spoken question delivery via text-to-speech with synchronized viseme lip-sync, captures Candidate speech via real-time speech-to-text, and allows the dynamic LLM runtime to evaluate answers and determine subsequent questions until session conclusion.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate, AI Virtual Interviewer (System)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To simulate an authentic technical interview experience with visual and auditory realism, allowing candidates to practice under realistic conditions.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Live 3D Interview Room, Interview Session Pause / Exit Modal, 2D Waveform Fallback View</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Candidate live microphone stream, pause/exit user actions.</li>
+<li><b>Output data:</b> Transcribed Candidate answer text, synthesized 3D interviewer speech audio, synchronized facial blendshape animation, dynamic question dialogue turns, completed transcript record.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The 3D interviewer avatar performs natural idle animations and viseme-driven lip-sync during speech. Candidate spoken answers are transcribed into text. At product level, the dialogue consists of generic Questions delivered sequentially (BR-58). The LLM runtime determines whether an answer is sufficient or requires further questioning before concluding the interview. If WebGL experiences GPU memory exhaustion or fails, the interface gracefully degrades to the 2D Waveform Fallback View without terminating the session.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-15 (An Interview Session can only start only after the relevant Extracted Job Description is approved and confirmed), BR-47 (A Candidate interviewing for a Recruiter Job Posting must use the 3D interviewer model specified by the Recruiter), BR-48 (A Candidate interviewing for a Recruiter Job Posting must use the Voice Profile specified by the Recruiter), BR-58 (An interview proceeds to evaluation when the interview engine determines that no further questions are required).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate enters the Live 3D Interview Room (UC 15).</li>
+<li>The 3D virtual interviewer welcomes the Candidate and delivers the first Question using synthesized speech with lip-sync.</li>
+<li>The Candidate speaks their answer; the system captures audio and transcribes the speech (UC 16).</li>
+<li>The system runtime analyzes the response and determines the next question turn.</li>
+<li>Steps 2–4 repeat dynamically across relevant technical competencies.</li>
+<li>When the interview engine determines that all required topics have been covered (BR-58), the interviewer announces the conclusion of the interview.</li>
+<li>The system transitions the session to "Evaluating" status and automatically routes the Candidate to the performance evaluation screen.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Candidate clicks "Pause / Exit": The Interview Session Pause / Exit Modal appears, allowing the Candidate to pause the session or exit cleanly.</li>
+<li>Hardware/WebGL crash: The system activates the 2D Waveform Fallback View, allowing the Candidate to continue the interview via audio only.</li>
+<li>Abrupt browser closure / disconnect: The session enters "Interrupted" state, awaiting resumption within the allowable timeout window (BR-19, BR-20).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Live 3D Interview Room, Interview Session Pause / Exit Modal, 2D Waveform Fallback View. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.8 Active Interview Session Resumption & Cleanup</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate re-opens an interrupted session from the Candidate Dashboard, or the background session handler detects an expired interrupted session.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function coordinates the stateful recovery of interrupted interview sessions, restoring prior dialogue turns and current question progress if the Candidate reconnects within the active window, or terminates and cleans up abandoned sessions exceeding the timeout threshold.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate (for resumption), System Handler (for abandonment termination)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To protect candidates from accidental disconnects while ensuring platform resources are cleaned up when sessions are abandoned.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Candidate Dashboard, Live 3D Interview Room</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Candidate reconnect request with session ID, or background cron trigger polling stale sessions.</li>
+<li><b>Output data:</b> Restored live interview context and dialogue state, or finalized "Abandoned" session status with resource cleanup.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> When a Candidate disconnects, the session state is preserved in an "Interrupted" status. The Candidate may resume the session from their dashboard as long as the session has not timed out (BR-19). If the Candidate remains disconnected for more than 15 minutes, the background System Handler automatically transitions the session to "Abandoned" status (BR-20, UC 57), releases allocated runtime resources, and closes the session.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-19 (A Candidate can only resume an interrupted Interview Session only while that session remains in an active or resumable state), BR-20 (If a Candidate leaves or remains disconnected from an Interview Session for more than 15 minutes, the system must terminate the session as abandoned).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>(Resumption - UC 17) A disconnected Candidate returns to the platform and logs in.</li>
+<li>The Candidate Dashboard displays an active "Resume Interview" banner for the interrupted session.</li>
+<li>The Candidate clicks "Resume Interview" within the 15-minute window.</li>
+<li>The system validates the session state (BR-19), restores previous conversational turns, and reconnects the Candidate to the Live 3D Interview Room at the exact question where interruption occurred.</li>
+<li>(System Abandonment Termination - UC 57) An interrupted session exceeds 15 minutes of continuous disconnection.</li>
+<li>The background System Handler identifies the stale session, marks it as "Abandoned" (BR-20), invalidates the live runtime token, and records the abandonment event.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Candidate attempts to resume after 15 minutes: The system informs the Candidate that the session has expired and cannot be resumed; the Candidate must initiate a new practice session (BR-20).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Candidate Dashboard, Live 3D Interview Room. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.9 Interview Performance Evaluation & Diagnostics</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An interview session finishes, or a Candidate selects a completed session from their Interview History.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function presents the multi-dimensional diagnostic evaluation generated for a completed interview, displaying overall and competency-level scores, turn-by-turn question critiques with strengths and improvement guidance, and prioritized improvement recommendations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To provide candidates with detailed actionable feedback and quantitative performance insights to accelerate skill development.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Interview Performance Report, Question Feedback, Improvement Recommendations</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Completed interview session transcript, session evaluation criteria, internal blueprint mapping.</li>
+<li><b>Output data:</b> Overall score, competency breakdown scores (e.g., technical depth, problem-solving, communication), question-by-question feedback with strengths and improvement areas, personalized learning recommendations.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Upon session completion, the automated evaluation pipeline analyzes Candidate transcripts against the session rubric. The resulting report consists of three dedicated diagnostic facets: high-level performance scoring, granular question feedback (critiquing individual candidate responses with strengths and improvement areas), and personalized improvement recommendations pointing to specific learning resources and practice areas.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-21 (Question-level feedback must be associated with the Interview Session in which the candidate answered), BR-22 (Performance Scores and Improvement Recommendations must be generated from the recorded responses and evaluation criteria of that specific session), BR-24 (Evaluation of a completed Interview Session must remain associated with the Blueprint and criteria active when the session was created).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Following interview completion, the system transitions to the Interview Performance Report screen.</li>
+<li>The Candidate inspects their overall score, radar competency breakdown, and performance summary (UC 19, BR-22).</li>
+<li>The Candidate switches to the Question Feedback tab/view to review individual turn critiques, strengths, weaknesses, and improvement guidance (UC 18, BR-21).</li>
+<li>The Candidate navigates to the Improvement Recommendations tab/view to inspect prioritized learning action items (UC 20, BR-22).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Evaluation pipeline still processing: The system displays a progress indicator and refreshes automatically when results are finalized.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Interview Performance Report, Question Feedback, Improvement Recommendations. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.3.10 Interview History Archive & Result Export</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate navigates to "Interview History" or clicks "Export Report" on an Interview Performance Report.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function provides a searchable chronological archive of all historical interview sessions completed by the Candidate, and allows exporting individual session results into downloadable standalone formats (e.g., PDF) for offline review or sharing.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To track longitudinal interview performance progress and provide portable, downloadable records of interview evaluations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Interview History, Export Report Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Search keywords, date range filters, score threshold filters, target JD/Job Posting filter, export options (format, include transcript flag).</li>
+<li><b>Output data:</b> Filtered list of historical interview session cards, compiled downloadable performance export document (PDF).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The Interview History screen displays all completed, evaluated, and abandoned sessions belonging to the Candidate. The export dialog compiles the performance score breakdown, feedback highlights, and question transcripts into an official branded document artifact.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-23 (An exported Interview Session Result must correspond to the selected stored session and reflect the exact stored scores and feedback without dynamic alteration).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate navigates to the Interview History screen.</li>
+<li>The system renders past interview sessions with completion dates, target titles, and overall scores (UC 21).</li>
+<li>The Candidate filters records by date or target company.</li>
+<li>The Candidate selects a session and clicks "Export Report".</li>
+<li>The Export Report Dialog appears; the Candidate selects export options (e.g., PDF format with question feedback included).</li>
+<li>The system generates the export document and triggers a client-side file download (UC 22, BR-23).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Export generation timeout: If the report compilation encounters a transient error, the system offers an immediate retry action.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Interview History, Export Report Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 13pt; font-weight: bold; color: #1F4D78; margin-top: 14pt; margin-bottom: 4pt;">3.4 Recruitment & Application Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;">This section defines the functional requirements for corporate recruitment and candidate job applications, covering job posting creation with mandatory 3D interviewer configuration, recruiter posting administration, candidate vacancy discovery, application submission with integrated interview gateway, candidate application tracking, recruiter application screening, and binary adjudication.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.1 Recruiter Job Posting Creation & AI Configuration</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Recruiter clicks "Create Job Posting" from the Recruiter Dashboard or My Job Postings Management screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function facilitates authoring a new corporate job opening, utilizing AI extraction from raw job description text to parse requirements, and configuring mandatory interview parameters including the company's designated 3D virtual interviewer persona and Voice Profile before submitting for platform moderation.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To establish standardized corporate job openings with mandatory AI interview criteria tailored to company hiring standards.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Create Job Posting, AI Extraction Review & Confirmation, Configure Company 3D Interviewer & Voice</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Job opening title, department, employment type, location, raw job description text, confirmed competency taxonomy, selected company 3D interviewer avatar, selected provider Voice Profile.</li>
+<li><b>Output data:</b> Staged corporate Job Posting record with "Pending Moderation" status, configured interview specifications.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The Recruiter enters raw job description details, which the AI extraction service parses into structured competencies. The Recruiter reviews and confirms the extracted data (BR-44). Next, the Recruiter selects the specific 3D interviewer avatar and Voice Profile that will conduct all candidate screening interviews for this role (BR-45). Upon final submission, the posting is placed in the moderation queue for Administrator approval (BR-46).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-44 (A Recruiter must review and confirm the extracted Job Posting information before submitting it for moderation), BR-45 (A Recruiter must select an available company 3D interviewer model and an available Voice Profile for a Job Posting before submitting it for moderation), BR-46 (A Job Posting must not be publicly available while its moderation status is pending or rejected).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Recruiter navigates to the Create Job Posting screen and inputs role details and raw JD text.</li>
+<li>The system performs AI extraction and routes the Recruiter to the AI Extraction Review & Confirmation screen.</li>
+<li>The Recruiter reviews and approves the extracted skills, responsibilities, and qualifications (BR-44).</li>
+<li>On the Configure Company 3D Interviewer & Voice screen, the Recruiter selects the designated company interviewer avatar and Voice Profile (BR-45).</li>
+<li>The Recruiter clicks "Submit for Approval".</li>
+<li>The system records the Job Posting in "Pending Moderation" status and submits it to the platform governance moderation queue (BR-46).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Submission without selecting interviewer avatar or voice: The system prevents submission and highlights missing selections (BR-45).</li>
+<li>Missing mandatory job details: The system validates required text fields before extraction.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Create Job Posting, AI Extraction Review & Confirmation, Configure Company 3D Interviewer & Voice. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.2 Recruiter Job Posting Administration</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Recruiter navigates to "My Job Postings" from the navigation header or selects an action on a specific posting.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function provides administrative management of the Recruiter's owned job postings, allowing searching, filtering by publication status, viewing details, updating posting content, and archiving inactive vacancies.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To maintain and manage the lifecycle of corporate job vacancies published by the recruiting organization.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Recruiter Dashboard, My Job Postings Management, Edit Job Posting, Archive Job Posting Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Filter criteria (Status: Pending, Approved, Archived; Date), search query, modified posting fields, archive confirmation.</li>
+<li><b>Output data:</b> Filtered list of owned job postings, detailed posting record, updated posting state, archived status timestamp.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Recruiters are strictly restricted to managing job postings owned by their account (BR-29, BR-30, BR-31). When a posting is archived, it is immediately withdrawn from the public Job Board, preventing new candidate applications (BR-32), while all existing received applications and attached interview results remain accessible for historical review.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-29 (A Recruiter can only view Job Postings they own within recruiter-management functions), BR-30 (A Recruiter can only update Job Postings they own), BR-31 (A Recruiter can only archive Job Postings they own), BR-32 (Candidates must not be allowed to apply to archived Job Postings).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Recruiter opens the My Job Postings Management screen.</li>
+<li>The system lists all postings owned by the Recruiter with active application counts and status badges (UC 33, UC 35, BR-29).</li>
+<li>The Recruiter selects a posting and clicks "Edit" to modify vacancy details on the Edit Job Posting screen (UC 36, BR-30).</li>
+<li>The Recruiter saves changes; the system updates the posting record.</li>
+<li>(Optional) The Recruiter selects "Archive", confirms the Archive Job Posting Dialog prompt, and the system transitions the posting to "Archived" status (UC 37, BR-31, BR-32).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Attempt to edit or archive a posting owned by another user: Access is forbidden with an authorization violation error (BR-29, BR-30, BR-31).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Recruiter Dashboard, My Job Postings Management, Edit Job Posting, Archive Job Posting Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.3 Candidate Job Board Discovery & Vacancy Inspection</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate navigates to the "Job Board" from the top navigation bar.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function enables candidates to browse, search, and filter approved and active corporate job vacancies, and view comprehensive job details, company descriptions, and interview requirements.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To discover verified employment opportunities and understand mandatory screening interview parameters before applying.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Job Board (Browse Postings), Job Posting Detail</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Search keywords (job title, skill tags, company), department/location filters, selected Job Posting ID.</li>
+<li><b>Output data:</b> Filtered grid of active corporate job postings, comprehensive Job Posting Detail view.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> The Job Board only exposes Job Postings that have received formal Administrator moderation approval and remain in active status (BR-33, BR-46). Archived or pending postings are excluded from search results. The detailed view displays role requirements, company info, and informs the Candidate that a standardized AI screening interview is required upon submission.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-32 (Candidates must not be allowed to apply to archived Job Postings), BR-33 (Only approved and active Job Postings can be publicly available for Candidate applications), BR-46 (A Job Posting must not be publicly available while its moderation status is pending or rejected).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate navigates to the Job Board (Browse Postings) screen.</li>
+<li>The system queries and displays approved and active job postings (UC 26, UC 27, BR-33).</li>
+<li>The Candidate filters by keyword or skill tag.</li>
+<li>The Candidate clicks a job card to open the Job Posting Detail screen (UC 28).</li>
+<li>The system displays full vacancy responsibilities, requirements, and mandatory interview prerequisites.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Candidate navigates via direct URL to an archived or pending posting: The system prevents viewing and displays an "Opportunity Unavailable" notice (BR-32, BR-33, BR-46).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Job Board (Browse Postings), Job Posting Detail. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.4 Job Application Submission & Mandatory Interview Gateway</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate clicks "Apply Now" on the Job Posting Detail screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function manages the multi-step job application process: capturing the Candidate's CV/resume, verifying application uniqueness, launching the mandatory company-configured AI technical interview, and attaching the finalized interview result directly to the application dossier upon completion.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To provide an objective screening gateway where candidate resumes are paired with standardized AI interview assessments for recruiter review.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Job Posting Detail, Job Application & CV Upload, Application Submitted Confirmation, Configure Interview Session, Live 3D Interview Room</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Job Posting ID, uploaded CV document (PDF), contact details, screening interview responses.</li>
+<li><b>Output data:</b> Staged application record, initialized company interview session, completed application dossier with attached Interview Result.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> A Candidate may submit at most one application per Job Posting (BR-25). Uploading a CV is mandatory before proceeding (BR-49). In contrast to practice interviews, the Candidate cannot alter the interviewer avatar or voice; the interview automatically enforces the Recruiter's designated persona and voice (BR-47, BR-48). The application is held in a "Pending Interview" state and is not released to the Recruiter until the interview is completed (BR-50). Upon conclusion, the system automatically links the evaluation report to the application (BR-51, BR-52).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-25 (A Candidate can only submit at most one Application for the same Job Posting), BR-26 (A Candidate must provide all required Application information before submitting an Application), BR-47 (A Candidate interviewing for a Recruiter Job Posting must use the 3D interviewer model specified by the Recruiter), BR-48 (A Candidate interviewing for a Recruiter Job Posting must use the Voice Profile specified by the Recruiter), BR-49 (A Candidate must upload the required CV or resume information before proceeding to the required interview), BR-50 (A completed Application must not be made available to the Recruiter until the Candidate finishes the required interview), BR-51 (The Interview Result attached to an Application must belong to the same Candidate and correspond to the required Job Posting interview), BR-52 (When the required interview is completed, the system must attach its Interview Result to the pending Application).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate clicks "Apply Now" on an active Job Posting Detail screen.</li>
+<li>The system displays the Job Application & CV Upload screen.</li>
+<li>The Candidate uploads their CV, fills required contact fields (BR-26, BR-49), and submits.</li>
+<li>The system verifies no prior application exists for this posting from this Candidate (BR-25), stages the application, and transitions directly to the company-configured interview gateway.</li>
+<li>The interview launches using the Recruiter's mandatory 3D avatar and Voice Profile (BR-47, BR-48).</li>
+<li>The Candidate completes the live interview simulation.</li>
+<li>Upon interview completion, the evaluation engine scores the session and automatically attaches the Interview Result to the application (BR-51, BR-52).</li>
+<li>The system updates the application status to "Submitted" (making it available to the Recruiter per BR-50) and renders the Application Submitted Confirmation screen.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Duplicate application: If the Candidate has already applied to this posting, the system alerts the Candidate (BR-25) and prevents re-submission.</li>
+<li>Candidate abandons the interview before completion: The application remains in "Incomplete / Pending Interview" state and is hidden from the Recruiter (BR-50).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Job Posting Detail, Job Application & CV Upload, Application Submitted Confirmation, Configure Interview Session, Live 3D Interview Room. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.5 Candidate Application Tracking & Dossier Viewer</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate selects "My Applications" from the user navigation menu.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function allows candidates to track the status of all submitted job applications (e.g., Pending Review, Approved, Rejected) and inspect their submitted application dossier, including their uploaded CV and attached interview performance summary.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To provide transparency regarding application progress and allow candidates to review their submitted materials.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: My Applications Tracking, Application Dossier & Result Viewer</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Candidate ID, selected Application ID.</li>
+<li><b>Output data:</b> List of submitted applications with status badges, detailed application dossier view including attached interview evaluation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Candidates can only view their own applications (BR-27). The interface avoids multi-stage pipeline jargon, presenting clear binary lifecycle statuses (Pending, Approved, or Rejected). Candidates can inspect their attached interview score to understand how they performed on the screening assessment.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-27 (A Candidate can only view their own submitted Application details and statuses).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate navigates to the My Applications Tracking screen.</li>
+<li>The system lists all applications submitted by the Candidate along with job titles, companies, submission dates, and current statuses (UC 31, BR-27).</li>
+<li>The Candidate clicks an application to view details.</li>
+<li>The Application Dossier & Result Viewer screen opens, displaying the uploaded CV, submission timestamp, and the attached Interview Result summary (UC 30).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Unauthorized URL access to another candidate's application: Access is forbidden with a permission error (BR-27).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: My Applications Tracking, Application Dossier & Result Viewer. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.6 Recruiter Application Screening & Attached Result Inspection</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Recruiter navigates to "Received Applications" or selects an application from My Job Postings.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function allows recruiters to search, filter, and inspect completed candidate applications submitted to their owned job postings, providing access to candidate CVs and the attached standardized AI interview results.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To enable recruiters to screen applicants efficiently using objective AI interview scores alongside traditional resumes.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Received Applications List, Application Detail & Review, Attached Interview Result Viewer</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Job Posting filter, candidate name search, score threshold filter, selected Application ID.</li>
+<li><b>Output data:</b> Filtered list of candidate applications, detailed candidate dossier, rendered attached interview report.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Recruiters are strictly limited to reviewing applications submitted to job postings owned by their account (BR-28). Applications whose mandatory interviews were abandoned or remain incomplete are excluded from the list (BR-50). The Recruiter can inspect the full candidate CV and view the attached Interview Result, including competency scores and turn-by-turn critiques (BR-51).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-28 (A Recruiter can only view Applications when they were submitted to Job Postings owned by that Recruiter), BR-50 (A completed Application must not be made available to the Recruiter until the Candidate finishes the required interview), BR-51 (The Interview Result attached to an Application must belong to the same Candidate and correspond to the required Job Posting interview).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Recruiter navigates to the Received Applications List screen.</li>
+<li>The system renders submitted applications for the Recruiter's postings, displaying candidate names, application dates, and overall interview scores (UC 38, BR-28, BR-50).</li>
+<li>The Recruiter filters by job opening or minimum interview score.</li>
+<li>The Recruiter clicks an applicant row to open Application Detail & Review (UC 39).</li>
+<li>The Recruiter reviews the Candidate's CV and opens the Attached Interview Result Viewer to inspect detailed performance metrics (BR-51).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Attempt to view an application for another company's posting: The system rejects the request with an access denial (BR-28).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Received Applications List, Application Detail & Review, Attached Interview Result Viewer. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.4.7 Recruiter Definitive Binary Adjudication</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Recruiter clicks "Approve" or "Reject" within the Application Detail & Review interface.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function records the Recruiter's definitive hiring decision on a completed candidate application, updating the application status to Approved or Rejected and capturing optional decision feedback.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Recruiter</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To conclude the screening review process with a clear, definitive adjudication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Application Detail & Review, Application Adjudication Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Application ID, decision action (Approve or Reject), optional recruiter decision notes.</li>
+<li><b>Output data:</b> Updated application status (Approved / Rejected), adjudication timestamp, notification event dispatched to the Candidate.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> In strict accordance with platform scope, recruitment adjudication is binary: Approve or Reject. Complex multi-stage applicant tracking (such as scheduling multi-round live interviews, offer letters, or onboarding workflows) is excluded. The decision updates the application status visible to the Candidate and seals the application record.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-34 (A Recruiter can only approve or reject Applications submitted to Job Postings owned by that Recruiter).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>While reviewing an application on the Application Detail & Review screen, the Recruiter decides on the applicant.</li>
+<li>The Recruiter clicks "Approve" or "Reject".</li>
+<li>The Application Adjudication Dialog prompts for confirmation and optional notes.</li>
+<li>The Recruiter confirms the decision.</li>
+<li>The system records the status as "Approved" or "Rejected" (BR-34), logs the adjudication timestamp, updates the Candidate's tracking dashboard, and locks the application.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Attempt to adjudicate an application belonging to an unowned job posting: Request is rejected (BR-34).</li>
+<li>Attempting to re-adjudicate an already finalized application: System indicates the application status is final.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Application Detail & Review, Application Adjudication Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 13pt; font-weight: bold; color: #1F4D78; margin-top: 14pt; margin-bottom: 4pt;">3.5 Platform Administration & Governance</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;">This section defines the administrative functions governing platform integrity, security, and quality, encompassing global user account oversight and locking, job posting content moderation, platform-wide interview session audit tracking, AI behavior prompt configuration, evaluation rubric calibration, and provider voice profile catalog curation.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.5.1 User Account Governance & Security Locking</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator navigates to the Account Governance section of the Admin Governance Console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function provides administrative oversight of all registered platform accounts across roles (Candidate, Recruiter, Administrator), enabling filtering by status and role, inspection of account details, and execution of security administrative actions to lock or unlock accounts.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To enforce platform terms of service, protect system security, and suspend compromised or malicious accounts.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Admin Governance Console, Account Governance (User List), Account Detail & Lock/Unlock</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Account filter criteria (role, status, registration date), search keyword (name, email), target Account ID, lock/unlock command with administrative reason.</li>
+<li><b>Output data:</b> Filtered list of registered user accounts, detailed account dossier, updated account status flag (Active / Locked), security audit log entry.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Only users holding the Administrator role can access this capability (BR-35). When an account is locked, The system immediately rejects any subsequent authentication attempts, and active sessions are terminated (BR-05). Administrators can subsequently unlock an account after verification.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-05 (A locked account must not be allowed to log in or access protected functions), BR-35 (Only an Administrator can lock or unlock another user's account).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator accesses the Admin Governance Console and opens Account Governance (User List).</li>
+<li>The system renders the registered accounts table with search, role filters, and status indicators (UC 41).</li>
+<li>The Administrator selects an account and navigates to Account Detail & Lock/Unlock.</li>
+<li>The Administrator clicks "Lock Account", enters a mandatory administrative rationale, and confirms.</li>
+<li>The system updates the account status to "Locked" (BR-05, BR-35), terminates active sessions, and logs the security audit event.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Non-admin access attempt: The system enforces strict role-based access control and denies entry.</li>
+<li>Administrator attempts to lock their own active administrator account: The system prohibits self-lockout.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Admin Governance Console, Account Governance (User List), Account Detail & Lock/Unlock. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.5.2 Job Posting Moderation & Platform Adjudication</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator navigates to the Job Posting Moderation Queue.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function provides content moderation oversight for recruiter-submitted job openings, allowing administrators to inspect vacancy details, AI competency models, and company interviewer configurations, and record formal approval or rejection decisions before publication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To verify that all job openings published on the platform meet professional quality, compliance, and non-discrimination standards.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Job Posting Moderation Queue, Job Posting Review & Approval, Moderation Decision Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Moderation status filter (Pending, Approved, Rejected), Job Posting ID, moderation decision (Approve/Reject), feedback notes.</li>
+<li><b>Output data:</b> Filtered moderation queue, comprehensive vacancy review view, updated Job Posting publication status, moderation notification to Recruiter.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> When a Recruiter submits a job opening, it enters the queue in "Pending Moderation" status. The posting cannot be viewed by candidates or applied to until an Administrator approves it (BR-36, BR-46). If rejected, the Administrator may provide explanatory feedback notes, allowing the Recruiter to revise and re-submit.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-36 (Only an Administrator can approve or reject Job Postings for platform moderation), BR-46 (A Job Posting must not be publicly available while its moderation status is pending or rejected).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator opens the Job Posting Moderation Queue.</li>
+<li>The system displays pending recruiter job submissions (UC 43).</li>
+<li>The Administrator clicks a submission to open the Job Posting Review & Approval screen.</li>
+<li>The Administrator reviews the job description text, competency taxonomy, and selected interviewer avatar/voice.</li>
+<li>The Administrator clicks "Approve", opens the Moderation Decision Dialog, and confirms (UC 44).</li>
+<li>The system marks the posting as "Approved" (BR-36), publishes it to the Candidate Job Board (BR-46), and notifies the Recruiter.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Rejection: The Administrator may enter optional explanatory notes before confirming rejection.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Job Posting Moderation Queue, Job Posting Review & Approval, Moderation Decision Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.5.3 Platform Interview Session Governance & Audit</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator navigates to "Interview Sessions Oversight" within the governance console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function provides platform-wide audit visibility into all historical and active interview sessions across all users, enabling searching, filtering by date and outcome, and inspecting full session execution details including transcript turns and rubric evaluations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To monitor platform simulation quality, investigate technical or scoring anomalies, and audit system integrity.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Interview Sessions Oversight, Interview Session Detail</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Filter criteria (User ID, date range, session state: Completed/Abandoned/Evaluating, overall score range), selected Session ID.</li>
+<li><b>Output data:</b> Filtered list of platform interview sessions, comprehensive session audit dossier (blueprint reference, timestamps, transcript turns, score vectors).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Administrators possess read-only audit access across all candidate practice sessions and recruitment screening sessions. The audit view binds the session to the exact internal Blueprint and evaluation criteria version active at session execution time (BR-24).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-24 (Evaluation of a completed Interview Session must remain associated with the Blueprint and criteria active when the session was created).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator navigates to Interview Sessions Oversight.</li>
+<li>The system renders the global interview sessions ledger with comprehensive search and filtering controls (UC 50).</li>
+<li>The Administrator filters by date range or session status.</li>
+<li>The Administrator clicks a session row to inspect its full execution dossier on the Interview Session Detail screen (UC 51).</li>
+<li>The system displays dialogue transcripts, turn timings, avatar and voice metadata, and evaluation scoring breakdowns (BR-24).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Session ID not found: System returns an error and redirects to the sessions list.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Interview Sessions Oversight, Interview Session Detail. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.5.4 AI Behaviour & Evaluation Criteria Calibration</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator navigates to "AI Behaviour Management" or "Evaluation Criteria Calibration" within the Interview Feature Configuration module.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function enables administrators to calibrate global AI interviewer behavioral prompts, configure interview dialogue constraints, and edit the global evaluation rubrics and scoring weights used to assess candidate technical competencies.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To fine-tune the conversational realism of the AI interviewer and maintain rigorous, standardized competency assessment rubrics across the platform.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Interview Feature Configuration, AI Behaviour Management, Prompt Template Editor Drawer, Evaluation Criteria Calibration, Rubric Template Editor Drawer</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Global behavioral prompt templates, dialogue turn limits, pacing parameters, evaluation rubric dimensions, scoring weight distributions.</li>
+<li><b>Output data:</b> Versioned prompt template configurations, updated global evaluation rubric definitions, calibration audit log.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Only Administrators can modify evaluation rubrics and AI behavior prompts (BR-37, BR-38). Changes take effect for newly initiated interview sessions while preserving historical consistency for completed sessions. The Prompt Template Editor Drawer allows adjusting interviewer tone and follow-up strictness, while the Rubric Template Editor Drawer allows calibrating criteria weighting (e.g., technical correctness, architecture design, clarity).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-37 (Only an Administrator can edit global Evaluation Criteria), BR-38 (Only an Administrator can manage platform AI Behaviour and interview-feature configurations).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator accesses AI Behaviour Management and opens the Prompt Template Editor Drawer (UC 46).</li>
+<li>The Administrator adjusts interviewer conversational behavior instructions and saves changes.</li>
+<li>The Administrator opens Evaluation Criteria Calibration and launches the Rubric Template Editor Drawer (UC 45).</li>
+<li>The Administrator updates competency weighting parameters and confirms validation checks.</li>
+<li>The system saves the calibrated rubric version (BR-37, BR-38) and applies it to subsequent interview sessions.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Scoring weights do not sum to 100%: The system flags the validation discrepancy and prevents saving until weights are balanced.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Interview Feature Configuration, AI Behaviour Management, Prompt Template Editor Drawer, Evaluation Criteria Calibration, Rubric Template Editor Drawer. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.5.5 Provider Voice Profile Catalog Management</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator navigates to the Voice Profile Catalog in the governance console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function manages the catalog of available text-to-speech voice profiles by fetching external voice assets from the connected provider (e.g., ElevenLabs), cataloging voice metadata (gender, accent, language), and deprecating or removing outdated voice profiles.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator, External TTS Provider (ElevenLabs)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To curate a high-quality selection of realistic voices available for candidate practice and recruiter job opening configurations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Voice Profile Catalog, Fetch Voice Profiles Modal, Delete Voice Profile Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Fetch provider trigger, provider API synchronization parameters, Voice Profile ID selected for deletion/deactivation.</li>
+<li><b>Output data:</b> Synchronized voice catalog list, updated voice metadata records, deletion confirmation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Administrators manage provider-sourced Voice Profiles (BR-39). In accordance with ratified product scope, Administrators do NOT manage candidate 3D avatars or virtual room backgrounds (BR-40). Fetching voices queries the external TTS provider and registers available voice IDs. Deleting a voice profile marks it as unavailable for future sessions while preserving historical references in completed interview logs.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-39 (Only an Administrator can fetch, view, or delete provider-sourced Voice Profiles), BR-40 (Administrators must not manage Candidate Personal 3D Avatar assets or the platform 3D background catalog).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator navigates to the Voice Profile Catalog.</li>
+<li>The system displays all registered voice profiles with name, provider ID, accent, and sample audio playback (UC 47).</li>
+<li>The Administrator clicks "Fetch Voice Profiles", opening the Fetch Voice Profiles Modal (UC 48).</li>
+<li>The system queries the external TTS provider API, identifies newly available voices, and synchronizes the catalog.</li>
+<li>(Optional) The Administrator selects an obsolete voice profile, clicks "Delete", and confirms via the Delete Voice Profile Dialog (UC 49).</li>
+<li>The system removes or deactivates the voice profile (BR-39).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Provider API connection timeout: The system displays a connectivity alert and retains the existing voice catalog without corruption.</li>
+<li>Attempting to delete a voice currently configured on an active published job posting: The system warns the Administrator and requires reassignment or soft-deprecation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Voice Profile Catalog, Fetch Voice Profiles Modal, Delete Voice Profile Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 13pt; font-weight: bold; color: #1F4D78; margin-top: 14pt; margin-bottom: 4pt;">3.6 Membership & Payment Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;">This section defines the functional requirements for candidate subscription billing, secure third-party payment gateway checkout, financial transaction audit ledgering, platform revenue analytics, and administrative subscription tier pricing governance.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.6.1 Candidate Membership Subscription & Cancellation</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> A Candidate clicks "Subscribe Membership" or "Manage Subscription" on the Membership & Billing screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function manages the Candidate membership subscription lifecycle, directing the user to a secure payment gateway for checkout, activating paid Membership benefits upon successful payment confirmation, and processing voluntary cancellation requests.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Candidate, External Payment Gateway</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To provide candidates with access to paid platform features through secure subscription transactions.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Membership & Billing, Payment Gateway Checkout Redirect, Unsubscribe Confirmation Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Selected Membership plan, billing cycle, payment gateway callback payload, cancellation confirmation.</li>
+<li><b>Output data:</b> Initialized checkout session URL, updated membership status (Active / Inactive / Canceled), billing renewal date.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> In alignment with ratified domain decisions, RoleCue operates strictly on a recurring subscription membership model. Paid membership benefits are strictly activated only after the payment gateway confirms successful transaction completion (BR-42). If a payment is pending or fails, benefits are not granted (BR-43). When a Candidate cancels their subscription, benefits remain active until the end of the paid billing period.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-42 (A paid Membership state must be activated or updated only after the associated payment transaction succeeds), BR-43 (A failed or pending payment must not grant paid Membership benefits, and the same payment attempt cannot activate benefits more than once).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Candidate navigates to the Membership & Billing screen and selects a subscription plan.</li>
+<li>The system initializes a transaction record and redirects the Candidate via the Payment Gateway Checkout Redirect screen to the external payment gateway.</li>
+<li>The Candidate completes payment authorization on the secure provider portal.</li>
+<li>The payment gateway returns a verified success callback to RoleCue.</li>
+<li>The system confirms the transaction, activates the paid Membership state on the Candidate's account (BR-42), and updates the billing dashboard.</li>
+<li>(Cancellation) An active subscriber clicks "Cancel Subscription" on the Membership & Billing screen.</li>
+<li>The Unsubscribe Confirmation Dialog appears, outlining benefit expiration details at the end of the billing term.</li>
+<li>The Candidate confirms cancellation; the system updates the renewal status, preventing future renewals while maintaining access until period end.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Payment declined or canceled by user: The payment gateway returns a failure/cancel callback; the system leaves the account in the inactive membership state (BR-43) and displays a payment failed message.</li>
+<li>Duplicate callback / replay: The system detects that the transaction has already been settled and ignores redundant activations (BR-43).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Membership & Billing, Payment Gateway Checkout Redirect, Unsubscribe Confirmation Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.6.2 Financial Transactions Audit & Revenue Reporting</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator navigates to "Payment Transactions Ledger" or "Revenue Report Generator", or a Candidate views their personal payment history.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function maintains an immutable audit ledger of all platform membership payment transactions, allows searching and filtering transactions by date and status, and generates aggregated financial revenue reports.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator (for global ledger and revenue reports), Candidate (for personal transaction history)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To ensure financial transparency, audit payment gateway reconciliation, and analyze recurring platform revenue.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Payment Transactions Ledger, Revenue Report Generator, Payment Transaction History</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Date range filters, transaction status filters (Success, Failed, Refunded), report grouping parameters (Monthly, Quarterly).</li>
+<li><b>Output data:</b> Filtered transaction ledger table, aggregated revenue figures, exportable revenue summary reports.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Administrators have access to view all payment transactions across the platform and generate executive revenue summaries (BR-41). Candidates can view their own personal historical transactions via Payment Transaction History. All transaction records are read-only and reconciled against external gateway reference identifiers.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-41 (Only Administrators can update Membership pricing and view platform Payment Transactions or generate Revenue Reports).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator navigates to the Payment Transactions Ledger in the governance console.</li>
+<li>The system renders all platform payment transactions with user email, gateway transaction ID, amount, and status (UC 52, BR-41).</li>
+<li>The Administrator filters records by date range or transaction status.</li>
+<li>The Administrator opens the Revenue Report Generator (UC 53).</li>
+<li>The Administrator selects reporting parameters (e.g., Monthly revenue breakdown) and clicks "Generate Report".</li>
+<li>The system calculates total gross revenue, transaction counts, and churn rates, displaying the interactive summary with export options.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Non-admin user attempts to access administrative revenue reports: Access is denied (BR-41).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Payment Transactions Ledger, Revenue Report Generator, Payment Transaction History. Visual layout to be produced during the dedicated UI design phase.</p>
+<h4 style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; font-weight: bold; color: #1F4D78; margin-top: 10pt; margin-bottom: 2pt;">3.6.3 Membership Pricing Governance</h4>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function trigger:</b> An Administrator clicks "Update Pricing" on the membership configuration view within the governance console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function description:</b> This function allows administrators to update the subscription fee and billing terms for platform membership tiers, establishing new baseline pricing for upcoming subscriber sign-ups.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Purpose:</b> To manage platform commercial packaging and adjust subscription price points in accordance with business strategy.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Interface:</b> Web: Membership & Billing, Update Membership Price Modal</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li><b>Input data:</b> Membership plan ID, new subscription price, effective currency, administrative confirmation.</li>
+<li><b>Output data:</b> Updated membership pricing schedule, pricing audit log record.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Function details:</b> Only Administrators possess the authority to modify membership prices (BR-41). Updating a plan's price applies to new subscription checkouts in accordance with platform policy.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Business rule:</b> BR-41 (Only Administrators can update Membership pricing and view platform Payment Transactions or generate Revenue Reports).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>The Administrator opens the membership configuration panel and selects "Update Membership Price".</li>
+<li>The Update Membership Price Modal opens, displaying current Membership pricing.</li>
+<li>The Administrator enters the new subscription fee and clicks "Save Changes".</li>
+<li>The system verifies administrator authorization (BR-41), validates that the price is a positive monetary value, and persists the new price.</li>
+<li>The updated price is immediately reflected in the checkout flow.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000; font-weight: normal;">
+<li>Invalid or negative price input: The system rejects the value and prompts for a valid numerical price.</li>
+<li>Unauthorized user attempt: Access blocked with permission violation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000; font-weight: normal;"><b>Screen layout:</b> Screen Layout Reference: Membership & Billing, Update Membership Price Modal. Visual layout to be produced during the dedicated UI design phase.</p>
+

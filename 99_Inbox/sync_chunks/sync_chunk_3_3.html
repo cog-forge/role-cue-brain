@@ -1,0 +1,275 @@
+<h2 style="font-family: Calibri, Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #2E74B5; margin-top: 16pt; margin-bottom: 4pt;">3.3 Candidate Interview Practice Management</h2>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;">This section defines the functional requirements for candidate practice interview operations, encompassing target job description ingestion and AI competency extraction, personal 3D avatar generation, simulation parameter configuration, hardware readiness testing, real-time 3D AI interview execution, session resumption, multi-dimensional diagnostic evaluation, and longitudinal history archiving.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.1 Target JD Ingestion & AI Extraction</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate clicks "Add Target JD" or "Import Job Description" from the Target JD Library.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function accepts raw job description text or document uploads from the Candidate, validates the content, triggers an asynchronous AI extraction process to parse structured competency requirements, and stages the draft for Candidate review.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To ingest real-world job postings into the platform so that tailored technical interview simulations can be dynamically structured.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Add Target JD</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Raw job description text (pasted text) or uploaded JD document (PDF/DOCX), target job title, company name.</li>
+<li><b>Output data:</b> Validated ingestion payload, queued AI extraction task, staged draft JD record.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Candidates maintain complete private ownership over their imported Target JDs. The ingestion module ensures the provided content contains sufficient textual depth for competency parsing before submitting it to the LLM extraction pipeline.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-09 (Candidates can only access and manage their own Target JD for practice), BR-10 (A Candidate must review and confirm the AI-extracted Job Description before the system uses it to generate an Interview Blueprint), BR-13 (A Candidate Target JD for Practice is private Candidate data and is distinct from a Recruiter Job Posting).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate navigates to the Add Target JD screen.</li>
+<li>The Candidate inputs a job title, target company, and pastes the raw job description text or uploads a JD file.</li>
+<li>The Candidate submits the form for extraction.</li>
+<li>The system validates text content, invokes AI extraction to identify core requirements, tech stacks, and seniority levels, and automatically routes the Candidate to the Review & Refine Extracted JD screen.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Empty or insufficiently informative JD text (under minimum length threshold): The system prompts the Candidate that the text is too brief to extract technical competencies.</li>
+<li>Unsupported file upload format: The system alerts the user and limits uploads to supported text/document formats.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Add Target JD. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.2 Review, Refine & Confirm Extracted Target JD</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> The AI extraction completes, or the Candidate opens an existing unconfirmed Target JD from their library.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function allows the Candidate to inspect the structured competencies extracted by AI, adjust technical domains, add custom refinement notes (such as excluding specific libraries or emphasizing architectural concepts), and formally approve the finalized JD for interview generation.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To ensure human verification of AI-extracted technical requirements and allow personalized customization before interview simulations are generated.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Review & Refine Extracted JD, Refinement Notes Panel</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Candidate edits to job title, role level, core skills, responsibilities, optional refinement notes (exclusions/emphases).</li>
+<li><b>Output data:</b> Approved Target JD record with finalized competency taxonomy, internal Interview Blueprint readiness trigger.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Human review is mandatory. Once the Candidate clicks "Approve and Confirm", the Target JD status transitions from Staged to Approved. System internal processes subsequently derive the internal Interview Blueprint (BR-11, BR-12) used by the interview simulator. Per ratified domain rules, the Interview Blueprint remains internal and hidden from the Candidate.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-09 (Candidates can only access and manage their own Target JD for practice), BR-10 (A Candidate must review and confirm the AI-extracted Job Description before the system uses it to generate an Interview Blueprint), BR-11 (Interview Blueprint generation must use the approved Extracted Job Description, interview configuration, and global Evaluation Criteria), BR-12 (The Interview Blueprint is an internal system artifact and must not be exposed to the Candidate as a visible screen, preview, or manual builder step), BR-13 (A Candidate Target JD for Practice is private Candidate data and is distinct from a Recruiter Job Posting).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate views the extracted job title, technical stack, core responsibilities, and competencies on the Review & Refine Extracted JD screen.</li>
+<li>(Optional) The Candidate opens the Refinement Notes Panel and adds specific guidance (e.g., "Exclude Angular; focus on React and micro-frontends").</li>
+<li>The Candidate edits any extracted fields if necessary to match their practice goals.</li>
+<li>The Candidate clicks "Approve and Confirm" (BR-10).</li>
+<li>The system persists the confirmed Target JD, triggers background preparation of the internal Interview Blueprint (BR-11, BR-12), and presents options to configure a practice session.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Candidate cancels the review: The system retains the draft Target JD in unconfirmed state; no internal blueprint is generated until approval is given.</li>
+<li>All competencies cleared: The system prevents approval if the competency taxonomy is completely emptied.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Review & Refine Extracted JD, Refinement Notes Panel. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.3 Target JD Library Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate navigates to the Target JD Library from the main navigation sidebar.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function provides a dedicated repository for Candidates to search, filter, inspect details of, and delete their privately imported Target Job Descriptions.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To organize and manage the Candidate's collection of practice target vacancies over time.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Target JD Library</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Search keywords (title, company, skills), status filter (Draft, Approved), JD identifier for deletion.</li>
+<li><b>Output data:</b> Filtered list of private Target JDs, detailed view of JD attributes, deletion confirmation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Candidates can only access their own private JDs. Deletion removes the Target JD record from the library, but in accordance with data integrity rules (BR-14), all previously completed interview sessions and performance reports linked to that JD remain fully intact and accessible in the Candidate's history.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-09 (Candidates can only access and manage their own Target JD for practice), BR-13 (A Candidate Target JD for Practice is private Candidate data and is distinct from a Recruiter Job Posting), BR-14 (Deleting a saved Target JD must not invalidate historical completed Interview Sessions or their attached Performance Reports).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate accesses the Target JD Library.</li>
+<li>The system renders the Candidate's saved Target JDs with search and filtering controls (UC 23).</li>
+<li>The Candidate searches by keyword or filters by status.</li>
+<li>The Candidate clicks a JD card to inspect its details (UC 24).</li>
+<li>(Optional) The Candidate clicks "Delete" on a JD card and confirms the prompt (UC 25).</li>
+<li>The system removes the JD from the active library while preserving any historical interview reports linked to it (BR-14).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Unauthorized access attempt: The system enforces user-scoping; requests for JDs belonging to other candidates are rejected (BR-09).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Target JD Library. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.4 Personal 3D Avatar Generation</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate clicks "Create 3D Avatar" or "Generate Personal Avatar" within the Personal 3D Avatar Studio.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function integrates an embedded Avaturn web experience allowing the Candidate to capture photos, preview and customize a personal 3D avatar, and hand off the generated GLB asset to RoleCue for conversion to VRM and private candidate storage.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To enable candidates to embody a realistic personal 3D avatar during interactive interview simulations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Personal 3D Avatar Studio, Avaturn Embedded Experience, Personal Avatar Confirmation & Preview</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Captured user photo, user hairstyle/clothing selections within Avaturn iframe, generated GLB export payload.</li>
+<li><b>Output data:</b> Processed and validated VRM avatar model, avatar metadata record, updated candidate avatar library.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> As ratified in architectural decisions, the personal avatar flow utilizes the free embedded Avaturn iframe rather than a paid Pro API. Avaturn handles image capture, photo quality checks, facial reconstruction, and GLB export. When Avaturn completes generation, RoleCue receives the GLB file, converts it into a standard VRM avatar model with facial blendshapes, and binds it strictly to the owning Candidate. If conversion fails, the avatar is not made available.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-18 (A Personal 3D Avatar generated from a Candidate's photo belongs to that Candidate and is private Candidate data), BR-53 (Photo capture, photo validation, avatar preview, customization, and GLB generation are handled by the embedded Avaturn experience), BR-54 (The Personal 3D Avatar generation flow must not depend on Avaturn Pro API orchestration), BR-55 (RoleCue may persist a newly generated Personal 3D Avatar only after receiving the completed GLB asset from the embedded Avaturn flow), BR-56 (If GLB-to-VRM conversion fails, the Personal 3D Avatar must not be marked as available for Candidate use), BR-57 (A Candidate-owned Personal 3D Avatar must only be accessible to its owning Candidate).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate navigates to the Personal 3D Avatar Studio and clicks "Generate Avatar".</li>
+<li>The system loads the Avaturn Embedded Experience within a secure iframe (BR-53, BR-54).</li>
+<li>The Candidate follows Avaturn's instructions to take or upload a front-facing selfie.</li>
+<li>Avaturn reconstructs the 3D head mesh and allows the Candidate to select clothing and hairstyles.</li>
+<li>The Candidate confirms the avatar, and Avaturn exports the final GLB asset.</li>
+<li>RoleCue captures the GLB payload (BR-55), converts it to VRM format, verifies facial blendshapes, and saves it to the Candidate's profile (BR-18, BR-57).</li>
+<li>The system redirects to the Personal Avatar Confirmation & Preview screen where the Candidate inspects the interactive 3D model.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Poor photo quality / face not recognized: Avaturn prompts the user within the iframe to re-capture under better lighting (BR-53).</li>
+<li>Conversion failure (corrupt GLB or invalid blendshapes): RoleCue detects the conversion failure (BR-56), discards the invalid asset, and notifies the Candidate to retry.</li>
+<li>Candidate closes the iframe before completing export: The session terminates cleanly without persisting an incomplete avatar.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Personal 3D Avatar Studio, Avaturn Embedded Experience, Personal Avatar Confirmation & Preview. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.5 Interview Session Configuration & Preflight Inspection</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate selects an approved Target JD (or applies to a Recruiter Job Posting) and clicks "Start Interview" or "Configure Practice Session".</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function configures the interview runtime parameters—including 3D interviewer avatar selection, provider voice selection, virtual room environment, and difficulty tier—and creates the formal Interview Session entity.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To customize the simulation environment for personal practice or initialize the standardized interview environment for job applications.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Candidate Dashboard, Configure Interview Session</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Target JD ID (or Job Posting ID), selected 3D interviewer model, selected Voice Profile, room/environment theme, interview difficulty.</li>
+<li><b>Output data:</b> Initialized Interview Session record in "Configured" state, session token, preflight routing parameters.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> For Candidate Target JD practice, the Candidate has freedom to choose any available 3D interviewer persona, provider voice, virtual room, and practice difficulty (BR-16, BR-17, BR-59). For Recruiter Job Postings, the company interviewer model and voice profile are pre-locked by the Recruiter and cannot be overridden by the Candidate (BR-47, BR-48). The Candidate can preview the selected 3D interviewer avatar in real time before launching. The system verifies that the underlying JD is approved before creating the session (BR-15).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-11 (Interview Blueprint generation must use the approved Extracted Job Description, interview configuration, and global Evaluation Criteria), BR-12 (The Interview Blueprint is an internal system artifact), BR-15 (An Interview Session can only start only after the relevant Extracted Job Description is approved and confirmed), BR-16 (A Candidate can select only Voice Profiles currently made available by the system), BR-17 (A Candidate can select only 3D interviewer avatars currently made available by the system), BR-59 (For an interview based on a Candidate's own Target JD, the Candidate may choose any available interviewer persona, Voice Profile, room, and difficulty).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate selects an approved Target JD and clicks "Practice Interview".</li>
+<li>The system displays the Configure Interview Session screen.</li>
+<li>The Candidate selects an interviewer persona (previewing the 3D model and voice sample via UC 9), chooses a room theme, and sets difficulty (UC 13, BR-59).</li>
+<li>The Candidate clicks "Create Session" (UC 10).</li>
+<li>The system validates availability of the selected voice and avatar (BR-16, BR-17), creates the Interview Session record (BR-15), triggers background compilation of the internal blueprint (BR-11, BR-12), and routes the Candidate to the readiness check.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Attempting to start an interview with an unconfirmed JD: System blocks creation and redirects to review (BR-15).</li>
+<li>Selected voice profile deactivated or unavailable: System flags the item and prompts the Candidate to select an active voice profile.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Candidate Dashboard, Configure Interview Session. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.6 Audio & Hardware Readiness Check</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> The Candidate proceeds from session configuration toward the live interview room.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function performs a local preflight check of the Candidate's microphone, speaker/headphone output, and WebGL rendering capabilities, verifying hardware readiness before admitting the user into the real-time simulation.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To prevent technical disruptions during live interview simulations by ensuring audio capture, playback, and 3D rendering are functional.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Test Audio & Interview Readiness, Readiness Device Error Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Selected microphone device, speaker test playback trigger, user voice test sample, WebGL context status.</li>
+<li><b>Output data:</b> Audio input level metering, audio loopback playback confirmation, hardware readiness verification flag.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The interface captures a brief voice snippet, plays it back to the Candidate to confirm auditory clarity, checks microphone input gain levels, and verifies WebGL GPU acceleration for 3D avatar rendering. If any hardware prerequisite fails, admission to the live session is held.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-15 (An Interview Session can only start only after the relevant Extracted Job Description is approved and confirmed, and prerequisite readiness checks are satisfied).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate arrives at the Test Audio & Interview Readiness screen.</li>
+<li>The system requests browser microphone permissions; the Candidate grants access.</li>
+<li>The Candidate speaks into the microphone; the visual input meter responds dynamically.</li>
+<li>The Candidate clicks "Test Speaker"; the system plays an audio sample, and the Candidate confirms hearing it clearly.</li>
+<li>The system confirms WebGL 3D capability and enables the "Enter Interview Room" button.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Microphone permission denied or no audio device found: The Readiness Device Error Dialog appears with instructions on granting browser permissions and connecting an audio input.</li>
+<li>WebGL unsupported or disabled: The system warns the Candidate and prepares the 2D Waveform Fallback View for lower-end devices.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Test Audio & Interview Readiness, Readiness Device Error Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.7 Interactive 3D AI Interview Simulation</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> The Candidate passes the readiness preflight and clicks "Join Interview Room".</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function conducts the real-time technical interview simulation. It renders the 3D virtual interviewer avatar in the selected room environment, orchestrates spoken question delivery via text-to-speech with synchronized viseme lip-sync, captures Candidate speech via real-time speech-to-text, and allows the dynamic LLM runtime to evaluate answers and determine subsequent questions until session conclusion.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate, AI Virtual Interviewer (System)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To simulate an authentic technical interview experience with visual and auditory realism, allowing candidates to practice under realistic conditions.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Live 3D Interview Room, Interview Session Pause / Exit Modal, 2D Waveform Fallback View</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Candidate live microphone stream, session state token, pause/exit user actions.</li>
+<li><b>Output data:</b> Transcribed Candidate answer text, synthesized 3D interviewer speech audio, synchronized facial blendshape animation, dynamic question dialogue turns, completed transcript record.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The 3D interviewer avatar performs natural idle animations and viseme-driven lip-sync during speech. Candidate spoken answers are transcribed into text. At product level, the dialogue consists of generic Questions delivered sequentially (BR-58). The LLM runtime determines whether an answer is sufficient or requires further questioning before concluding the interview. If WebGL experiences GPU memory exhaustion or fails, the interface gracefully degrades to the 2D Waveform Fallback View without terminating the session.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-15 (An Interview Session can only start only after the relevant Extracted Job Description is approved and confirmed), BR-47 (A Candidate interviewing for a Recruiter Job Posting must use the 3D interviewer model specified by the Recruiter), BR-48 (A Candidate interviewing for a Recruiter Job Posting must use the Voice Profile specified by the Recruiter), BR-58 (An interview proceeds to evaluation when the interview engine determines that no further questions are required).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate enters the Live 3D Interview Room (UC 15).</li>
+<li>The 3D virtual interviewer welcomes the Candidate and delivers the first Question using synthesized speech with lip-sync.</li>
+<li>The Candidate speaks their answer; the system captures audio and transcribes the speech (UC 16).</li>
+<li>The system runtime analyzes the response and determines the next question turn.</li>
+<li>Steps 2–4 repeat dynamically across relevant technical competencies.</li>
+<li>When the interview engine determines that all required topics have been covered (BR-58), the interviewer announces the conclusion of the interview.</li>
+<li>The system transitions the session to "Evaluating" status and automatically routes the Candidate to the performance evaluation screen.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Candidate clicks "Pause / Exit": The Interview Session Pause / Exit Modal appears, allowing the Candidate to pause the session or exit cleanly.</li>
+<li>Hardware/WebGL crash: The system activates the 2D Waveform Fallback View, allowing the Candidate to continue the interview via audio only.</li>
+<li>Abrupt browser closure / disconnect: The session enters "Interrupted" state, awaiting resumption within the allowable timeout window (BR-19, BR-20).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Live 3D Interview Room, Interview Session Pause / Exit Modal, 2D Waveform Fallback View. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.8 Active Interview Session Resumption & Cleanup</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate re-opens an interrupted session from the Candidate Dashboard, or the background session handler detects an expired interrupted session.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function coordinates the stateful recovery of interrupted interview sessions, restoring prior dialogue turns and current question progress if the Candidate reconnects within the active window, or terminates and cleans up abandoned sessions exceeding the timeout threshold.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate (for resumption), System Handler (for abandonment termination)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To protect candidates from accidental disconnects while ensuring platform resources are cleaned up when sessions are abandoned.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Candidate Dashboard, Live 3D Interview Room</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Candidate reconnect request with session ID, or background cron trigger polling stale sessions.</li>
+<li><b>Output data:</b> Restored live interview context and dialogue state, or finalized "Abandoned" session status with resource cleanup.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> When a Candidate disconnects, the session state is preserved in an "Interrupted" status. The Candidate may resume the session from their dashboard as long as the session has not timed out (BR-19). If the Candidate remains disconnected for more than 15 minutes, the background System Handler automatically transitions the session to "Abandoned" status (BR-20, UC 57), releases allocated runtime resources, and closes the session.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-19 (A Candidate can only resume an interrupted Interview Session only while that session remains in an active or resumable state), BR-20 (If a Candidate leaves or remains disconnected from an Interview Session for more than 15 minutes, the system must terminate the session as abandoned).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>(Resumption - UC 17) A disconnected Candidate returns to the platform and logs in.</li>
+<li>The Candidate Dashboard displays an active "Resume Interview" banner for the interrupted session.</li>
+<li>The Candidate clicks "Resume Interview" within the 15-minute window.</li>
+<li>The system validates the session state (BR-19), restores previous conversational turns, and reconnects the Candidate to the Live 3D Interview Room at the exact question where interruption occurred.</li>
+<li>(System Abandonment Termination - UC 57) An interrupted session exceeds 15 minutes of continuous disconnection.</li>
+<li>The background System Handler identifies the stale session, marks it as "Abandoned" (BR-20), invalidates the live runtime token, and records the abandonment event.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Candidate attempts to resume after 15 minutes: The system informs the Candidate that the session has expired and cannot be resumed; the Candidate must initiate a new practice session (BR-20).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Candidate Dashboard, Live 3D Interview Room. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.9 Interview Performance Evaluation & Diagnostics</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An interview session finishes, or a Candidate selects a completed session from their Interview History.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function presents the multi-dimensional diagnostic evaluation generated for a completed interview, displaying overall and competency-level scores, turn-by-turn question critiques with suggested model answers, and prioritized improvement recommendations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To provide candidates with detailed actionable feedback and quantitative performance insights to accelerate skill development.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Interview Performance Report, Question Feedback, Improvement Recommendations</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Completed interview session transcript, session evaluation criteria, internal blueprint mapping.</li>
+<li><b>Output data:</b> Overall score, competency breakdown scores (e.g., technical depth, problem-solving, communication), question-by-question feedback with model answers, personalized learning recommendations.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Upon session completion, the automated evaluation pipeline analyzes Candidate transcripts against the session rubric. The resulting report consists of three dedicated diagnostic facets: high-level performance scoring, granular question feedback (critiquing individual candidate responses and offering model answers), and personalized improvement recommendations pointing to specific learning resources and practice areas.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-21 (Question-level feedback must be associated with the Interview Session in which the candidate answered), BR-22 (Performance Scores and Improvement Recommendations must be generated from the recorded responses and evaluation criteria of that specific session), BR-24 (Evaluation of a completed Interview Session must remain associated with the Blueprint and criteria active when the session was created).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Following interview completion, the system transitions to the Interview Performance Report screen.</li>
+<li>The Candidate inspects their overall score, radar competency breakdown, and performance summary (UC 19, BR-22).</li>
+<li>The Candidate switches to the Question Feedback tab/view to review individual turn critiques, strengths, weaknesses, and model answers (UC 18, BR-21).</li>
+<li>The Candidate navigates to the Improvement Recommendations tab/view to inspect prioritized learning action items (UC 20, BR-22).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Evaluation pipeline still processing: The system displays a progress indicator with estimated time remaining and refreshes automatically when results are finalized.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Interview Performance Report, Question Feedback, Improvement Recommendations. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.3.10 Interview History Archive & Result Export</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Candidate navigates to "Interview History" or clicks "Export Report" on an Interview Performance Report.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function provides a searchable chronological archive of all historical interview sessions completed by the Candidate, and allows exporting individual session results into downloadable standalone formats (e.g., PDF) for offline review or sharing.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Candidate</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To track longitudinal interview performance progress and provide portable, downloadable records of interview evaluations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Interview History, Export Report Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Search keywords, date range filters, score threshold filters, target JD/Job Posting filter, export options (format, include transcript flag).</li>
+<li><b>Output data:</b> Filtered list of historical interview session cards, compiled downloadable performance export document (PDF).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The Interview History screen displays all completed, evaluated, and abandoned sessions belonging to the Candidate. The export dialog compiles the performance score breakdown, feedback highlights, and question transcripts into an official branded document artifact.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-23 (An exported Interview Session Result must correspond to the selected stored session and reflect the exact stored scores and feedback without dynamic alteration).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Candidate navigates to the Interview History screen.</li>
+<li>The system renders past interview sessions with completion dates, target titles, and overall scores (UC 21).</li>
+<li>The Candidate filters records by date or target company.</li>
+<li>The Candidate selects a session and clicks "Export Report".</li>
+<li>The Export Report Dialog appears; the Candidate selects export options (e.g., PDF format with question feedback included).</li>
+<li>The system generates the export document and triggers a client-side file download (UC 22, BR-23).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Export generation timeout: If the report compilation encounters a transient error, the system offers an immediate retry action.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Interview History, Export Report Dialog. Visual layout to be produced during the dedicated UI design phase.</p>

@@ -1,0 +1,136 @@
+<h2 style="font-family: Calibri, Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #2E74B5; margin-top: 16pt; margin-bottom: 4pt;">3.5 Platform Administration & Governance</h2>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;">This section defines the administrative functions governing platform integrity, security, and quality, encompassing global user account oversight and locking, job posting content moderation, platform-wide interview session audit tracking, AI behavior prompt configuration, evaluation rubric calibration, and provider voice profile catalog curation.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.5.1 User Account Governance & Security Locking</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator navigates to the Account Governance section of the Admin Governance Console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function provides administrative oversight of all registered platform accounts across roles (Candidate, Recruiter, Administrator), enabling filtering by status and role, inspection of account details, and execution of security administrative actions to lock or unlock accounts.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To enforce platform terms of service, protect system security, and suspend compromised or malicious accounts.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Admin Governance Console, Account Governance (User List), Account Detail & Lock/Unlock</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Account filter criteria (role, status, registration date), search keyword (name, email), target Account ID, lock/unlock command with administrative reason.</li>
+<li><b>Output data:</b> Filtered list of registered user accounts, detailed account dossier, updated account status flag (Active / Locked), security audit log entry.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Only users holding the Administrator role can access this capability (BR-35). When an account is locked, Better Auth session resolution immediately rejects any subsequent authentication attempts, and active sessions are terminated (BR-05). Administrators can subsequently unlock an account after verification.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-05 (A locked account must not be allowed to log in or access protected functions), BR-35 (Only an Administrator can lock or unlock another user's account).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator accesses the Admin Governance Console and opens Account Governance (User List).</li>
+<li>The system renders the registered accounts table with search, role filters, and status indicators (UC 41).</li>
+<li>The Administrator selects an account and navigates to Account Detail & Lock/Unlock.</li>
+<li>The Administrator clicks "Lock Account", enters a mandatory administrative rationale, and confirms.</li>
+<li>The system updates the account status to "Locked" (BR-05, BR-35), terminates active sessions, and logs the security audit event.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Non-admin access attempt: The system enforces strict role-based access control and denies entry.</li>
+<li>Administrator attempts to lock their own active administrator account: The system prohibits self-lockout.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Admin Governance Console, Account Governance (User List), Account Detail & Lock/Unlock. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.5.2 Job Posting Moderation & Platform Adjudication</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator navigates to the Job Posting Moderation Queue.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function provides content moderation oversight for recruiter-submitted job openings, allowing administrators to inspect vacancy details, AI competency models, and company interviewer configurations, and record formal approval or rejection decisions before publication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To verify that all job openings published on the platform meet professional quality, compliance, and non-discrimination standards.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Job Posting Moderation Queue, Job Posting Review & Approval, Moderation Decision Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Moderation status filter (Pending, Approved, Rejected), Job Posting ID, moderation decision (Approve/Reject), feedback notes.</li>
+<li><b>Output data:</b> Filtered moderation queue, comprehensive vacancy review view, updated Job Posting publication status, moderation notification to Recruiter.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> When a Recruiter submits a job opening, it enters the queue in "Pending Moderation" status. The posting cannot be viewed by candidates or applied to until an Administrator approves it (BR-36, BR-46). If rejected, the Administrator provides actionable feedback, allowing the Recruiter to revise and re-submit.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-36 (Only an Administrator can approve or reject Job Postings for platform moderation), BR-46 (A Job Posting must not be publicly available while its moderation status is pending or rejected).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator opens the Job Posting Moderation Queue.</li>
+<li>The system displays pending recruiter job submissions (UC 43).</li>
+<li>The Administrator clicks a submission to open the Job Posting Review & Approval screen.</li>
+<li>The Administrator reviews the job description text, competency taxonomy, and selected interviewer avatar/voice.</li>
+<li>The Administrator clicks "Approve", opens the Moderation Decision Dialog, and confirms (UC 44).</li>
+<li>The system marks the posting as "Approved" (BR-36), publishes it to the Candidate Job Board (BR-46), and notifies the Recruiter.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Rejection without rationale: The system requires an explanatory moderation note before confirming rejection.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Job Posting Moderation Queue, Job Posting Review & Approval, Moderation Decision Dialog. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.5.3 Platform Interview Session Governance & Audit</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator navigates to "Interview Sessions Oversight" within the governance console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function provides platform-wide audit visibility into all historical and active interview sessions across all users, enabling searching, filtering by date and outcome, and inspecting full session execution details including transcript turns and rubric evaluations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To monitor platform simulation quality, investigate technical or scoring anomalies, and audit system integrity.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Interview Sessions Oversight, Interview Session Detail</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Filter criteria (User ID, date range, session state: Completed/Abandoned/Evaluating, overall score range), selected Session ID.</li>
+<li><b>Output data:</b> Filtered list of platform interview sessions, comprehensive session audit dossier (blueprint reference, timestamps, transcript turns, score vectors).</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Administrators possess read-only audit access across all candidate practice sessions and recruitment screening sessions. The audit view binds the session to the exact internal Blueprint and evaluation criteria version active at session execution time (BR-24).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-24 (Evaluation of a completed Interview Session must remain associated with the Blueprint and criteria active when the session was created).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator navigates to Interview Sessions Oversight.</li>
+<li>The system renders the global interview sessions ledger with comprehensive search and filtering controls (UC 50).</li>
+<li>The Administrator filters by date range or session status.</li>
+<li>The Administrator clicks a session row to inspect its full execution dossier on the Interview Session Detail screen (UC 51).</li>
+<li>The system displays dialogue transcripts, turn timings, avatar and voice metadata, and evaluation scoring breakdowns (BR-24).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Session ID not found: System returns an error and redirects to the sessions list.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Interview Sessions Oversight, Interview Session Detail. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.5.4 AI Behaviour & Evaluation Criteria Calibration</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator navigates to "AI Behaviour Management" or "Evaluation Criteria Calibration" within the Interview Feature Configuration module.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function enables administrators to calibrate global AI interviewer behavioral prompts, configure interview dialogue constraints, and edit the global evaluation rubrics and scoring weights used to assess candidate technical competencies.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To fine-tune the conversational realism of the AI interviewer and maintain rigorous, standardized competency assessment rubrics across the platform.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Interview Feature Configuration, AI Behaviour Management, Prompt Template Editor Drawer, Evaluation Criteria Calibration, Rubric Template Editor Drawer</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Global behavioral prompt templates, dialogue turn limits, pacing parameters, evaluation rubric dimensions, scoring weight distributions.</li>
+<li><b>Output data:</b> Versioned prompt template configurations, updated global evaluation rubric definitions, calibration audit log.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Only Administrators can modify evaluation rubrics and AI behavior prompts (BR-37, BR-38). Changes take effect for newly initiated interview sessions while preserving historical consistency for completed sessions. The Prompt Template Editor Drawer allows adjusting interviewer tone and follow-up strictness, while the Rubric Template Editor Drawer allows calibrating criteria weighting (e.g., technical correctness, architecture design, clarity).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-37 (Only an Administrator can edit global Evaluation Criteria), BR-38 (Only an Administrator can manage platform AI Behaviour and interview-feature configurations).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator accesses AI Behaviour Management and opens the Prompt Template Editor Drawer (UC 46).</li>
+<li>The Administrator adjusts interviewer conversational behavior instructions and saves changes.</li>
+<li>The Administrator opens Evaluation Criteria Calibration and launches the Rubric Template Editor Drawer (UC 45).</li>
+<li>The Administrator updates competency weighting parameters and confirms validation checks.</li>
+<li>The system saves the calibrated rubric version (BR-37, BR-38) and applies it to subsequent interview sessions.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Scoring weights do not sum to 100%: The system flags the validation discrepancy and prevents saving until weights are balanced.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Interview Feature Configuration, AI Behaviour Management, Prompt Template Editor Drawer, Evaluation Criteria Calibration, Rubric Template Editor Drawer. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.5.5 Provider Voice Profile Catalog Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An Administrator navigates to the Voice Profile Catalog in the governance console.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function manages the catalog of available text-to-speech voice profiles by fetching external voice assets from the connected provider (e.g., ElevenLabs), cataloging voice metadata (gender, accent, language), and deprecating or removing outdated voice profiles.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Administrator, External TTS Provider (ElevenLabs)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To curate a high-quality selection of realistic voices available for candidate practice and recruiter job opening configurations.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Voice Profile Catalog, Fetch Voice Profiles Modal, Delete Voice Profile Dialog</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Fetch provider trigger, provider API synchronization parameters, Voice Profile ID selected for deletion/deactivation.</li>
+<li><b>Output data:</b> Synchronized voice catalog list, updated voice metadata records, deletion confirmation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Administrators manage provider-sourced Voice Profiles (BR-39). In accordance with ratified product scope, Administrators do NOT manage candidate 3D avatars or virtual room backgrounds (BR-40). Fetching voices queries the external TTS provider and registers available voice IDs. Deleting a voice profile marks it as unavailable for future sessions while preserving historical references in completed interview logs.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-39 (Only an Administrator can fetch, view, or delete provider-sourced Voice Profiles), BR-40 (Administrators must not manage Candidate Personal 3D Avatar assets or the platform 3D background catalog).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Administrator navigates to the Voice Profile Catalog.</li>
+<li>The system displays all registered voice profiles with name, provider ID, accent, and sample audio playback (UC 47).</li>
+<li>The Administrator clicks "Fetch Voice Profiles", opening the Fetch Voice Profiles Modal (UC 48).</li>
+<li>The system queries the external TTS provider API, identifies newly available voices, and synchronizes the catalog.</li>
+<li>(Optional) The Administrator selects an obsolete voice profile, clicks "Delete", and confirms via the Delete Voice Profile Dialog (UC 49).</li>
+<li>The system removes or deactivates the voice profile (BR-39).</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Provider API connection timeout: The system displays a connectivity alert and retains the existing voice catalog without corruption.</li>
+<li>Attempting to delete a voice currently configured on an active published job posting: The system warns the Administrator and requires reassignment or soft-deprecation.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Voice Profile Catalog, Fetch Voice Profiles Modal, Delete Voice Profile Dialog. Visual layout to be produced during the dedicated UI design phase.</p>

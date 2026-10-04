@@ -1,0 +1,112 @@
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;">This section defines the architectural background functions, processing pipelines, automated services, and scheduled tasks that operate across the platform without a dedicated user interface.</p>
+<table style="border-collapse: collapse; width: 100%; border: 1px solid #000000; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; margin-top: 6pt; margin-bottom: 12pt;">
+<thead>
+<tr>
+<th style="background-color: #FFE8E2; border: 1px solid #000000; padding: 5px 6px; font-weight: bold; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; color: #000000; width: 8%;">ID</th>
+<th style="background-color: #FFE8E2; border: 1px solid #000000; padding: 5px 6px; font-weight: bold; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; color: #000000; width: 22%;">Function</th>
+<th style="background-color: #FFE8E2; border: 1px solid #000000; padding: 5px 6px; font-weight: bold; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; color: #000000; width: 24%;">Trigger</th>
+<th style="background-color: #FFE8E2; border: 1px solid #000000; padding: 5px 6px; font-weight: bold; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; color: #000000; width: 26%;">Processing Summary</th>
+<th style="background-color: #FFE8E2; border: 1px solid #000000; padding: 5px 6px; font-weight: bold; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; color: #000000; width: 20%;">Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-01</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Credential Verification & Session Resolution</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">User submits login credentials</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Better Auth validates submitted email and password hash, verifies account active status, and resolves role authorization context.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Authenticated session token issued and user routed to role dashboard.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-02</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">JD Parsing & Technical Competency Extraction</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Raw JD text or PDF submitted</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">LLM semantic extraction parses text into normalized schema; deterministic rules validate categories and deduplicate skills.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Validated extracted competency payload delivered to review screen.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-03</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Autonomous Interview Blueprint Compilation</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Candidate approves JD and session configuration</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">System semantic planner synthesizes approved JD tags, refinement notes, and difficulty parameters into structured assessment stages and rubrics.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Immutable internal assessment blueprint compiled; strictly hidden from candidate.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-04</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Runtime Question Orchestration</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Candidate completes previous spoken response</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">LLM analyzes candidate's transcribed answer against interview context and blueprint milestones to determine the next conversational question.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Next runtime question text delivered to speech synthesis pipeline.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-05</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Real-Time Speech-to-Text Processing</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Candidate speaks into microphone</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Streaming audio chunks are processed via Voice Activity Detection (VAD) and transcribed into clean text by the STT provider.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Accurate turn transcript emitted to interview orchestrator.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-06</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Text-to-Speech Synthesis</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Question / interviewer utterance text is ready for playback.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">The selected TTS provider converts interviewer utterance text into synthesized speech audio using the configured Voice Profile.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Synthesized interviewer audio delivered to the interview runtime.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-07</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Lip-Sync & Viseme Processing</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Synthesized interviewer audio playback begins.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">The interview runtime derives and smooths viseme events from interviewer audio and maps them to supported facial morph targets on the active 3D avatar.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Synchronized mouth and facial animation rendered during interviewer speech.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-08</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Automated Turn & Competency Evaluation</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Interview session concluded</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Evaluates interview responses against the session evaluation criteria and relevant technical competencies to produce performance scores and qualitative feedback.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Performance Report created with scores, question feedback, and improvement recommendations.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-09</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Avaturn GLB-to-VRM Asset Conversion</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Avaturn iframe completes customization</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Backend asset conversion pipeline ingests Avaturn GLB export, normalizes humanoid bone rigging into standardized VRM, and persists asset.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Persisted Candidate-owned VRM avatar stored in personal studio library.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-10</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Job Application Assembly & Submission</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Candidate finishes Job Posting interview</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">System links candidate CV/resume, application metadata, and resulting Interview Result into an application record with status PENDING.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Completed application dossier made available to the authoring recruiter.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-11</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Payment Webhook Verification & Subscription Activation</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Gateway dispatches payment status webhook</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Gateway webhook signature is cryptographically verified; database transaction logs immutable ledger entry and updates subscription to ACTIVE.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Candidate practice entitlements activated idempotently.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-12</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Disconnected Session Inactivity Cleanup</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Session connection lost or abandoned</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Automated system handler detects expired heartbeat or prolonged inactivity and gracefully terminates orphaned interview sessions.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Session resources released and incomplete session marked terminated.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-13</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Transactional Notification Dispatch</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Domain events occur (registration, password recovery, decision)</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Asynchronous email dispatcher formats and transmits verification tokens, password recovery links, and application status notices.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Outbound transactional emails delivered to recipient mailboxes.</td>
+</tr>
+<tr>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; text-align: center; vertical-align: middle; color: #000000; font-weight: bold;">NS-14</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000; font-weight: bold;">Voice Profile Catalog Synchronization</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Administrator triggers voice fetch</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">System queries external TTS provider APIs to discover available voice identifiers, languages, genders, and audio preview samples.</td>
+<td style="border: 1px solid #000000; padding: 4px 6px; font-family: Calibri, Arial, sans-serif; font-size: 9.5pt; vertical-align: middle; color: #000000;">Newly available voice profiles ingested into platform governance catalog.</td>
+</tr>
+</tbody>
+</table>

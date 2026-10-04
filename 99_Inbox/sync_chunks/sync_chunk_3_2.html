@@ -1,0 +1,192 @@
+<h2 style="font-family: Calibri, Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #2E74B5; margin-top: 16pt; margin-bottom: 4pt;">3.2 Account & Access Management</h2>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;">This section defines the functional requirements for user registration, identity authentication, credential recovery, user profile management, credential security, and multi-factor authentication across all platform user roles.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.1 Platform Public Exploration & Value Proposition</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Guest accesses the platform root URL via a web browser.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function renders the public marketing and platform introduction portal, showcasing the RoleCue value proposition, technical interview simulation capabilities, supported industry domains, and navigation paths for account registration and authentication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Guest</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To introduce prospective candidates and recruiters to the platform's AI-driven technical interview features and facilitate user onboarding.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Public Landing Page</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> HTTP request parameters, public catalog highlights, feature overview assets.</li>
+<li><b>Output data:</b> Rendered public landing view, product overview summaries, navigation links to registration and login.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The interface operates publicly without requiring prior authentication. It presents overview highlights regarding real-time 3D interviewer interaction, job description analysis, automated rubric-based scoring, and recruiting capabilities.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features; unauthenticated guests may only view public marketing content and entry points).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Guest navigates to the platform base URL.</li>
+<li>The system loads and displays the Public Landing Page with feature highlights, value propositions, and role-based onboarding calls to action.</li>
+<li>The Guest clicks the registration or login call to action to transition to the respective authentication interface.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Network connectivity failure prevents assets from loading; the client renders an offline retry notice.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Public Landing Page. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.2 User Registration & Role Selection</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A Guest clicks the "Sign Up" or "Register" button on the Public Landing Page or login view.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function captures account registration credentials, validates email uniqueness and password complexity, establishes the initial user identity record, and dispatches an email verification notice.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Guest</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To allow new candidates and recruiters to establish authenticated accounts with verified identities and defined roles.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Account Registration, Email Verification Notice</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Full name, email address, password, password confirmation, desired account role (Candidate or Recruiter).</li>
+<li><b>Output data:</b> Newly created user account record with pending verification status, dispatched verification token, and confirmation screen.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Registration validates that the provided email is not already associated with an existing account. The system validates password strength according to platform security policy. Better Auth manages the underlying credential generation and token creation, while the interface transitions the user to the Email Verification Notice screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-01 (An account must have a unique email address), BR-02 (An account password must be between 8 and 32 characters long), BR-03 (An account password must contain at least one lowercase letter, one uppercase letter, one number, and one special character).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The Guest navigates to the Account Registration screen.</li>
+<li>The Guest inputs their full name, email address, password, password confirmation, and selects their role.</li>
+<li>The system validates that the email address is unique and the password complies with security rules.</li>
+<li>The system registers the account in a pending verification state and sends an email containing an activation link.</li>
+<li>The system redirects the user to the Email Verification Notice screen with instructions to check their inbox.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Duplicate email address: The system informs the user that an account with this email already exists and offers a link to login or recover the password (BR-01).</li>
+<li>Password complexity violation: The system indicates the specific unmet requirements (length, case, numeric, or special character) and prevents submission (BR-02, BR-03).</li>
+<li>Confirmation password mismatch: The system flags the mismatch and prompts the user to re-enter matching passwords.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Account Registration, Email Verification Notice. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.3 User Authentication & Session Resolution</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> A user submits login credentials on the Account Login screen, or clicks the "Sign Out" action from the authenticated navigation bar.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function verifies user identity via email and password credentials, checks account status against governance restrictions, prompts for two-factor authentication if enabled, resolves an authenticated session, and terminates active sessions upon logout.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Registered User (Candidate, Recruiter, Administrator)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To authenticate valid users, establish role-based access to protected workspaces, and cleanly invalidate sessions upon departure.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Account Login</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Email address, password, optional two-factor one-time verification code (if 2FA is active).</li>
+<li><b>Output data:</b> Authenticated user session, role-scoped routing redirect (Candidate Dashboard, Recruiter Dashboard, or Admin Governance Console), or invalidated session state.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Better Auth handles credential verification, session token generation, and secure session persistence. When an account has two-factor authentication enabled, the system enforces a secondary verification challenge before issuing the session. If an account is locked by platform administration, authentication is blocked immediately.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features), BR-05 (A locked account must not be allowed to log in or access protected functions), BR-08 (When two-factor authentication is enabled for an account, authentication is not complete until the two-factor challenge is verified).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The user navigates to the Account Login screen and enters their email and password.</li>
+<li>The system verifies that the credentials are valid and confirms the account is not locked (BR-05).</li>
+<li>(If 2FA is enabled) The system prompts for the two-factor authentication code and verifies it (BR-08).</li>
+<li>The system establishes an authenticated session (BR-04) and redirects the user to their respective role dashboard.</li>
+<li>(Upon Logout) The authenticated user clicks the Logout action; the system invalidates the session and redirects to the Public Landing Page.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Invalid credentials: The system displays an authentication error without revealing whether the email or password was incorrect.</li>
+<li>Locked account: The system denies access and informs the user that the account has been suspended by platform administration (BR-05).</li>
+<li>Invalid 2FA code: The system notifies the user of an invalid verification code and permits retry within rate-limiting boundaries.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Account Login. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.4 Forgot Password & Credential Recovery</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An unauthenticated user clicks the "Forgot Password?" link on the Account Login screen.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function coordinates the self-service credential recovery process by validating the registered email address, issuing a single-use time-limited reset token, and providing a secure interface to establish a new password compliant with platform complexity standards.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Registered User</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To allow users who have forgotten their credentials to regain secure access to their accounts without administrative intervention.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Forgot Password Request, Password Reset Link Dispatched Notice, Set New Password</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Registered email address, single-use reset token, new password, new password confirmation.</li>
+<li><b>Output data:</b> Password reset notification email, verified reset authorization, updated password hash.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> In accordance with canonical specifications, password reset does not form an independent Use Case but represents the completion flow of the Forgot Password capability. The recovery token expires after a predefined security duration and is invalidated immediately upon first use.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-02 (An account password must be between 8 and 32 characters long), BR-03 (An account password must contain at least one lowercase letter, one uppercase letter, one number, and one special character), BR-06 (A user must verify their identity before resetting a forgotten password), BR-07 (A password reset token can only be used only once).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The user navigates to the Forgot Password Request screen and enters their account email address.</li>
+<li>The system checks if the email exists in the registry and generates a cryptographically secure, single-use reset token (BR-06).</li>
+<li>The system dispatches an email containing the reset link and displays the Password Reset Link Dispatched Notice.</li>
+<li>The user clicks the link from their email and arrives at the Set New Password screen.</li>
+<li>The user enters a new password conforming to complexity requirements and confirms it.</li>
+<li>The system verifies token validity, consumes the token so it cannot be reused (BR-07), updates the password (BR-02, BR-03), and confirms success.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Email not found: The system displays a generic confirmation message to prevent user enumeration attacks.</li>
+<li>Expired or previously consumed token: The system informs the user that the reset link is no longer valid (BR-07) and prompts them to request a new recovery link.</li>
+<li>New password does not meet complexity requirements: The system displays validation errors and requires correction.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Forgot Password Request, Password Reset Link Dispatched Notice, Set New Password. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.5 Profile Inspection & Update</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An authenticated user clicks on their user avatar or selects "Profile" from the top navigation header.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function presents the user's personal identity and contact details, and enables self-service editing of editable profile attributes such as display name, headline, phone number, bio, and avatar portrait.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Registered User (Candidate, Recruiter, Administrator)</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To allow users to maintain up-to-date personal and professional identity information across the platform.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: User Profile</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Updated display name, phone number, professional title/headline, biographical summary, profile image upload.</li>
+<li><b>Output data:</b> Refreshed user profile record, persisted profile image asset, updated display in the application shell.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> Users can only view and update their own personal profile records. Read-only fields include account creation timestamp, verified email address (managed through dedicated security workflows), and assigned platform role.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The user navigates to the User Profile screen (UC 5).</li>
+<li>The system displays current profile information, including name, email, role, and profile portrait.</li>
+<li>The user modifies editable fields (e.g., changes display name or uploads a new portrait) and clicks "Save Changes" (UC 6).</li>
+<li>The system validates the inputs, updates the profile in the user repository, and displays a success notification.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Invalid file format or oversized avatar image: The system rejects the upload with an informative validation message.</li>
+<li>Missing mandatory field: The system flags required fields that have been cleared and prevents submission.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: User Profile. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.6 Credential Security & Password Modification</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An authenticated user clicks the "Change Password" button within the Account Security & Password management settings.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function enables authenticated users to proactively change their account password by verifying their existing current password and providing a new password meeting all complexity criteria.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Registered User</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To allow users to maintain account hygiene, satisfy security rotation policies, or mitigate potential credential compromise.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Account Security & Password, Change Password Modal</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> Current password, new password, new password confirmation.</li>
+<li><b>Output data:</b> Updated password credential hash, audit timestamp of password modification.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> The system re-authenticates the user's current password before allowing the update. The new password cannot be identical to the current password and must comply strictly with length and character composition rules.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-02 (An account password must be between 8 and 32 characters long), BR-03 (An account password must contain at least one lowercase letter, one uppercase letter, one number, and one special character), BR-04 (A user must be authenticated before accessing registered-user features).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The user navigates to Account Security & Password and selects "Change Password".</li>
+<li>The Change Password Modal appears.</li>
+<li>The user inputs their current password, desired new password, and confirms the new password.</li>
+<li>The system validates the current password, verifies new password strength (BR-02, BR-03), and persists the new credential hash.</li>
+<li>The modal closes and a confirmation banner is displayed.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Incorrect current password: The system rejects the change with an authentication failure message.</li>
+<li>New password matches current password: The system prompts the user to select a distinct new password.</li>
+<li>New password violates complexity requirements: The system highlights failing criteria.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Account Security & Password, Change Password Modal. Visual layout to be produced during the dedicated UI design phase.</p>
+<h3 style="font-family: Calibri, Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #1F4D78; margin-top: 12pt; margin-bottom: 3pt;">3.2.7 Two-Factor Authentication Management</h3>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function trigger:</b> An authenticated user clicks "Set Up 2FA" or "Manage 2FA" in the Account Security & Password interface.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function description:</b> This function manages the configuration of time-based one-time password (TOTP) two-factor authentication, generating a secret seed, rendering a QR code for authenticator application onboarding, and verifying a test code before activating multi-factor enforcement.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Actor/roles:</b> Registered User</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Purpose:</b> To provide enhanced account protection against unauthorized access through two-factor authentication.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Interface:</b> Web: Account Security & Password, Two-Factor Authentication Setup Modal</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Data processing:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li><b>Input data:</b> TOTP secret registration request, 6-digit confirmation verification code.</li>
+<li><b>Output data:</b> Rendered TOTP QR code, secret key display, 2FA status flag (Enabled/Disabled), backup recovery codes.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Function details:</b> To prevent lockout, 2FA is not permanently activated until the user enters a valid 6-digit code generated from their newly paired authenticator application. Once active, all subsequent logins require passing the 2FA challenge.</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Business rule:</b> BR-04 (A user must be authenticated before accessing registered-user features), BR-08 (When two-factor authentication is enabled for an account, authentication is not complete until the two-factor challenge is verified).</p>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Normal case:</b></p>
+<ol style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>The user navigates to Account Security & Password and clicks "Enable Two-Factor Authentication".</li>
+<li>The Two-Factor Authentication Setup Modal opens, displaying a QR code and secret text key.</li>
+<li>The user scans the QR code with their TOTP authenticator application (e.g., Google Authenticator).</li>
+<li>The user inputs the 6-digit token displayed in their authenticator app and clicks "Verify and Enable".</li>
+<li>The system confirms code validity, marks 2FA as active on the user's account (BR-08), and presents one-time backup recovery codes.</li>
+</ol>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Abnormal case:</b></p>
+<ul style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 1pt; margin-bottom: 2pt; padding-left: 20pt; color: #000000;">
+<li>Invalid verification code: The system displays a mismatch error and instructs the user to check their device time synchronization and re-enter the code.</li>
+<li>Modal cancellation before verification: The unconfirmed 2FA configuration is discarded; 2FA remains disabled.</li>
+</ul>
+<p style="font-family: Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.25; margin-top: 2pt; margin-bottom: 3pt; color: #000000;"><b>Screen layout:</b> Screen Layout Reference: Account Security & Password, Two-Factor Authentication Setup Modal. Visual layout to be produced during the dedicated UI design phase.</p>
