@@ -52,7 +52,7 @@ flowchart TD
     %% Actor Interactions
     GUEST <-->|"View landing page, register"| SYSTEM
     CAND <-->|"JD refinement, practice interviews, CV applications, coin wallet, avatar inventory"| SYSTEM
-    REC <-->|"Job Postings, question bank editing, evaluation weights, slot funding, intake open/close, CV screening, recordings & final decisions"| SYSTEM
+    REC <-->|"Job Postings, question bank editing, evaluation weights, slot funding, close intake, CV screening, recordings & final decisions"| SYSTEM
     ADMIN <-->|"Account governance, job posting moderation, session operational oversight, voice profiles, revenue audits"| SYSTEM
 
     %% Service Interactions
@@ -72,10 +72,10 @@ flowchart TD
    * *Rationale:* `Registered User` is an abstract generalization encompassing Candidates and Recruiters. In the physical system context, the concrete human interacting with the system is either a **Candidate** or a **Recruiter**. Registered User inheritance does **NOT** grant Admin personal wallet or avatar inventory rights.
 2. **System Handler Representation:**
    * **Rule:** `System Handler` is **not** an external entity in the Context Diagram.
-   * *Rationale:* The System Handler is an internal automated system concept (background worker) that terminates a candidate's abandoned session. It is not an external actor.
+   * *Rationale:* The System Handler is an internal automated system concept (background worker) that terminates abandoned candidate sessions, enforces 24-hour interview deadline expirations, automatically closes intake when `interview_slot` capacity is met, and executes unused slot refunds upon terminal Job Posting auto-close. It is not an external actor.
 3. **External Service Boundaries:**
    * All external services interact via secure, authenticated network protocols (HTTPS / streaming connections).
-   * Vendor agnosticism: Integrations use standardized internal adapter interfaces so underlying providers can evolve without impacting core domain logic. No specific vendor (e.g., Jev/TypeSafe) is selected for follow-up decisions; Jev is tentative and unapproved.
+   * Vendor agnosticism: Integrations use standardized internal adapter interfaces so underlying providers can evolve without impacting core domain logic. PayOS is the confirmed payment gateway provider.
 4. **Embedded Avatar Experience:**
    * Avaturn does not introduce a separate external human actor.
    * RoleCue embeds Avaturn's free iframe experience for personal avatar creation. Avaturn returns a final GLB; RoleCue converts and persists the VRM artifact in the user's inventory. The integration detail is specified in [[02_System/Integrations|External Integrations]].
@@ -90,15 +90,15 @@ flowchart TD
 | :--- | :--- | :--- |
 | **Guest** | Registration credentials. | Landing page content; account confirmation. |
 | **Candidate** | Target JD (text/PDF); refinement notes; requirement confirmations; session configuration; microphone audio stream; embedded Avaturn photo capture/customization; CV/resume and job application submissions; coin package checkout intents. | Extracted requirement tags; 3D virtual interviewer presentation; audio speech + lip-sync visemes; diagnostic evaluation reports; Candidate-owned VRM personal avatars; application status updates; coin wallet balance; overall recruitment evaluation scores (recordings and transcripts hidden during recruitment). |
-| **Recruiter** | Job Postings from JD-like content; requirement confirmations; own-posting question bank edits; posting evaluation weights; company 3D interviewer model and Voice Profile selections; coin package checkout intents; interview slot funding; intake control (Open/Close); End Recruitment commands; CV screening decisions (**Pass / Reject**); final application decisions (**Approve / Reject**); avatar studio generation. | Own Job Postings and approval state; incoming Applications and CVs (immediately upon submission); applicant evaluation results, transcripts, and recruitment audio/video recordings; coin wallet balance and slot refund confirmations; personal VRM avatars. |
-| **Administrator** | Account lock/unlock commands; job posting moderation commands (approve/reject); voice profile fetch/delete commands. *(Global AI prompt calibration, evaluation criteria editing, Interview Feature Configuration / runtime toggles, and coin package price updates remain awaiting confirmation).* | Filtered account lists; job posting lists; operational interview session metadata; voice profile catalog; payment order and coin transaction records; revenue reports. *(Admin does NOT possess a wallet, avatar inventory, or recruitment recording access).* |
+| **Recruiter** | Job Postings from JD-like content; requirement confirmations; own-posting question bank edits; posting evaluation weights; company 3D interviewer model and Voice Profile selections; coin package checkout intents; interview slot funding; intake control (Close Job Posting Intake); CV screening decisions (**Pass / Reject**); hard-gated final application decisions (**Approve / Reject** within View Application Detail); avatar studio generation. | Own Job Postings and approval state; incoming Applications and CVs (immediately upon submission); applicant evaluation results, transcripts, and recruitment audio/video recordings consolidated in View Application Detail; coin wallet balance and slot refund confirmations; personal VRM avatars. |
+| **Administrator** | Account lock/unlock commands; job posting moderation commands (approve/reject); voice profile fetch/delete commands. *(Global AI prompt calibration, evaluation criteria editing, Interview Feature Configuration / runtime toggles, and coin package price updates are excluded from frozen scope).* | Filtered account lists; job posting lists; operational interview session metadata; voice profile catalog; unified payment transactions (`transactions`); revenue reports. *(Admin does NOT possess a wallet, avatar inventory, or recruitment recording access).* |
 
 ### 4.2. External Service Boundaries
 
 | Service Boundary | Direction | Protocol | Primary Data Exchange |
 | :--- | :---: | :---: | :--- |
-| **LLM Provider** | Bidirectional | HTTPS | Ingests normalized JD text $\rightarrow$ outputs structured JSON competencies.<br/>Ingests confirmed requirements $\rightarrow$ generates single core-question bank Blueprint.<br/>Ingests Candidate Answer + Interview Context $\rightarrow$ analyzes responses for adaptive question loop.<br/>Ingests session transcript + evaluation configuration/weights $\rightarrow$ outputs evaluation scores. |
+| **LLM Provider** | Bidirectional | HTTPS | Ingests normalized JD text $\rightarrow$ outputs structured JSON competencies.<br/>Ingests confirmed requirements $\rightarrow$ generates core-question bank (`core_questions`).<br/>Ingests Candidate Answer + Interview Context $\rightarrow$ analyzes responses for adaptive question loop.<br/>Ingests session transcript + evaluation configuration/weights $\rightarrow$ outputs evaluation scores. |
 | **STT Provider** | Bidirectional | WSS / HTTPS | Ingests candidate audio stream chunks $\rightarrow$ outputs real-time text transcripts. |
 | **TTS Provider** | Bidirectional | HTTPS | Ingests interviewer dialogue text $\rightarrow$ outputs synthesized audio buffer with facial blend-shape viseme timing metadata. |
-| **Payment Gateway** | Bidirectional | HTTPS | Ingests coin package checkout intent $\rightarrow$ returns gateway checkout portal URL.<br/>Dispatches cryptographically signed webhooks confirming real-money transaction status. |
+| **Payment Gateway (PayOS)** | Bidirectional | HTTPS | Ingests coin package checkout intent $\rightarrow$ returns PayOS checkout portal URL.<br/>Dispatches cryptographically signed webhooks confirming real-money transaction status. |
 | **Email Provider** | Outbound | HTTPS / SMTP | Ingests email payloads (verification tokens, password-recovery links, application notices, system alerts) $\rightarrow$ dispatches to destination mailboxes. |

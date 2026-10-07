@@ -122,62 +122,65 @@ sequenceDiagram
     Admin->>System: Approve Job Posting
     System->>DB: Set Job Posting Status to APPROVED
 
-    Note over Recruiter,System: 2. Slot Funding & Intake Management
-    Recruiter->>System: Fund interview slots using Coins from Wallet
-    System->>DB: Record funded Interview Slots
+    Note over Recruiter,System: 2. Slot Funding & Intake Open
+    Recruiter->>System: Fund interview capacity using Coins from Wallet (interview_slot)
+    System->>DB: Record interview_slot on Job Posting
     Recruiter->>System: Open application intake (Intake: OPEN)
 
-    Note over Candidate,Recruiter: 3. Application Submission & Immediate Visibility
+    Note over Candidate,Recruiter: 3. Unlimited Application Intake & Immediate Visibility
     Candidate->>System: Browse Approved Postings (Intake: OPEN)
-    Candidate->>System: View Posting Details and select Apply
-    Candidate->>System: Upload CV/resume and submit application
-    System->>DB: Persist Application with CV (Status: PENDING_CV_SCREENING)
-    System-->>Recruiter: Application & CV immediately visible in Recruiter Dashboard
+    Candidate->>System: Submit Application with uploaded CV (Unlimited submissions allowed)
+    System->>DB: Persist Application with CV (Status: PENDING)
+    System-->>Recruiter: Application & CV immediately visible in View Application Detail
 
-    Note over Recruiter,Candidate: 4. Recruiter CV Screening
-    Recruiter->>System: Screen submitted Application and CV
+    Note over Recruiter,Candidate: 4. CV Screening & 24h Deadline
+    Recruiter->>System: Screen CV in View Application Detail (Max interview_slot approvals)
     alt Recruiter rejects CV
         Recruiter->>System: Reject CV
-        System->>DB: Update Application (Status: CV_REJECTED)
-        System-->>Candidate: Notify CV screening rejected
-    else Recruiter passes CV
-        Recruiter->>System: Pass CV
-        System->>DB: Update Application (Status: CV_PASSED - Eligible to Interview)
-        System-->>Candidate: Notify eligible to schedule/start interview
+        System->>DB: Update Application (Status: REJECTED - Terminal)
+        System-->>Candidate: Notify CV rejected
+    else Recruiter approves CV
+        Recruiter->>System: Approve CV (Grants eligibility; does not consume slot yet)
+        System->>DB: Set cv_approved_at & interview_deadline = cv_approved_at + 24 hours
+        System-->>Candidate: Notify interview eligible with 24h deadline
     end
 
-    opt Applicant passed CV screening
-        Note over Candidate,System: 5. Recruitment Technical Interview
+    Note over Recruiter,System: 5. Close Intake (Manual or When Limitation Met)
+    opt Close Intake triggered (Manual or configured limit met)
+        System->>DB: Stop new applications (Intake: CLOSED)
+        System->>DB: Auto-reject remaining unscreened/not-approved Applications
+        Note over System,DB: Approved candidates remain interview-eligible. No refund yet. No reopen flow.
+    end
+
+    Note over Candidate,System: 6. Recruitment Technical Interview & Slot Consumption
+    opt Approved Candidate interviews before deadline
         Candidate->>System: Start recruitment interview
-        System->>DB: Consume 1 funded Interview Slot (Prepaid by Recruiter)
+        System->>DB: Consume 1 funded interview slot on FIRST successful start (Free reconnect)
         Note over Candidate,System: Uses locked company 3D model & Voice Profile
         System->>DB: Record recruitment session, audio/video recordings & transcript
         System->>DB: Evaluate session and store Interview Result
         System->>DB: Attach Interview Result & recordings to Application
         System-->>Candidate: Display overall recruitment score (Transcripts/recordings hidden)
+    end
+    opt Candidate fails to interview before interview_deadline
+        System->>DB: Deadline expired -> Auto-reject Application (Status: REJECTED - Terminal)
+    end
 
-        Note over Recruiter,Candidate: 6. Recruiter Review & Final Decision
-        Recruiter->>System: Review Application, CV, evaluation result, and recordings/transcript
+    Note over Recruiter,System: 7. Hard-Gated Final Review & Terminal Auto-Close
+    Note over Recruiter,System: Final decision HARD-GATED until MAX(interview_deadline)
+    opt After MAX(interview_deadline)
+        Recruiter->>System: Open View Application Detail (Reviews CV, scores, recordings)
         alt Recruiter Approves
-            Recruiter->>System: Approve Application
-            System->>DB: Update Application (Status: APPROVED)
-            System-->>Candidate: Notify Application Approved
+            Recruiter->>System: Approve Application (Status: APPROVED - Terminal)
         else Recruiter Rejects
-            Recruiter->>System: Reject Application
-            System->>DB: Update Application (Status: REJECTED)
-            System-->>Candidate: Notify Application Rejected
+            Recruiter->>System: Reject Application (Status: REJECTED - Terminal)
         end
     end
 
-    Note over Recruiter,System: 7. Intake Closing vs. End Recruitment
-    opt Close Intake (Temporary Halt)
-        Recruiter->>System: Close intake (Intake: CLOSED)
-        Note over Recruiter,System: Stops new applications; already-screened applicants can still interview. No slot refund.
-    end
-    opt End Recruitment (Completion)
-        Recruiter->>System: End Recruitment
-        System->>DB: Mark recruitment finished; calculate eligible unused interview slots
-        System->>DB: Refund eligible unused slots as Coins to Recruiter Wallet
+    opt Every Application reaches terminal state (APPROVED / REJECTED)
+        System->>DB: Terminal Job Posting Auto-Close
+        System->>DB: Refund unused interview_slot capacity as internal Coins to Recruiter Wallet
+        Note over System,DB: Refund unused JP Candidate Slot (Internal coin movement; no PayOS call)
     end
 ```
 
@@ -186,42 +189,56 @@ sequenceDiagram
 1. **Job Posting Creation & Question Bank Setup:**
    * A Recruiter creates a **Job Posting** (the company's Job Description) from JD-like content.
    * AI extracts structured requirements, and the Recruiter reviews and confirms them.
-   * The system generates a single **Interview Blueprint** (core-question bank) for the posting.
+   * The system generates a single **Interview Blueprint** (core-question bank, persisted in `core_questions`) for the posting.
    * The Recruiter can view and edit core questions within their own posting's question bank.
    * The Recruiter configures posting-level evaluation weights (separate from the question bank).
    * Before submission for Admin approval, the Recruiter locks the company 3D interviewer model and Voice Profile.
    * Administrator approves the posting, making it publicly discoverable.
-2. **Interview Slot Funding & Intake Control:**
-   * The Recruiter funds **Interview Slots** for the Job Posting using coins from their personal coin wallet.
-   * An interview slot represents prepaid capacity for an interview, not an application or CV review.
-   * The Recruiter controls intake: **Open intake** accepts new applications; **Close intake** temporarily halts new incoming applications.
-   * *Critical Distinction:* When intake is closed, applicants who already passed CV screening can still conduct their interview. Close intake does not refund slots.
-3. **Application Submission & Immediate Recruiter Visibility:**
-   * Candidates browse approved Job Postings with open intake.
-   * The Candidate uploads a CV/resume and submits an Application.
-   * **Immediate Visibility:** The Application and uploaded CV/resume are immediately visible in the owning Recruiter's dashboard before any interview occurs. The former assumption requiring a completed interview prior to application visibility is superseded.
-4. **Recruiter CV Screening Decision:**
-   * The Recruiter reviews the candidate profile and uploaded CV/resume.
-   * The Recruiter renders a **CV Screening Decision**:
-     * `CV_REJECTED`: Candidate is disqualified; no interview occurs.
-     * `CV_PASSED`: Candidate is granted eligibility to conduct the required technical interview. Passing CV screening does not consume an interview slot.
-5. **Recruitment Interview Simulation:**
-   * An applicant with `CV_PASSED` status launches the technical interview.
-   * **Slot Consumption:** Starting the interview consumes one prepaid interview slot funded by the Recruiter. The Candidate is **not** charged. Reconnecting to or resuming that active session does not consume an additional slot.
-   * The interview strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
-   * The interview captures audio/video recordings and turn transcripts.
-6. **Result Attachment & Role-Specific Visibility:**
+2. **Interview Slot Funding & Intake Open:**
+   * The Recruiter funds interview capacity for the Job Posting using coins from their personal coin wallet, persisting `job_postings.interview_slot`.
+   * **`interview_slot` Definition:** Represents exclusively maximum recruitment interview capacity (the maximum number of Candidates that may be approved to proceed into the recruitment interview stage). It does **not** mean total Applications/CVs submitted, company hiring headcount, or final hires. RoleCue does not persist or enforce company hiring headcount.
+   * The Recruiter opens application intake.
+3. **Application Intake & Immediate Recruiter Visibility:**
+   * While Job Posting intake is **OPEN**, Candidates may submit an **UNLIMITED** number of Applications with uploaded CV/resumes.
+   * Application submissions are **NOT limited by interview capacity** (`interview_slot`).
+   * **Immediate Visibility:** The Application and uploaded CV/resume are immediately visible to the owning Recruiter in **View Application Detail** upon submission, prior to any interview taking place.
+4. **Recruiter CV Screening & 24-Hour Interview Deadline:**
+   * The Recruiter screens Applications and uploaded CVs inside **View Application Detail**.
+   * The Recruiter may approve at most `interview_slot` Candidates to proceed to the recruitment interview stage.
+   * **CV Approval Semantics:** Approving a CV grants interview eligibility; it does **not** consume the funded interview slot yet.
+   * **Interview Deadline:** When an Application is approved:
+     $$\text{interview\_deadline} = \text{cv\_approved\_at} + 24\text{ hours}$$
+   * If an approved Candidate does not complete the recruitment interview by `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
+5. **Close Intake (Manual or Limitation-Driven):**
+   * Intake can be closed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
+   * **Close Intake Semantics:**
+     * Stops accepting new Applications/CVs.
+     * Automatically **REJECTS** all remaining Applications that are still unscreened or not approved to proceed to interview.
+     * Candidates already approved for interview remain interview-eligible and may still complete their interviews within their 24-hour windows.
+     * Close Intake is **NOT terminal Job Posting close** and does **NOT refund unused interview capacity**.
+     * There is **NO Reopen Intake flow** and **NO manual End Recruitment command**.
+6. **Recruitment Interview Simulation & Slot Consumption:**
+   * An applicant with approved interview eligibility launches the technical interview.
+   * **Slot Consumption Boundary:** The funded interview slot is consumed strictly on the Candidate's **FIRST successful recruitment interview start**. Reconnecting to or resuming that active session consumes no additional slot.
+   * The Candidate is **never charged** for a Recruiter-funded recruitment interview.
+   * The interview strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile, capturing audio/video recordings and turn transcripts.
+7. **Result Attachment & Role-Specific Visibility:**
    * The evaluation engine generates the Interview Result (Performance Report) and attaches it, along with the audio/video recordings, to the candidate's Application.
    * **Candidate Visibility:** The Candidate can view their overall recruitment evaluation score, but **cannot** access recruitment transcripts or audio/video recordings during recruitment.
-   * **Recruiter Visibility:** The owning Recruiter has full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and full audio/video recordings and transcripts.
-7. **Final Decision (Scope Termination):**
-   * The Recruiter reviews the complete dossier and renders a definitive final decision: **Approve** or **Reject**.
-   * Status transitions to `APPROVED` or `REJECTED`.
-   * Recruitment scope terminates strictly at this binary decision. No offer management, background checks, or onboarding pipelines.
-8. **End Recruitment & Unused Slot Coin Refund:**
-   * When hiring completes or the position is closed, the Recruiter triggers **End Recruitment**.
-   * Only ending recruitment triggers an automatic internal coin refund for eligible unused interview slots back into the owning Recruiter's personal coin wallet.
-   * This refund is an internal ledger credit, not an external payment gateway cash refund.
+   * **Recruiter Visibility:** The owning Recruiter has full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and full audio/video recordings and transcripts inside **View Application Detail**.
+8. **Hard-Gated Final Recruiter Review & Terminal Decision:**
+   * Recruiter final Approve/Reject decisions are **HARD-GATED** until:
+     $$\text{MAX}(\text{interview\_deadline})$$
+     across all interview-eligible Applications for that Job Posting.
+   * Before that timestamp, the Recruiter **cannot** perform final Approve/Reject.
+   * After the gate expires, the Recruiter opens **View Application Detail**, inspects candidate profile, CV, evaluation score, and authorized recordings/transcripts, and renders the definitive final decision: **Approve** or **Reject** Application.
+   * All Recruiter CV, report, and recording review capabilities are consolidated inside **View Application Detail** (no separate top-level review use cases).
+9. **Terminal Job Posting Auto-Close & Unused Slot Coin Refund:**
+   * A Job Posting automatically reaches terminal closed state when **EVERY Application in scope has a terminal result** (`APPROVED` or `REJECTED`).
+   * Terminal rejections include applications rejected during Close Intake cleanup, interview deadline expiry, Recruiter CV rejection, and final Recruiter rejection.
+   * Upon terminal auto-close, the system executes **Refund unused JP Candidate Slot**, refunding all still-unused recruitment interview capacity to the Recruiter's personal coin wallet as internal coins.
+   * This refund is an internal database ledger credit; it does **not** call PayOS or external payment gateways.
+   * Terminal Job Posting close is strictly automated; there is **no manual End Recruitment command**.
 
 ---
 

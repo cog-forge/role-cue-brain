@@ -30,24 +30,26 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
   A single setup capability whose visual and vocal selection depends on the interview origin:
   * **Target JD for Practice:** The Candidate chooses an available system 3D interviewer or eligible model from their personal avatar inventory, an available Voice Profile, a 3D environment, difficulty, and duration.
   * **Recruiter Job Posting:** The Recruiter selects the company 3D interviewer model and Voice Profile before Job Posting approval. The Candidate must use those locked settings and cannot override them.
-* **Interview Blueprint (`interview_blueprints`):**
-  The first-class persistent **core-question bank** generated after human confirmation of extracted skills, requirements, and seniority context:
-  * Exactly **one current Blueprint** exists per JD (absent until generated).
-  * Contains ONLY the persistent/current core-question bank/list. Does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
-  * **Role Access Invariant:** Strictly **hidden from Candidates** (Candidates never view, edit, or confirm Blueprints). Recruiters **can** view and edit core questions within the question bank generated for their own Job Postings.
+* **Interview Blueprint (Core-Question Bank):**
+  A conceptual and product term for the persistent **core-question bank** generated after human confirmation of extracted skills, requirements, and seniority context:
+  * Persistent storage utilizes `core_questions`; there is **no separate Blueprint table** in the database.
+  * Exactly **one current question bank** exists per JD (absent until generated).
+  * Contains ONLY the persistent pool/list of core questions. Does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
+  * **Role Access Invariant:** Strictly **hidden from Candidates** (Candidates never view, edit, or confirm question banks). Recruiters **can** view and edit core questions within the question bank generated for their own Job Postings.
   * *Separation:* Evaluation weights and scoring settings are configured separately and are not embedded into the question bank.
-* **Interview Session (`interview_sessions`):**
-  A concrete execution attempt of an interview executing from an Interview Blueprint.
+* **Interview Session (`interviews`):**
+  A concrete execution attempt of an interview executing from the core-question bank:
   * **Practice Session:** Debited in coins from the Candidate's personal wallet upon session start; reconnecting to or resuming the same active session is free.
-  * **Recruitment Session:** Requires the Candidate to have submitted an application with a CV and passed Recruiter CV screening. Consumes one prepaid interview slot funded by the Recruiter; the Candidate is not charged. Reconnecting to or resuming the same session consumes no additional slot.
+  * **Recruitment Session:** Requires the Candidate to have submitted an application with a CV and received CV approval from the Recruiter. Consumes one prepaid interview slot strictly upon the Candidate's **first successful interview start**; reconnecting to or resuming that session consumes no additional slot. The Candidate is never charged.
+  * **24-Hour Interview Deadline:** Approved Candidates must complete the interview before `interview_deadline = cv_approved_at + 24 hours`; failure to complete by deadline results in automatic terminal `REJECTED`.
 * **Recruitment Audio/Video Recordings:**
   Recruitment interviews capture audio/video recordings and conversational transcripts.
-  * Retained exclusively for review by the Recruiter owning the Job Posting.
+  * Retained exclusively for review by the Recruiter owning the Job Posting inside View Application Detail.
   * Candidates view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment.
   * Practice interviews do not record video; they use microphone/STT for spoken dialogue.
 * **Session Execution Snapshot / Context (`blueprint_snapshot`):**
-  An immutable copy of the exact question-bank/question selection context AND the evaluation configuration actually used, captured at the moment an Interview Session is initialized. Guarantees that historical turn grading, replay, and scoring remain 100% reproducible even if source questions or evaluation weights change later (without modeling evaluation criteria as part of the current Blueprint).
-* **Conversational Turns (`session_turns`):**
+  An immutable copy of the exact question-bank/question selection context AND the evaluation configuration actually used, captured at the moment an Interview Session is initialized. Guarantees that historical turn grading, replay, and scoring remain 100% reproducible even if source questions or evaluation weights change later (without modeling evaluation criteria as part of the current question bank).
+* **Conversational Turns (`conversation_turns`):**
   Sequentially indexed dialogue units capturing interviewer question text, TTS audio playback, candidate transcript, and real-time response data.
 * **Adaptive Question Loop:**
   During simulation, the runtime samples a random set of $x$ core questions from the bank and may ask bounded follow-ups based on the candidate's answers and interview context.
@@ -115,10 +117,12 @@ stateDiagram-v2
    Each Target JD or Job Posting has at most **one current Blueprint** containing its question bank (absent until generated). Changing difficulty or configuration does not spawn multiple current banks.
 4. **Start Charging Boundary vs. Resume:**
    * A practice interview is debited in coins from the Candidate's personal wallet **upon session start**, not when it finishes.
-   * A recruitment interview consumes one prepaid interview slot funded by the Recruiter **upon session start**. The Candidate is **not** charged.
+   * A recruitment interview consumes one prepaid interview slot funded by the Recruiter strictly upon the Candidate's **first successful start**. The Candidate is **never** charged.
    * If a session disconnects or is paused, reconnecting to or resuming the same active session incurs **no second charge** and consumes no additional slot.
-5. **Recruitment Interview Eligibility:**
-   To launch a recruitment interview, a Candidate must have submitted an application with a CV, and the Recruiter must have rendered a `CV_PASSED` screening decision. The session strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
+5. **Recruitment Interview Eligibility & 24-Hour Deadline:**
+   * To launch a recruitment interview, a Candidate must have submitted an application with a CV, and the Recruiter must have approved the CV via View Application Detail. Approval grants interview eligibility, but does not consume a slot yet.
+   * The interview must be completed before `interview_deadline = cv_approved_at + 24 hours`. Missing the deadline automatically transitions the Application to terminal `REJECTED`.
+   * The session strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
 6. **Recruitment Recording & Visibility Boundary:**
    Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. Candidates can view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. Practice interviews do not record video.
 7. **Immutable Session Execution Snapshot:**

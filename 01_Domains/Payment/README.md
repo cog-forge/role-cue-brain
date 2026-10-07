@@ -27,34 +27,41 @@ Provide a transparent, reliable coin-based monetization infrastructure. Candidat
 ## 2. Core Concepts
 
 * **Coin (`coins`):**
-  The standard internal digital currency of RoleCue. Coins are purchased in packages using real money via external payment gateways and spent internally on platform capabilities.
+  The standard internal digital currency of RoleCue. Coins are purchased in packages (`coin_packages`) using real money via PayOS and spent internally on platform capabilities.
 * **Personal Wallet (`wallets`):**
   An internal digital coin ledger owned individually by an authenticated **Candidate** or **Recruiter**. Tracks current available balance and append-only transaction history.
   * **Role Restriction Invariant:** Only Candidates and Recruiters hold personal coin wallets. **Administrators do NOT have a wallet.**
-* **Payment Order / External Transaction (`payment_orders`):**
-  An immutable record of an external real-money purchase processed through a third-party Payment Gateway to acquire a coin package. Verified cryptographically via signed webhooks before coins are minted into the user's wallet.
-* **Coin Transaction (`coin_transactions`):**
-  An immutable internal ledger entry recording an internal debit or credit of coins within a personal wallet:
-  * Types: `PACKAGE_PURCHASE_CREDIT`, `PRACTICE_INTERVIEW_DEBIT`, `INTERVIEW_SLOT_PURCHASE_DEBIT`, `AVATAR_GENERATION_DEBIT`, `AVATAR_SLOT_PURCHASE_DEBIT`, `END_RECRUITMENT_SLOT_REFUND_CREDIT`.
-* **Interview Slot Capacity Funding:**
-  Recruiter uses coins from their personal wallet to purchase/fund **Interview Slots** for an approved Job Posting. An interview slot represents interview capacity, not an application or CV review.
+* **Coin Packages (`coin_packages`):**
+  Defined coin bundles available for purchase using real money via PayOS checkout.
+* **Unified Transaction Model (`transactions`):**
+  An immutable ledger recording both external real-money package orders and internal coin movements. The platform operates on a single unified transaction model with fields including:
+  * `from`
+  * `to`
+  * `amount`
+  * `currency`
+  * `description`
+  * `status`
+  * `payos_order_code`
+  * **Architectural Invariant:** The team explicitly rejected the proposed payment redesign that separated `payment_orders` and `coin_transactions`. The unified transaction model is the frozen contract, and its semantic and traceability limitations are accepted technical debt for this capstone.
+* **Interview Capacity Funding (`interview_slot`):**
+  Recruiter uses coins from their personal wallet to purchase/fund `interview_slot` capacity on an approved Job Posting. `interview_slot` represents maximum recruitment interview capacity, not an application or CV review.
 * **Avatar Operations Funding:**
   Coins fund two distinct avatar operations:
   1. *Generation Fee:* Charged strictly upon successful VRM persistence in RoleCue.
   2. *Capacity Purchase:* Buys an additional avatar storage slot when inventory is full.
-* **End Recruitment Slot Refund:**
-  When a Recruiter executes **End Recruitment**, eligible unused funded interview slots are refunded as coins back into the owning Recruiter's personal coin wallet.
-* **Unconfirmed Commercial Parameters:**
-  Package pricing, coin conversion rates, coin precision, package sizes, and initial free avatar capacities remain unconfirmed product decisions. No hypothetical prices, exchange ratios, or gateway brand constraints are locked as global defaults.
+* **Terminal Job Posting Slot Refund (`Refund unused JP Candidate Slot`):**
+  When a Job Posting automatically reaches terminal closed state (when every application in scope has a terminal result `APPROVED` or `REJECTED`), all still-unused interview capacity is refunded as internal coins back into the owning Recruiter's personal coin wallet.
+  * Refund does **not** happen on Close Intake.
+  * Refund does **not** invoke PayOS (it is an internal coin ledger movement).
 
 ---
 
 ## 3. Actors Involved
 
-* **Candidate:** Purchases coin packages using real money; maintains a personal wallet; spends coins to start practice interview sessions and perform personal avatar operations.
-* **Recruiter:** Purchases coin packages using real money; maintains a personal wallet; spends coins to fund Job Posting interview slots and perform avatar operations; receives internal coin refunds for eligible unused interview slots upon End Recruitment.
-* **Administrator:** Audits external payment orders and internal coin transactions; generates platform revenue reports. (Administrative management of coin package pricing remains awaiting confirmation).
-* **Payment Gateway (External Boundary):** Ingests checkout intents for coin packages and delivers cryptographically signed webhooks confirming real-money transaction status.
+* **Candidate:** Purchases coin packages using real money via PayOS; maintains a personal wallet; spends coins to start practice interview sessions and perform personal avatar operations.
+* **Recruiter:** Purchases coin packages using real money via PayOS; maintains a personal wallet; spends coins to fund Job Posting `interview_slot` capacity and perform avatar operations; receives internal coin refunds for eligible unused interview capacity upon terminal Job Posting auto-close.
+* **Administrator:** Audits unified payment transactions; generates platform revenue reports.
+* **PayOS (Confirmed Payment Provider):** Ingests checkout intents for coin packages and delivers cryptographically signed webhooks confirming real-money transaction status via `payos_order_code`.
 
 ---
 
@@ -65,33 +72,33 @@ sequenceDiagram
     autonumber
     actor User as Candidate / Recruiter
     participant Pay as Payment Domain
-    participant DB as Financial Ledger
-    participant Gateway as Payment Gateway
+    participant DB as Financial Ledger (transactions)
+    participant PayOS as PayOS Gateway
     actor Admin as Administrator
 
-    Note over User,Gateway: 1. Coin Package Purchase (Real-Money)
+    Note over User,PayOS: 1. Coin Package Purchase (Real-Money via PayOS)
     User->>Pay: Purchase Coin Package
-    Pay->>DB: Create Payment Order (Status: PENDING)
-    Pay->>Gateway: Initialize Checkout Session
-    Gateway-->>Pay: Checkout URL
-    Pay-->>User: Redirect to Gateway Portal
-    User->>Gateway: Complete Real-Money Payment
-    Gateway->>Pay: POST /payments/webhook (Cryptographically Signed)
+    Pay->>DB: Create Transaction (Status: PENDING, currency, amount, payos_order_code)
+    Pay->>PayOS: Initialize Checkout Session
+    PayOS-->>Pay: Checkout URL
+    Pay-->>User: Redirect to PayOS Portal
+    User->>PayOS: Complete Real-Money Payment
+    PayOS->>Pay: POST /payments/webhook (Cryptographically Signed)
     Pay->>Pay: Verify Webhook Signature
-    Pay->>DB: Mark Payment Order SUCCESS
-    Pay->>DB: Credit Coins to User Personal Wallet (CoinTransaction)
+    Pay->>DB: Update Transaction Status = SUCCESS
+    Pay->>DB: Credit Coins to User Personal Wallet (Unified Transaction)
     Pay-->>User: Coin Balance Updated
 
-    Note over User,DB: 2. Internal Coin Spending (No Gateway Call)
+    Note over User,DB: 2. Internal Coin Spending (No PayOS Call)
     opt Candidate Starts Practice Interview
         User->>Pay: Start Practice Interview
         Pay->>DB: Debit Practice Fee from Candidate Wallet (Session Start)
         Pay-->>User: Interview Authorized
     end
     opt Recruiter Funds Interview Slots
-        User->>Pay: Fund Interview Slots for Job Posting
-        Pay->>DB: Debit Slot Fee from Recruiter Wallet & Allocate Slots
-        Pay-->>User: Slots Funded
+        User->>Pay: Fund interview_slot for Job Posting
+        Pay->>DB: Debit Slot Fee from Recruiter Wallet & Allocate interview_slot
+        Pay-->>User: Capacity Funded
     end
     opt Avatar Generation Fee
         User->>Pay: Confirm Successful VRM Persistence
@@ -99,16 +106,15 @@ sequenceDiagram
         Pay-->>User: Generation Fee Paid
     end
 
-    Note over User,DB: 3. End Recruitment Slot Refund (Internal Coin Movement)
-    opt Recruiter Ends Recruitment
-        User->>Pay: Trigger End Recruitment
-        Pay->>DB: Calculate Eligible Unused Interview Slots
-        Pay->>DB: Credit Refund as Coins to Recruiter Wallet (No Gateway Call)
-        Pay-->>User: Refund Coins Credited to Wallet
+    Note over User,DB: 3. Terminal Job Posting Auto-Close Refund (Internal Coin Movement)
+    opt Every Application reaches terminal state (APPROVED / REJECTED)
+        Pay->>DB: Calculate Eligible Unused interview_slot Capacity
+        Pay->>DB: Credit Refund as Coins to Recruiter Wallet (No PayOS Call)
+        Pay-->>User: Unused Capacity Coins Refunded to Wallet
     end
 
     Note over Admin,DB: 4. Financial Audit & Governance
-    Admin->>Pay: Inspect Payment Orders & Coin Transactions
+    Admin->>Pay: Inspect Unified Transactions
     Pay->>DB: Query Financial Ledgers
     Admin->>Pay: Generate Platform Revenue Reports
     Pay->>DB: Aggregate Financial Performance Metrics
@@ -119,43 +125,45 @@ sequenceDiagram
 ## 5. Business Rules & Invariants
 
 1. **Separation of External Payments and Internal Coins:**
-   Real-money transactions occur exclusively through external Payment Gateways to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar storage slot purchases) and internal refunds (unused interview slots upon End Recruitment) execute purely within the internal coin ledger. Internal coin spending and refunds are **not** external payment gateway transactions.
-2. **Wallet Scope & Role Boundaries:**
+   Real-money transactions occur exclusively through PayOS to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar storage slot purchases) and internal refunds (unused interview capacity upon terminal Job Posting close) execute purely within the internal coin ledger. Internal coin spending and refunds do **not** invoke PayOS.
+2. **Unified Transaction Model Invariant:**
+   Transactions are persisted in a single `transactions` table containing fields `from`, `to`, `amount`, `currency`, `description`, `status`, and `payos_order_code`. RoleCue does not use separate `payment_orders` and `coin_transactions` tables.
+3. **Wallet Scope & Role Boundaries:**
    Personal coin wallets belong exclusively to **Candidates** and **Recruiters**. Administrators do **NOT** have a wallet. Registered User inheritance does not grant an Admin wallet capabilities.
-3. **Practice Interview Start Charging Boundary:**
+4. **Practice Interview Start Charging Boundary:**
    A practice interview is debited from the Candidate's coin wallet **at session start**, not when it concludes. If a session experiences a network disconnect or is paused, reconnecting to or resuming the same session incurs **no second charge**.
-4. **Recruitment Interview Slot Consumption:**
-   A recruitment interview consumes one prepaid interview slot funded by the Recruiter upon session start. The Candidate is **not** charged. Reconnecting to or resuming that active recruitment session does not consume an additional slot.
-5. **Avatar Generation Charging Boundary:**
+5. **Recruitment Interview Slot Consumption:**
+   A recruitment interview consumes one prepaid interview slot funded by the Recruiter strictly upon the Candidate's **first successful start**. The Candidate is **never charged**. Reconnecting to or resuming that active recruitment session does not consume an additional slot.
+6. **Avatar Generation Charging Boundary:**
    The avatar generation fee is debited in coins **only after successful VRM persistence** in RoleCue. Opening the avatar creator, uploading photos, generating an Avaturn GLB, or initiating conversion does **not** incur a generation fee.
-6. **Avatar Inventory Capacity vs. Generation Fee:**
+7. **Avatar Inventory Capacity vs. Generation Fee:**
    Avatar storage slots represent storage capacity, not generation credits. Purchasing additional storage capacity and paying a generation fee are distinct operations.
-7. **End Recruitment vs. Close Intake Refund Boundary:**
-   Only **End Recruitment** calculates eligible unused funded interview slots and refunds them as coins back into the owning Recruiter's personal wallet. **Close intake does NOT refund interview slots.**
-8. **No Cash Refund Dispute Queues:**
-   RoleCue does not operate external gateway refund queues, cash dispute adjudication forms, or administrative chargeback workflows. Unused slot refunds upon End Recruitment execute automatically as internal ledger credits.
-9. **Webhook Idempotency & Cryptographic Verification:**
-   Payment webhooks must be cryptographically verified against the gateway's shared secret or public key. Handlers must be strictly idempotent; duplicate webhooks for the same order reference must never result in duplicate coin credits.
-10. **Ledger Immutability:**
-    Payment orders and internal coin transaction ledgers are append-only. Once recorded, entries cannot be modified or deleted.
+8. **Terminal Job Posting Auto-Close vs. Close Intake Refund Boundary:**
+   Only **terminal Job Posting auto-close** (reached when every application has a terminal result `APPROVED` or `REJECTED`) triggers **Refund unused JP Candidate Slot**. **Close intake does NOT refund interview slots.**
+9. **No Cash Refund Dispute Queues:**
+   RoleCue does not operate external gateway refund queues, cash dispute adjudication forms, or administrative chargeback workflows. Unused slot refunds upon terminal auto-close execute automatically as internal ledger credits.
+10. **Webhook Idempotency & Cryptographic Verification:**
+    Payment webhooks from PayOS must be cryptographically verified. Handlers must be strictly idempotent; duplicate webhooks for the same order code must never result in duplicate coin credits.
+11. **Ledger Immutability:**
+    The unified transaction ledger is append-only. Once recorded, entries cannot be modified or deleted.
 
 ---
 
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Verifies Candidate wallet balance and debits coins at practice session start. For recruitment interviews, verifies that the Job Posting has an available funded interview slot and consumes it upon session start.
+  Verifies Candidate wallet balance and debits coins at practice session start. For recruitment interviews, verifies that the Job Posting has an available funded interview slot and consumes it upon the Candidate's first successful start.
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
-  Debits Recruiter wallet coins to fund interview slots. Upon End Recruitment, calculates eligible unused slots and credits coin refunds to the Recruiter's wallet.
+  Debits Recruiter wallet coins to fund `interview_slot` capacity. Upon terminal Job Posting auto-close, calculates eligible unused capacity and credits internal coin refunds to the Recruiter's wallet (`Refund unused JP Candidate Slot`).
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
   Debits the avatar generation fee upon successful VRM persistence. Debits coins when a Candidate or Recruiter purchases additional avatar storage slots.
 * **[[01_Domains/Auth/README|Auth Domain]]:**
   Associates personal coin wallets and transaction records with authenticated Candidate and Recruiter `user_id`s.
 * **[[01_Domains/Administration/README|Administration Domain]]:**
-  Administrators audit external payment orders, inspect internal coin transactions, and generate revenue reports. (Coin pricing updates flagged as awaiting confirmation).
+  Administrators audit unified payment transactions and generate revenue reports.
 
 ---
 
 ## 7. External Integrations
 
-* **Payment Gateway:** External electronic payment processors facilitating real-money checkout for coin packages and delivering cryptographically signed webhooks confirming transaction status.
+* **PayOS:** Confirmed third-party electronic payment processor facilitating real-money checkout for coin packages and delivering cryptographically signed webhooks confirming transaction status via `payos_order_code`.

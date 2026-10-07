@@ -43,13 +43,15 @@ This document records the ratified, long-lived product decisions that govern the
 * **Decision:** The recruitment workflow follows a CV-first sequence and strictly terminates at **Application Approve** or **Reject**.
 * **Rationale:** RoleCue is an interview simulation platform and lightweight career matching board, not a full applicant tracking suite. Modeling multi-stage hiring pipelines, panel scheduling, or onboarding would dilute team focus and explode project complexity.
 * **Rule:**
-  1. The Candidate submits an Application with an uploaded CV/resume.
-  2. The Application and CV are **immediately visible** to the owning Recruiter prior to any interview occurring. (The former assumption requiring a completed interview prior to visibility is superseded).
-  3. The Recruiter renders a **CV Screening Decision** (`Pass` or `Reject` CV screening). Passing grants interview eligibility; it is not final hiring.
-  4. An approved applicant conducts the technical interview using a funded slot prepaid by the Recruiter.
-  5. The Interview Result and recruitment recordings are attached to the Application.
-  6. The Recruiter reviews the candidate dossier, evaluation result, and recordings/transcript, rendering a final **Approve** or **Reject** decision.
-  7. Scope strictly terminates at this binary final verdict.
+  1. While Job Posting intake is OPEN, Candidates may submit an unlimited number of Applications with CV/resume (not capped by `interview_slot`).
+  2. The Application and CV are **immediately visible** to the owning Recruiter inside **View Application Detail** prior to any interview occurring.
+  3. The Recruiter renders a **CV Screening Decision** (`Pass` or `Reject` CV screening) for at most `interview_slot` Candidates. Passing grants interview eligibility; it is not final hiring.
+  4. Each approved application receives an individual deadline: `interview_deadline = cv_approved_at + 24 hours`. If the Candidate does not start before the deadline, the System Handler marks the application as terminal `REJECTED`.
+  5. An approved applicant conducts the technical interview; interview slot capacity is consumed upon the Candidate's **first successful interview start** (reconnects/resumes are free).
+  6. The Interview Result and recruitment recordings/transcripts are attached to the Application.
+  7. Recruiter final review decisions are **HARD-GATED until MAX(interview_deadline)** across all interview-eligible applications for that posting.
+  8. Once the hard gate opens, the Recruiter reviews candidate profile, CV, evaluation score, and authorized recordings/transcripts consolidated directly inside **View Application Detail** and renders the final **Approve / Reject Application** decision.
+  9. When every application reaches a terminal state (`APPROVED` or `REJECTED`), the Job Posting reaches terminal auto-close, triggering automated internal coin refund of unused slot capacity (`Refund unused JP Candidate Slot`). Scope strictly terminates at this point.
 
 ---
 
@@ -113,20 +115,22 @@ This document records the ratified, long-lived product decisions that govern the
 
 ---
 
-## 13. Recruiter Intake Management, Slot Funding & Recording Access
-* **Decision:** Recruiter capabilities include managing intake (Open/Close), funding interview slots, editing own question banks and evaluation weights, screening CVs, and reviewing recruitment recordings.
+## 13. Recruiter Intake Management, Capacity Limits & View Application Detail Consolidation
+* **Decision:** Recruiter capabilities include managing intake (Close Intake), funding interview capacity (`interview_slot`), editing own question banks and evaluation weights, screening CVs, and reviewing recruitment recordings and transcripts consolidated within View Application Detail.
 * **Rationale:** Recruiters require operational control over interview capacity, application intake pacing, and candidate performance evidence without expanding into a full ATS.
 * **Rule:**
-  * **Intake Control:** Open intake receives new applications; Close intake temporarily stops new submissions. Candidates who already passed CV screening can still interview while intake is closed. Close intake does **not** refund slots.
-  * **End Recruitment:** Formally finishes recruitment on a posting. Only ending recruitment refunds eligible unused interview slots as coins back into the Recruiter's personal wallet.
-  * **Evaluation Settings:** Posting-level evaluation weights are configured by the Recruiter separately from the question bank Blueprint.
-  * **Recruitment Recordings:** Audio/video recordings and transcripts are retained exclusively for the owning Recruiter. Candidates view their evaluation score, but cannot view recruitment transcripts or recordings during recruitment. Admin does not have recording access by inference.
-  * **Archive Job Posting (Removed):** `Archive Job Posting` is **not** part of RoleCue's current product contract. Terminology from earlier drafts referring to archiving Job Postings is obsolete. The current Recruiter operational lifecycle uses Open Intake, Close Intake, Reopen Intake, and End Recruitment only. `Delete Job Posting` remains available where supported by the Use Case V2 but is a distinct destructive action and does not inherit Archive semantics or trigger any slot refund.
+  * **Intake Control:** Open intake receives unlimited applications; Close intake (`Close Job Posting Intake` or automated `Close Job Posting When Meet Configured Limitation` when approved count reaches `interview_slot`) permanently closes intake and automatically marks all unscreened/unapproved applications as terminal `REJECTED`. Candidates who already passed CV screening can still interview within their 24-hour deadline (`cv_approved_at + 24 hours`). Close intake does **not** refund slots.
+  * **No Reopen Intake Flow:** There is **NO Reopen Intake** flow. Once closed, intake cannot be reopened.
+  * **No Manual End Recruitment Flow:** There is **NO manual End Recruitment** capability.
+  * **Terminal Auto-Close & Unused Slot Refund:** Terminal Job Posting close is reached automatically when EVERY application in scope has a terminal result (`APPROVED` or `REJECTED`). Upon terminal auto-close, the System Handler executes `Refund unused JP Candidate Slot`, refunding still-unused capacity to the Recruiter's wallet as internal coins.
+  * **Consolidated Application Review:** Review of candidate profile, CV, evaluation score, and authorized recordings/transcripts is consolidated directly within **View Application Detail**. There are no separate top-level review use cases.
+  * **Hard-Gated Final Decisions:** Final decisions (`Approve / Reject Application`) are **HARD-GATED until MAX(interview_deadline)** across all interview-eligible applications for that posting.
+  * **Archive Job Posting (Removed):** `Archive Job Posting` is **not** part of RoleCue's current product contract. Terminology from earlier drafts referring to archiving Job Postings is obsolete.
 
 ---
 
 ## 14. Adaptive Question Loop with Decoupled Follow-Up Decisions (Jev is Unselected)
-* **Decision:** The interview runtime selects a random set of $x$ core questions from the question bank Blueprint and may ask bounded follow-ups based on the candidate's answers and interview context.
+* **Decision:** The interview runtime selects a random set of $x$ core questions from the question bank (`core_questions`, conceptual Blueprint) and may ask bounded follow-ups based on the candidate's answers and interview context.
 * **Rationale:** Deciding whether to ask a follow-up and generating follow-up question wording are distinct responsibilities. Runtime execution must avoid rigid lock-in to an unverified external vendor or asserting that a single LLM owns all decisions.
 * **Rule:**
   * The simulation samples a random set of $x$ core questions from the bank and conducts adaptive dialogue with bounded follow-ups.
@@ -135,29 +139,30 @@ This document records the ratified, long-lived product decisions that govern the
 
 ---
 
-## 15. Coin Wallets, Slot Funding, and Charging Boundaries
-* **Decision:** Platform monetization is structured entirely around coin packages, personal wallets, and slot funding.
+## 15. Coin Wallets, Unified Transactions, Slot Capacity & Charging Boundaries
+* **Decision:** Platform monetization is structured entirely around coin packages, personal wallets, unified transactions, and slot capacity.
 * **Rationale:** Replaces recurring memberships with a flexible, transparent pay-per-use and capacity-funding model for Candidates and Recruiters.
 * **Rule:**
   * **Wallets:** Only Candidates and Recruiters hold personal coin wallets. Admin has no wallet.
-  * **External vs. Internal:** External payment gateways handle real-money checkout to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar capacity purchases) and internal refunds (End Recruitment unused slot refunds) are internal database ledger operations that do not invoke the external gateway.
+  * **Unified Transactions Model:** Platform utilizes a single unified `transactions` table with fields `from`, `to`, `amount`, `currency`, `description`, `status`, `payos_order_code`. The proposed redesign into split `payment_orders` and `coin_transactions` was formally rejected by the team and represents accepted technical debt for this capstone. PayOS is the confirmed provider.
+  * **External vs. Internal:** External payment gateway (PayOS) handles real-money checkout to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar capacity purchases) and internal refunds (`Refund unused JP Candidate Slot` at terminal auto-close) are internal database ledger operations that do not invoke PayOS.
   * **Start Charging Boundary:** Practice interviews are debited in coins from the Candidate's wallet upon session start (not completion); reconnecting to or resuming the same active session incurs no second charge.
-  * **Slot Consumption Boundary:** Recruitment interviews consume one prepaid Recruiter slot upon session start; resuming that session consumes no additional slot; Candidates are never charged.
+  * **Slot Consumption Boundary:** Recruitment interviews consume one prepaid Recruiter slot upon Candidate's first successful interview start; resuming that session consumes no additional slot; Candidates are never charged.
   * **Avatar Charging Boundary:** The avatar generation fee is debited in coins only after successful VRM persistence in RoleCue.
-  * **End Recruitment Refund:** Only End Recruitment refunds eligible unused interview slots as coins back to the Recruiter's wallet. Close intake does not refund slots.
+  * **Terminal Auto-Close Refund:** Only terminal Job Posting auto-close refunds eligible unused interview slots as coins back to the Recruiter's wallet (`Refund unused JP Candidate Slot`). Close intake does not refund slots.
 
 ---
 
-## 16. Unresolved Product Decisions (Awaiting Explicit Confirmation)
+## 16. Unresolved Product Decisions & Scope Exclusions
 
-The following operational, numerical, and architectural parameters remain unresolved product questions and must **not** be silently filled with invented defaults:
+The following operational, numerical, and architectural parameters remain unresolved product questions or scope exclusions and must **not** be silently filled with invented defaults:
 
 1. **Commercial Parameters & Precision:**
    * Exact monetary pricing for coin packages.
    * Coin exchange ratios, currency precision (integer vs. decimal), package sizes, and initial free avatar storage capacity.
 2. **Interview Slot Policies:**
    * Slot reservation mechanics and concurrency limits during high application traffic.
-   * Handling in-flight active interview sessions when a Recruiter triggers End Recruitment.
+   * Handling in-flight active interview sessions during terminal auto-close.
    * Exception/refund policies for technical interview disruptions.
    * Maximum permitted interview attempts per application.
 3. **Question Bank Sampling & Runtime Policy:**
@@ -174,6 +179,5 @@ The following operational, numerical, and architectural parameters remain unreso
    * Physical cloud storage architecture and candidate recording consent workflows.
    * Post-recruitment transcript access policies (whether transcripts remain permanently restricted or unlock upon recruitment termination).
    * Session recovery timeout window (older conflicting reports cite 10 minutes vs. 15 minutes; unresolved).
-6. **Global Administrative Management:**
-   * Whether platform Administrators have authority to manage global AI prompt templates, global evaluation criteria, and Interview Feature Configuration / runtime toggles (all remain unconfirmed product decisions awaiting formal ratification).
-   * Administrative management and editing of global coin package pricing tiers.
+6. **Global Administrative Management (Excluded from Frozen Scope):**
+   * Global AI prompt templates, global evaluation criteria editing, runtime interview feature toggles, and coin package pricing tier editing are excluded from the current frozen scope.

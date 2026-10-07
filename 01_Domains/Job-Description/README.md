@@ -35,7 +35,7 @@ Transform unstructured, heterogeneous job postings (provided by Candidates) into
   * `technologies`: Specific software packages, libraries, or runtimes (e.g., "Kafka", "Docker", "Redis").
   * `domain_knowledge`: Specialized industry domains (e.g., "Fintech", "Distributed Systems").
 * **Candidate Refinement Notes:** Natural-language instructions provided by the candidate during review (e.g., *"Exclude C# from the interview"*, *"Focus on distributed caching and concurrency"*). Stored alongside the reviewed requirements.
-* **Confirmed Technical Requirements:** The final, candidate-verified requirements state. Human confirmation of extracted requirements authorizes internal question-bank Blueprint generation.
+* **Confirmed Technical Requirements:** The final, candidate-verified requirements state. Human confirmation of extracted requirements authorizes internal question-bank generation (`core_questions`).
 
 ---
 
@@ -68,7 +68,7 @@ flowchart TD
 4. **Interactive Candidate Review:** The candidate inspects extracted skills, changes the seniority badge, deletes unneeded items, and adds missing technologies.
 5. **Refinement Notes:** The candidate supplies free-form natural language notes to steer the upcoming interview focus.
 6. **Requirement Confirmation:** The candidate explicitly confirms the reviewed requirements. Confirmation is the mandatory gate before question-bank generation.
-7. **Single Question-Bank Blueprint Generation:** The confirmed requirements and refinement notes are used to generate the internal Interview Blueprint (the core-question bank). Exactly one current Blueprint exists per JD, which remains strictly hidden from the candidate.
+7. **Single Question-Bank Generation:** The confirmed requirements and refinement notes are used to generate the internal core-question bank (`core_questions` table, conceptually referred to as the Interview Blueprint). Exactly one current core-question bank exists per JD, which remains strictly hidden from the candidate.
 
 ---
 
@@ -82,12 +82,12 @@ flowchart TD
    A role's `seniority_level` (`intern` to `lead`) describes job seniority, **not** mock interview session difficulty (`easy`, `medium`, `hard`). A candidate preparing for a `senior` JD can configure an `easy` diagnostic warm-up or a `hard` high-stress simulation.
 4. **Technical Competencies Exclusivity:**
    Extraction and interview planning focus exclusively on technical domain skills. Behavioral attributes and soft skills are out of scope.
-5. **Human Confirmation Precedes Blueprint Generation:**
-   Candidate review and explicit confirmation of extracted requirements and refinement notes must occur *before* the system generates the Interview Blueprint. Once generated, the requirements snapshot is locked for that bank.
-6. **Hidden Blueprint Rule (Candidate Confirms Requirements, Not Blueprint):**
-   The Candidate **never** views, edits, or confirms the Interview Blueprint. There is no blueprint preview capability. The Candidate confirms only the extracted requirements.
-7. **Single Current Blueprint per JD:**
-   A Target JD possesses at most **one current Blueprint** containing its core-question bank (it is absent until generated). Do not generate multiple current banks just because session configuration or difficulty differs.
+5. **Human Confirmation Precedes Question Bank Generation:**
+   Candidate review and explicit confirmation of extracted requirements and refinement notes must occur *before* the system generates the core-question bank (`core_questions`). Once generated, the requirements snapshot is locked for that bank.
+6. **Hidden Question Bank Rule (Candidate Confirms Requirements, Not Questions):**
+   The Candidate **never** views, edits, or confirms the Interview Blueprint / question bank. There is no blueprint preview capability. The Candidate confirms only the extracted requirements.
+7. **Single Current Question Bank per JD:**
+   A Target JD possesses at most **one current core-question bank** in `core_questions` (conceptual Blueprint; it is absent until generated). Do not generate multiple current banks just because session configuration or difficulty differs.
 8. **Deletion Safety:**
    Deleting a Target JD from the library must not corrupt historical completed interview sessions or performance reports associated with it.
 
@@ -96,7 +96,7 @@ flowchart TD
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  The Confirmed Requirements and Refinement Notes serve as the direct input to internal **Interview Blueprint generation**. Exactly one current core-question bank Blueprint exists per Target JD (absent until generated); changing session configuration or difficulty does not create multiple current banks.
+  The Confirmed Requirements and Refinement Notes serve as the direct input to internal **question bank generation** (persisted in `core_questions`, conceptually the Interview Blueprint). Exactly one current core-question bank exists per Target JD (absent until generated); changing session configuration or difficulty does not create multiple current banks.
 * **[[01_Domains/Auth/README|Auth Domain]]:**
   Every Target JD references `user_id` to establish candidate ownership.
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**

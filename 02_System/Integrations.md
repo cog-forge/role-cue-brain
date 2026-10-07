@@ -86,7 +86,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 ### 3.1. Large Language Model (LLM) Provider
 * **Purpose:**
   * **Structured JD Extraction:** Parses unstructured job description text into validated JSON technical competencies (title, seniority, categorized skills, technologies).
-  * **Question-Bank Blueprint Generation:** Autonomously builds the internal core-question bank Blueprint from confirmed requirements and refinement notes.
+  * **Question-Bank Generation:** Autonomously builds the internal core-question bank (`core_questions`, conceptual Blueprint) from confirmed requirements and refinement notes.
   * **Adaptive Questioning Dialogue:** Analyzes candidate answers against the interview context to evaluate turns and generate bounded follow-up questions.
   * **Multi-Dimensional Evaluation:** Evaluates full session transcripts against the session snapshot's evaluation configuration across technical competencies.
 * **Unresolved Decision Provider / Jev Status:**
@@ -120,15 +120,15 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 * **Integration Constraint:**
   RoleCue does not use Avaturn Pro APIs or backend Avaturn API orchestration for capture, customization, or avatar generation. No marketplace or admin asset-upload catalog is integrated.
 
-### 3.5. Payment Gateway
+### 3.5. Payment Gateway (PayOS)
 * **Purpose:**
-  Facilitates secure electronic payment processing for **coin package purchases** using real money. (Memberships and subscriptions have been completely superseded).
-* **Provider Flexibility:**
-  Supports localized payment rails (e.g., PayOS, VNPay, MoMo) and international card processors.
+  Facilitates secure electronic payment processing for **coin package purchases** using real money via PayOS. (Memberships and subscriptions have been completely superseded).
+* **Confirmed Provider:**
+  PayOS is the confirmed provider. PayOS order codes are tracked directly on the unified `transactions` table (`payos_order_code`). The team explicitly rejected the proposed redesign into split `payment_orders` / `coin_transactions` tables; the unified transaction model is the accepted contract.
 * **Security & Invariants:**
-  * Webhook callbacks must be cryptographically signed by the gateway.
+  * Webhook callbacks must be cryptographically signed by PayOS.
   * Webhook handlers must verify signatures and maintain strictly idempotent processing to prevent duplicate status changes or coin minting.
-  * Real-money transactions acquire coin packages; internal coin spending (practice start fees, interview slot funding, avatar generation fees, avatar capacity purchases) and internal refunds (unused slot coin refunds upon End Recruitment) execute purely within the internal database and do **NOT** invoke the Payment Gateway.
+  * Real-money transactions acquire coin packages; internal coin spending (practice start fees, interview slot funding, avatar generation fees, avatar capacity purchases) and internal refunds (unused slot coin refunds upon terminal Job Posting auto-close via `Refund unused JP Candidate Slot`) execute purely within the internal database and do **NOT** invoke PayOS.
 
 ### 3.6. Email Provider
 * **Purpose:**

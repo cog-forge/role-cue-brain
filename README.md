@@ -40,13 +40,13 @@ This repository is intentionally maintained as a **durable domain knowledge base
 
 **RoleCue** is an AI-powered virtual technical interview simulation platform. It delivers realistic, personalized technical interview practice tailored to target Job Descriptions through:
 * **AI-based JD Extraction & Refinement:** Ingestion of text or PDF job descriptions, deterministic validation of technical competencies, and natural-language candidate refinement.
-* **Internal Interview Blueprint Generation:** Autonomous generation of a single core-question bank Blueprint per JD following human confirmation of extracted requirements; hidden from Candidates, but editable by Recruiters for their own Job Postings.
+* **Internal Interview Blueprint Generation:** Autonomous generation of a single core-question bank (`core_questions`, conceptual Blueprint) per JD following human confirmation of extracted requirements; hidden from Candidates, but editable by Recruiters for their own Job Postings.
 * **Real-Time 3D Virtual Interviewer:** Interactive WebGL avatar with real-time speech-to-text (STT), text-to-speech (TTS), and synchronized blend-shape viseme lip-sync.
 * **Adaptive Technical Questioning:** Simulation conducts a random selection of core questions from the bank with bounded follow-ups; question-loop decisions and follow-up generation remain decoupled without premature vendor or single-model lock-in.
 * **Post-Interview Evaluation:** Automated multi-dimensional scoring across core technical competencies with actionable gap analysis; recruiter-configurable weights for job postings.
-* **Lightweight Job Posting & CV-First Application:** A Recruiter company-JD board with Admin approval, locked company interview presentation, and CV-first application screening. The Recruiter reviews submitted applications and CVs before an interview occurs; passed applicants interview using Recruiter-funded interview slots; recruitment remains bounded at Application Approve/Reject.
+* **Lightweight Job Posting & CV-First Application:** A Recruiter company-JD board with Admin approval, locked company interview presentation, unlimited CV intake, 24-hour interview deadlines, hard-gated final reviews at `MAX(interview_deadline)` consolidated in View Application Detail, and terminal auto-close with unused slot refunds.
 * **Personal 3D Avatar Inventory:** An embedded free Avaturn iframe experience whose final GLB is converted by RoleCue to a persisted VRM avatar. Both Candidates and Recruiters maintain personal avatar inventories with storage slot capacity and generation fees charged upon successful VRM persistence.
-* **Coin Wallets & Slot Funding:** Coin wallets for Candidates and Recruiters (replacing memberships and subscriptions). Coins fund Candidate practice interviews (debited upon start), Recruiter interview slots, avatar generation, and avatar inventory capacity.
+* **Coin Wallets, PayOS & Unified Transactions:** Coin wallets for Candidates and Recruiters. Real-money coin packages purchased via PayOS; unified `transactions` ledger records checkout orders and internal coin movements (practice starts, slot funding, avatar fees, and terminal auto-close unused slot refunds).
 
 ---
 

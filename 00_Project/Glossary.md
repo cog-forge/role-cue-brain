@@ -46,56 +46,55 @@ The execution parameters that determine an interview's presentation and runtime 
 * **Recruiter Job Posting:** The Recruiter selects the company 3D interviewer model and Voice Profile before Admin approval. Candidates must use those settings and cannot override them.
 
 ### Interview Blueprint
-The first-class persistent **core-question bank** generated following human confirmation of extracted requirements, skills, and seniority context. Exactly **one current Blueprint** exists per JD (absent until generated). It defines ONLY the persistent/current core-question bank/list. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
-* **Evaluation Configuration Separation:** Evaluation criteria, competency weights, and scoring settings are a separate concern from the question bank Blueprint. Recruiters can configure posting-level evaluation weights on their Job Postings separately.
-* **Access Boundary:** Strictly **internal and hidden from the Candidate**. Candidates never view, edit, or directly confirm an Interview Blueprint. Recruiters **can** view and edit core questions within the Blueprint generated for their own Job Postings.
+A conceptual and product term for the core-question bank generated following human confirmation of extracted requirements, skills, and seniority context. There is **no separate Blueprint table** in the database; persistent storage uses `core_questions`. Exactly **one current question bank** exists per JD (absent until generated). It defines ONLY the persistent core-question bank. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
+* **Evaluation Configuration Separation:** Evaluation criteria, competency weights, and scoring settings are a separate concern from the question bank. Recruiters can configure posting-level evaluation weights on their Job Postings separately.
+* **Access Boundary:** Strictly **internal and hidden from the Candidate**. Candidates never view, edit, or directly confirm an Interview Blueprint. Recruiters **can** view and edit core questions within the question bank generated for their own Job Postings.
 
 ### Interview Session
-A single concrete execution attempt of an interview executing from an Interview Blueprint. It may originate from a Candidate Target JD (practice) or a Recruiter Job Posting (recruitment). Tracks real-time conversational turns, candidate speech transcripts, Question delivery, audio playback, and (for recruitment) video/audio recordings. Holds an immutable snapshot preserving the historical question-bank context and evaluation configuration used.
+A concrete execution attempt of an interview (persisted as `interviews`). It may originate from a Candidate Target JD (practice) or a Recruiter Job Posting (recruitment). Tracks real-time conversational turns (`conversation_turns`), candidate speech transcripts, Question delivery, audio playback, and (for recruitment) video/audio recordings. Holds an immutable snapshot preserving the historical question-bank context and evaluation configuration used.
 
 ### Question
-The generic runtime unit spoken by the 3D interviewer during an Interview Session. An interview conducts a random selection of $x$ core questions from the question bank Blueprint, with bounded follow-ups determined by candidate answers and interview context. Deciding whether to follow up and generating follow-up wording are decoupled responsibilities without premature vendor lock-in.
+The generic runtime unit spoken by the 3D interviewer during an Interview Session (modeled via `interview_questions`). An interview conducts a random selection of $x$ core questions from the question bank, with bounded follow-ups determined by candidate answers and interview context. Deciding whether to follow up and generating follow-up wording are decoupled responsibilities without premature vendor lock-in.
 
 ### Blueprint Snapshot / Session Historical Context
-An immutable snapshot captured at the moment an Interview Session is initialized. Preserves the exact question-bank/question selection context AND the evaluation configuration actually used by the historical session. Ensures that historical evaluations, scoring, and performance reports remain 100% reproducible and tamper-proof even if the parent JD, question bank, or evaluation settings later evolve, without modeling evaluation criteria as part of the current Blueprint.
+An immutable snapshot captured at the moment an Interview Session is initialized. Preserves the exact question-bank/question selection context AND the evaluation configuration actually used by the historical session. Ensures that historical evaluations, scoring, and performance reports remain 100% reproducible and tamper-proof even if the parent JD, question bank, or evaluation settings later evolve, without modeling evaluation criteria as part of the current question bank.
 
 ### Application
-A candidate submission to a Recruiter's Job Posting containing Candidate application information and an uploaded CV/resume.
-* **Immediate Visibility:** The Application and CV are immediately visible to the owning Recruiter upon submission, prior to any interview.
-* **Lifecycle & Decisions:** Progresses through a two-decision lifecycle: initial `PENDING_CV_SCREENING` $\rightarrow$ Recruiter CV Screening Decision (`CV_PASSED` or `CV_REJECTED`) $\rightarrow$ (if passed, applicant conducts interview using a funded slot; Interview Result attached) $\rightarrow$ Recruiter Final Decision (`APPROVED` or `REJECTED`).
+A candidate submission to a Recruiter's Job Posting containing Candidate profile information and an uploaded CV/resume.
+* **Unlimited Submissions:** While intake is open, Candidates may submit an unlimited number of Applications and CVs. Submissions are NOT capped by interview capacity.
+* **Immediate Visibility:** The Application and CV are immediately visible to the owning Recruiter in View Application Detail upon submission.
+* **Lifecycle & Decisions:** Progresses through a structured lifecycle: initial `PENDING` $\rightarrow$ Recruiter CV Screening Approval (grants interview eligibility with a 24-hour deadline: `interview_deadline = cv_approved_at + 24 hours`) or Rejection $\rightarrow$ technical interview execution (funded slot consumed on first start) $\rightarrow$ Hard-Gated Final Review (gated until `MAX(interview_deadline)`) $\rightarrow$ Recruiter Final Decision (`APPROVED` or `REJECTED`).
+* **Terminal Rejection Paths:** Applications rejected during Close Intake cleanup, expired interview deadlines, CV screening rejections, and final Recruiter rejections all count as terminal rejected Applications.
 
 ### CV Screening Decision
-The Recruiter's initial evaluation of a candidate's uploaded CV/resume (`Pass` or `Reject` CV screening). Passing grants the candidate eligibility to conduct the required technical interview. It is distinct from and precedes the final application decision.
+The Recruiter's evaluation of a candidate's uploaded CV/resume inside View Application Detail. Recruiter may approve at most `interview_slot` Candidates to proceed to recruitment interview. Approving grants interview eligibility and sets a 24-hour deadline (`cv_approved_at + 24 hours`), but does not consume a funded slot yet.
 
 ### Final Decision
-The definitive, terminal decision rendered by the Recruiter (`Approve` or `Reject` Application) after reviewing the candidate's complete profile, CV, technical Interview Result, and recruitment audio/video recordings and transcripts. Marks the strict termination of recruitment scope.
+The definitive, terminal decision rendered by the Recruiter (`Approve` or `Reject` Application) inside View Application Detail after reviewing the candidate's complete profile, CV, technical Interview Result, and recruitment audio/video recordings and transcripts. Hard-gated until `MAX(interview_deadline)` across all interview-eligible Applications for the posting. Marks the strict termination of recruitment scope.
 
 ### Interview Result
-The persisted evaluation outcome (Performance Report) of the required technical interview associated with a Job Posting. Attached to the Application alongside recruitment recordings for Recruiter review. Candidates can view their recruitment score, but cannot view recruitment transcripts or recordings during recruitment.
+The persisted evaluation outcome (Performance Report) of the required technical interview associated with a Job Posting. Attached to the Application alongside recruitment recordings for Recruiter review inside View Application Detail. Candidates can view their recruitment score, but cannot view recruitment transcripts or recordings during recruitment.
 
 ### Coin
-The internal digital unit of value on RoleCue used to fund platform capabilities. Purchased in coin packages via external payment gateways using real money. Coins are used to pay for Candidate practice interview starts, Recruiter interview slots, avatar generation fees, and additional avatar inventory capacity slots.
+The internal digital unit of value on RoleCue used to fund platform capabilities. Purchased in coin packages via PayOS using real money. Coins are used to pay for Candidate practice interview starts, Recruiter interview slots, avatar generation fees, and additional avatar inventory capacity slots.
 
 ### Wallet (Coin Wallet)
-A personal digital coin balance ledger held individually by a **Candidate** or **Recruiter**. Tracks current coin balance and ledger transactions. Administrators do **NOT** possess a wallet.
+A personal digital coin balance ledger (`wallets`) held individually by a **Candidate** or **Recruiter**. Tracks current coin balance and ledger transactions. Administrators do **NOT** possess a wallet.
 
-### Coin Transaction
-An immutable internal financial ledger record representing an internal credit or debit of coins within a personal wallet (e.g., package purchase credit, practice interview debit, interview slot funding debit, avatar fee debit, avatar slot purchase debit, or unused slot refund credit upon End Recruitment). Internal coin movements are distinct from external payment gateway transactions.
+### Transaction (Unified Transaction Model)
+An immutable financial ledger record (`transactions`) under RoleCue's unified transaction model, tracking both external real-money package orders (processed via PayOS with `payos_order_code`) and internal coin ledger movements (practice interview start fees, interview slot funding, avatar generation fees, avatar capacity purchases, and unused slot refunds upon terminal Job Posting close). Contains fields such as `from`, `to`, `amount`, `currency`, `description`, `status`, and `payos_order_code`. PayOS is the confirmed real-money payment provider. The platform does NOT maintain separate `payment_orders` and `coin_transactions` tables.
 
-### Payment Order (Payment Transaction)
-An immutable record of an external real-money transaction processed through a third-party Payment Gateway to purchase a coin package. Verified cryptographically via signed webhooks.
-
-### Interview Slot
-A unit of prepaid interview capacity purchased by a Recruiter using coins from their wallet and allocated to an approved Job Posting. One slot is consumed when an eligible applicant starts the technical interview. Resuming that same session does not consume another slot. Eligible unused slots are refunded as coins upon End Recruitment. An interview slot represents interview capacity, not an application or CV review.
+### Interview Slot (`job_postings.interview_slot`)
+The frozen ERD field defining maximum recruitment interview capacity (the maximum number of Candidates that may be approved to proceed into the recruitment interview stage). One funded slot is consumed when an eligible applicant starts their first technical interview. Resuming that same session does not consume another slot. Eligible unused slots are refunded as coins upon terminal Job Posting auto-close. `interview_slot` does NOT represent total Applications/CVs submitted, company hiring headcount, or final hires. RoleCue does NOT persist or enforce company hiring headcount.
 
 ### Avatar Inventory Slot
 A unit of storage capacity in a Candidate's or Recruiter's personal 3D avatar inventory. Does **not** represent generation credits. When the inventory is full, a user must delete an existing model or purchase an additional inventory slot using coins to store a new avatar.
 
 ### Close Intake
-An operational action executed by a Recruiter to temporarily halt receiving new applications on an active Job Posting. Applicants who already passed CV screening prior to closing intake can still conduct their interview. Close intake does **not** refund interview slots or terminate recruitment. The Recruiter can reopen intake at any time.
+An operational action executed manually by a Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates). Halts receiving new Applications/CVs, automatically rejects all remaining unscreened or not-approved Applications, and preserves interview eligibility for already-approved Candidates within their 24-hour windows. Close Intake is NOT terminal Job Posting close and does NOT refund unused interview capacity. There is NO Reopen Intake flow and NO manual End Recruitment command.
 
-### End Recruitment
-The formal conclusion of recruitment for a Job Posting. Triggered by the Recruiter when hiring concludes or the vacancy is closed. Only ending recruitment calculates eligible unused funded interview slots and refunds them as coins back into the owning Recruiter's personal wallet.
+### Terminal Job Posting Close (Formerly End Recruitment)
+The automated conclusion of a Job Posting, reached automatically when EVERY Application in scope has a terminal result (`APPROVED` or `REJECTED`). Automatically executes `Refund unused JP Candidate Slot`, refunding all still-unused recruitment interview capacity to the owning Recruiter's personal wallet as internal coins. There is NO manual End Recruitment command. Close Intake does NOT trigger refunds.
 
 ### Voice Profile
 A speech synthesis persona sourced from Text-to-Speech (TTS) providers. Encapsulates provider identifiers, language, accent, gender, and vocal tone parameters. Sourced from TTS providers and managed exclusively by the **Admin**.

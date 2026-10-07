@@ -15,7 +15,8 @@ aliases:
 This document maps the primary business entities of the RoleCue platform and illustrates their conceptual relationships, multiplicities, and boundaries.
 
 > [!NOTE]
-> Conceptual models and entity names in this document illustrate domain relationships and business invariants. They must **not** be interpreted as approved physical database migration scripts or finalized SQL schema specifications.
+> The frozen RoleCue Use Case Diagram and frozen RoleCue ERD (named `RoleCue`) are authoritative.
+> Conceptual models and entity names in this document illustrate domain relationships and business invariants conforming strictly to the frozen contract. RoleCue does not redesign payment models, propose V2/vNext schemas, or invent missing business rules.
 
 ---
 
@@ -33,6 +34,7 @@ classDiagram
 
     class CandidateProfile {
         +UUID id
+        +UUID user_id
         +String full_name
         +String headline
         +String resume_url
@@ -40,6 +42,7 @@ classDiagram
 
     class RecruiterProfile {
         +UUID id
+        +UUID user_id
         +String company_name
     }
 
@@ -50,27 +53,28 @@ classDiagram
         +Timestamp updated_at
     }
 
-    class PaymentOrder {
+    class CoinPackage {
         +UUID id
-        +UUID user_id
-        +String gateway_order_ref
-        +Decimal amount
-        +String currency
-        +PaymentStatus status
-        +Timestamp created_at
+        +String name
+        +Decimal price
+        +Integer coin_amount
+        +Boolean is_active
     }
 
-    class CoinTransaction {
+    class Transaction {
         +UUID id
-        +UUID wallet_id
-        +CoinTxType type
-        +CoinAmount amount
-        +String reference_id
-        +Timestamp created_at
+        +UUID from
+        +UUID to
+        +Decimal amount
+        +String currency
+        +String description
+        +String status
+        +String payos_order_code
     }
 
     class TargetJD {
         +UUID id
+        +UUID user_id
         +String title
         +SeniorityLevel seniority_level
         +String raw_text
@@ -79,20 +83,14 @@ classDiagram
         +JDStatus status
     }
 
-    class InterviewBlueprint {
-        <<Internal Question Bank>>
+    class CoreQuestion {
+        <<Conceptual Blueprint>>
         +UUID id
-        +JSONB question_bank
-        +Integer question_count
-        +String contract_version
-    }
-
-    class PostingEvaluationSettings {
-        <<Separate from Bank>>
-        +UUID id
+        +UUID job_description_id
         +UUID job_posting_id
-        +JSONB competency_weights
-        +JSONB scoring_criteria
+        +String question_text
+        +String criteria
+        +Integer order
     }
 
     class JobPosting {
@@ -102,37 +100,33 @@ classDiagram
         +SeniorityLevel seniority_level
         +String description
         +Array~String~ required_technologies
+        +Integer interview_slot
         +String company_interviewer_model_id
         +UUID voice_profile_id
         +PostingStatus status
         +IntakeStatus intake_status
     }
 
-    class InterviewSlot {
-        +UUID id
-        +UUID job_posting_id
-        +SlotStatus status
-        +Timestamp funded_at
-        +Timestamp consumed_at
-    }
-
     class Application {
         +UUID id
         +UUID job_posting_id
         +UUID candidate_id
-        +JSONB candidate_info
-        +String cv_resume_url
-        +UUID interview_result_id
-        +CVScreeningStatus cv_screening_status
-        +ApplicationStatus final_status
+        +String cv_file_url
+        +ApplicationStatus status
+        +Timestamp interview_deadline
+        +Timestamp cv_approved_at
+        +Timestamp reviewed_at
+        +UUID interview_id
         +Timestamp submitted_at
     }
 
-    class InterviewSession {
+    class Interview {
         +UUID id
+        +UUID user_id
+        +UUID job_posting_id
+        +UUID job_description_id
         +InterviewOrigin origin
         +InterviewStatus status
-        +Integer current_turn_index
         +JSONB blueprint_snapshot
         +JSONB execution_context
         +String recording_url
@@ -140,17 +134,18 @@ classDiagram
         +Timestamp ended_at
     }
 
-    class SessionTurn {
+    class ConversationTurn {
         +UUID id
+        +UUID interview_id
         +Integer turn_index
         +String question_text
         +String candidate_transcript
-        +Float candidate_latency_sec
         +JSONB turn_evaluation
     }
 
     class PerformanceReport {
         +UUID id
+        +UUID interview_id
         +Float overall_score
         +JSONB competency_scores
         +JSONB turn_critiques
@@ -179,27 +174,24 @@ classDiagram
     UserAccount "1" -- "0..1" CandidateProfile : profile
     UserAccount "1" -- "0..1" RecruiterProfile : profile
     UserAccount "1" -- "0..1" CoinWallet : owns (Candidate or Recruiter)
-    UserAccount "1" -- "0..*" PaymentOrder : places (Candidate or Recruiter)
     UserAccount "1" -- "0..*" PersonalAvatar : owns (Candidate or Recruiter)
-    CoinWallet "1" -- "0..*" CoinTransaction : logs
+    CoinWallet "1" -- "0..*" Transaction : logs (from/to)
+    CoinPackage "1" -- "0..*" Transaction : purchases
 
     CandidateProfile "1" -- "0..*" TargetJD : owns
     CandidateProfile "1" -- "0..*" Application : submits
 
-    TargetJD "1" -- "0..1" InterviewBlueprint : has current question bank
-    JobPosting "1" -- "0..1" InterviewBlueprint : has current question bank
-    JobPosting "1" -- "1" PostingEvaluationSettings : configures evaluation
-    JobPosting "1" -- "0..*" InterviewSlot : holds funded capacity
+    TargetJD "1" -- "0..*" CoreQuestion : generates
+    JobPosting "1" -- "0..*" CoreQuestion : manages
     JobPosting "1" -- "0..*" Application : receives
     JobPosting "1" -- "1" VoiceProfile : requires
-    JobPosting "1" -- "0..*" InterviewSession : configures when origin
+    JobPosting "1" -- "0..*" Interview : originates when recruitment
     RecruiterProfile "1" -- "0..*" JobPosting : authors
 
-    InterviewBlueprint "1" -- "0..*" InterviewSession : instantiated by (via snapshot)
-    InterviewSession "1" -- "0..*" SessionTurn : records
-    InterviewSession "1" -- "0..1" PerformanceReport : produces
-    PerformanceReport "1" -- "0..1" Application : serves as Interview Result (attached after interview)
-    VoiceProfile "1" -- "0..*" InterviewSession : voices
+    Application "0..1" -- "0..1" Interview : links to
+    Interview "1" -- "0..*" ConversationTurn : records
+    Interview "1" -- "0..1" PerformanceReport : produces
+    VoiceProfile "1" -- "0..*" Interview : voices
 ```
 
 ---
@@ -207,30 +199,35 @@ classDiagram
 ## 2. Entity Descriptions & Invariants
 
 ### 2.1. Identity, Wallets & Financials
-* **`UserAccount`:** Root authentication record. Holds system role (`Candidate`, `Recruiter`, `Admin`) and status (`ACTIVE`, `LOCKED`).
-* **`CandidateProfile`:** Profile metadata specific to candidates.
-* **`RecruiterProfile`:** Employer identity metadata attached to a Recruiter account. Stores basic company identification without multi-tenant architecture.
-* **`CoinWallet`:** Personal coin ledger owned individually by an authenticated **Candidate** or **Recruiter**. Holds `coin_balance` represented as abstract `CoinAmount` (currency precision and minimum fractional unit remain unresolved product decisions). Administrators do **NOT** have a wallet.
-* **`PaymentOrder`:** Real-money checkout record processed via external Payment Gateways to acquire coin packages.
-* **`CoinTransaction`:** Immutable ledger entry recording internal credits/debits with `CoinAmount` values (practice interview starts, interview slot funding, avatar generation fees, avatar capacity purchases, and End Recruitment unused slot refunds).
+* **`UserAccount` (`accounts`):** Root authentication record. Holds system role (`Candidate`, `Recruiter`, `Admin`) and status (`ACTIVE`, `LOCKED`).
+* **`CandidateProfile` (`candidate_profiles`):** Profile metadata specific to candidates.
+* **`RecruiterProfile` (`recruiter_profiles`):** Employer identity metadata attached to a Recruiter account. Stores basic company identification without multi-tenant architecture.
+* **`CoinWallet` (`wallets`):** Personal coin ledger owned individually by an authenticated **Candidate** or **Recruiter**. Holds `coin_balance`. Administrators do **NOT** have a wallet.
+* **`CoinPackage` (`coin_packages`):** Fixed coin purchasing tiers available for purchase via PayOS.
+* **`Transaction` (`transactions`):** The unified financial ledger table. Records both real-money PayOS checkout orders (via `payos_order_code`) and internal coin balance transfers/refunds between wallets or system accounts using `from`, `to`, `amount`, `currency`, `description`, and `status`.
+  * *Accepted Technical Debt Note:* The team explicitly rejected the proposed payment architecture redesign (`payment_orders` + `coin_transactions`). The single unified `transactions` table is the authoritative model for this capstone.
 
 ### 2.2. Practice & Simulation Pipeline
-* **`TargetJD`:** The candidate's personal practice JD. Stores raw text, AI-extracted technical competencies, and natural-language `refinement_notes`.
-* **`InterviewBlueprint`:** The persistent **core-question bank**. Contains exclusively the bank of core questions generated from confirmed skills, requirements, and seniority/refinement context. Does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices (evaluation configuration is handled separately).
-  * **Invariant:** Exactly **at most one current Blueprint** exists per Target JD or Job Posting (absent until generated). Hidden from Candidates; Recruiter can view and edit core questions for their own Job Posting.
-* **`PostingEvaluationSettings`:** Recruiter posting-level settings and weights across technical competencies, stored **separately** from the question bank Blueprint.
-* **`InterviewSession`:** Concrete interview execution. Records whether the session originated from a Target JD (debited from Candidate wallet) or a Job Posting (consumes prepaid Recruiter interview slot). Preserves the source's exact question-bank context AND the evaluation configuration actually used within an immutable session snapshot (without modeling evaluation criteria as part of the current Blueprint).
-* **`SessionTurn`:** Granular dialogue unit within a session. Captures interviewer questions, candidate transcripts, audio timing, and real-time response analysis.
-* **`PerformanceReport`:** Authoritative evaluation artifact produced from completed sessions. Holds overall score, competency breakdown, turn critiques, and learning roadmap.
+* **`TargetJD` (`job_descriptions`):** The candidate's personal practice JD. Stores raw text, AI-extracted technical competencies, and natural-language `refinement_notes`.
+* **`CoreQuestion` (`core_questions`):** The persistent question bank. "Interview Blueprint" is a conceptual product term only; there is no Blueprint database table. Stores core questions linked to a `job_description_id` (practice) or `job_posting_id` (recruitment).
+* **`Interview` (`interviews`):** Concrete interview execution (practice or recruitment). Captures runtime state, `blueprint_snapshot`, `execution_context`, and audio/video `recording_url`.
+  * *Recruitment Slot Invariant:* For recruitment interviews, slot capacity is consumed upon the Candidate's **first successful interview start**. Reconnects or resumes do not consume additional capacity.
+* **`ConversationTurn` (`conversation_turns`):** Granular dialogue unit within an interview session. Captures interviewer questions, candidate transcripts, and turn evaluation.
+* **`PerformanceReport` (`performance_reports`):** Authoritative evaluation artifact produced from completed sessions. Holds overall score, competency breakdown, turn critiques, and learning roadmap.
 
 ### 2.3. Recruitment Board
-* **`JobPosting`:** The company's Job Description authored by a Recruiter from JD-like content. Holds company 3D model and Voice Profile selections, links to its current question bank Blueprint and evaluation settings, and tracks intake status (`OPEN`, `CLOSED`).
-* **`InterviewSlot`:** Unit of prepaid interview capacity allocated to a Job Posting, funded by the Recruiter using wallet coins. Consumed upon interview start; eligible unused slots are refunded as coins upon End Recruitment.
-* **`Application`:** The Candidate's application to a `JobPosting`.
-  * **Immediate Visibility:** Visible to the Recruiter immediately upon submission with uploaded CV/resume.
-  * **Initial Result Optionality:** `interview_result_id` is initially null/optional; attached only after the approved applicant completes the required technical interview.
-  * **Two Distinct Decisions:** Tracks initial `cv_screening_status` (`PENDING`, `CV_PASSED`, `CV_REJECTED`) and terminal `final_status` (`APPROVED`, `REJECTED`).
+* **`JobPosting` (`job_postings`):** The company's Job Description authored by a Recruiter. Holds company 3D model and Voice Profile selections, links to its core questions, and tracks intake status (`OPEN`, `CLOSED`).
+  * **`interview_slot` Field:** Singular integer field representing maximum recruitment interview capacity (maximum number of Candidates that may be approved to proceed into the interview stage). It does **NOT** limit total CV submissions and does **NOT** represent company hiring headcount or final hires. RoleCue does NOT persist or enforce company hiring headcount.
+  * **Intake Lifecycle:**
+    * **Intake Open:** Set automatically upon Admin approval. Candidates may submit an unlimited number of Applications/CVs. Submissions are immediately visible to the Recruiter in **View Application Detail**.
+    * **Close Intake:** Manual Recruiter action (`Close Job Posting Intake`) or automated System Handler action (`Close Job Posting When Meet Configured Limitation` when approved count reaches `interview_slot`). Closes intake and automatically sets all unscreened/unapproved applications to terminal `REJECTED`. Already-approved candidates retain interview eligibility. There is **NO Reopen Intake** flow.
+    * **Terminal Job Posting Close:** Automatically reached when EVERY application in scope has a terminal result (`APPROVED` or `REJECTED`). Automatically triggers `Refund unused JP Candidate Slot` to refund still-unused capacity to Recruiter's wallet as internal coins. There is **NO manual End Recruitment** command.
+* **`Application` (`applications`):** The Candidate's application to a `JobPosting`.
+  * **Intake Submission:** Candidates submit CV/resume while intake is OPEN; unlimited submissions permitted.
+  * **CV Screening:** Recruiter reviews CV in **View Application Detail** and approves at most `interview_slot` Candidates (`CV_APPROVED`). Approval sets `interview_deadline = cv_approved_at + 24 hours`.
+  * **Interview Deadline Enforcement:** If a candidate fails to start their interview before `interview_deadline`, the System Handler automatically marks the application as terminal `REJECTED`.
+  * **Hard-Gated Final Decisions:** Recruiter final Approve/Reject decisions are **HARD-GATED until MAX(interview_deadline)** across all interview-eligible applications for that posting. After the gate, the Recruiter renders final **Approve / Reject Application** decisions consolidated directly inside **View Application Detail**.
 
 ### 2.4. Audio-Visual Presentation & Avatar Inventory
-* **`VoiceProfile`:** Voice configuration sourced from external TTS providers. Curated and managed by Administrators.
-* **`PersonalAvatar`:** Humanoid 3D avatar stored as a standardized VRM. RoleCue converts Avaturn's final GLB to VRM, persists the asset, and associates it with the owning **Candidate or Recruiter** in their personal avatar inventory.
+* **`VoiceProfile` (`voice_profiles`):** Voice configuration sourced from external TTS providers. Curated and managed by Administrators.
+* **`PersonalAvatar` (`personal_avatars`):** Humanoid 3D avatar stored as a standardized VRM. RoleCue converts Avaturn's final GLB to VRM, persists the asset, and associates it with the owning **Candidate or Recruiter** in their personal avatar inventory.

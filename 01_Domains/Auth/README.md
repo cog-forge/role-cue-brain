@@ -103,9 +103,9 @@ sequenceDiagram
 * **All Domains:** Provides the authoritative `user_id` foreign key referenced across:
   * [[01_Domains/Job-Description/README|Job-Description]] (`job_descriptions.user_id`)
   * [[01_Domains/Job-Posting-Application/README|Job-Posting-Application]] (`job_postings.recruiter_id`, `applications.candidate_id`)
-  * [[01_Domains/Interview/README|Interview]] (`interview_sessions.user_id`)
+  * [[01_Domains/Interview/README|Interview]] (`interviews.user_id`)
   * [[01_Domains/Avatar-Voice/README|Avatar-Voice]] (`personal_avatars.user_id` for Candidates and Recruiters)
-  * [[01_Domains/Payment/README|Payment]] (`wallets.user_id`, `payment_orders.user_id`)
+  * [[01_Domains/Payment/README|Payment]] (`wallets.user_id`, `transactions.from`, `transactions.to`)
 * **[[01_Domains/Administration/README|Administration]]:** Admin user governance operates directly on user accounts (viewing, filtering, locking/unlocking).
 
 ---

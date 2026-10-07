@@ -49,12 +49,12 @@ RoleCue is designed for four primary user groups:
 | Actor | Profile | Primary Motivation |
 | :--- | :--- | :--- |
 | **Candidate** | Software engineers, students, career switchers | Prepare for specific technical job interviews, assess technical readiness, configure and conduct mock interviews (funded via personal coin wallet), create a personal 3D avatar through Avaturn and manage avatar inventory, manage personal coin wallet, discover matching job postings, and apply with CV. |
-| **Recruiter** | Tech talent acquisition, hiring managers, company reps | Publish company Job Postings to attract qualified candidates, purchase interview slots using personal coin wallet, screen incoming candidate CVs, manage application intake (Open/Close) and recruitment completion, review interview recordings and results, render final Approve/Reject decisions, and manage avatar inventory. |
+| **Recruiter** | Tech talent acquisition, hiring managers, company reps | Publish company Job Postings to attract qualified candidates, fund interview capacity (`interview_slot`) using personal coin wallet, screen incoming candidate CVs via Application Detail, manage application intake (Close Intake), review interview recordings and results in View Application Detail, render final Approve/Reject decisions, and manage avatar inventory. |
 | **Guest** | Unauthenticated visitors, prospective users | View the public landing page and register for an account. |
-| **Administrator** | Platform operators, technical governance | Maintain account security, approve/reject job postings, oversee interview sessions, calibrate TTS voice profiles, and audit payment transactions and revenue reports. (Global AI behavior/evaluation calibration and coin pricing administration remain awaiting confirmation). Admin has no personal wallet or avatar inventory. |
+| **Administrator** | Platform operators, technical governance | Maintain account security, approve/reject job postings, oversee interview sessions, calibrate TTS voice profiles, and audit payment transactions and revenue reports. Admin has no personal wallet or avatar inventory. |
 
 > [!NOTE]
-> System semantics also recognize **Registered User** (the shared authentication and profile base for Candidates and Recruiters) and **System Handler** (the internal automated handler responsible for terminating a candidate's abandoned session). Neither is an external actor. Registered User inheritance does **NOT** grant Admin a personal wallet or personal avatar inventory.
+> System semantics also recognize **Registered User** (the shared authentication and profile base for Candidates and Recruiters) and **System Handler** (the internal automated handler responsible for terminating abandoned sessions, executing automatic Close Intake when meeting configured limitations, enforcing 24-hour interview deadlines, and auto-closing terminal Job Postings with unused slot refunds). Neither is an external actor. Registered User inheritance does **NOT** grant Admin a personal wallet or personal avatar inventory.
 
 ---
 
@@ -88,16 +88,19 @@ flowchart TD
     end
 
     subgraph Board["5. Lightweight Job Board & CV-First Workflow"]
-        REC["Approved Recruiter Job Postings<br/>(Open/Close Intake, Funded Slots)"] --> APP["Candidate Application & CV Submission"]
-        APP --> SCREEN["Recruiter Screens CV (Pass/Reject)"]
-        SCREEN -->|Passed| INT_RUN["Interview using Funded Slot"]
+        REC["Approved Recruiter Job Postings<br/>(Open Intake, Funded interview_slot)"] --> APP["Candidate Unlimited Application & CV Submission"]
+        APP --> SCREEN["Recruiter Screens CV in Application Detail<br/>(Approve max interview_slot -> 24h Deadline)"]
+        SCREEN -->|Approved & Starts| INT_RUN["Interview Consumes Funded Slot"]
+        SCREEN -->|Close Intake / Deadline Expired| REJ["Terminal Application REJECTED"]
         INT_RUN --> RES["Result & Recordings Attached"]
-        RES --> DEC["Recruiter Final Decision (Approve/Reject)"]
+        RES --> GATE["Hard Gate: MAX(interview_deadline)"]
+        GATE --> DEC["Recruiter Final Decision in View Application Detail<br/>(Approve / Reject)"]
+        DEC --> TERM_CLOSE["All Applications Terminal -> Job Posting Auto-Close<br/>(Refund unused slots as internal Coins)"]
     end
 
     subgraph Identity["6. 3D Identity & Coin Monetization"]
         AVATURN["Embedded Avaturn Experience"] --> AVA["RoleCue VRM Avatar (Candidate & Recruiter)"]
-        COIN["Real-Money Coin Packages"] --> WALLET["Personal Coin Wallets (Candidate & Recruiter)"]
+        COIN["PayOS Real-Money Coin Packages"] --> WALLET["Personal Coin Wallets (Candidate & Recruiter)"]
         WALLET --> USAGE["Practice Debits, Slot Funding, Avatar Fees & Capacity"]
     end
 ```
@@ -105,15 +108,15 @@ flowchart TD
 1. **Job Description Extraction & Refinement:**
    Ingests raw text or multi-page PDF documents. Extracts normalized technical competencies (languages, frameworks, databases, tools, domain knowledge, seniority). Empowers the candidate to review extracted tags and provide natural-language refinement notes (e.g., *"Exclude C# from the interview"*). Human review and confirmation of extracted requirements must occur *before* question-bank Blueprint generation.
 2. **Internal Question-Bank Blueprint Generation:**
-   Generates a single comprehensive core-question bank Blueprint per JD following confirmed requirements. Specifies ONLY the persistent pool/list of core questions. Does not contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices. **Strictly hidden from the candidate.** For Job Postings, the owning Recruiter can view and edit core questions for their own posting. Evaluation configuration settings are maintained separately from the question bank.
+   Generates a single comprehensive core-question bank Blueprint per JD following confirmed requirements. Specifies ONLY the persistent pool/list of core questions (persisted via `core_questions`). Does not contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices. **Strictly hidden from the candidate.** For Job Postings, the owning Recruiter can view and edit core questions for their own posting. Evaluation configuration settings are maintained separately from the question bank.
 3. **Real-Time 3D Virtual Interview Simulation:**
-   Renders a 3D animated avatar in the browser via WebGL. The simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups. Spoken interaction is delivered via TTS with synchronized blend-shape visemes, while STT transcribes responses. Practice interviews are debited from the Candidate's coin wallet upon start (reconnect/resume of the same session is not recharged). Recruitment interviews consume a prepaid Recruiter slot. Follow-up decision logic and question wording generation remain decoupled without premature vendor lock-in.
+   Renders a 3D animated avatar in the browser via WebGL. The simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups. Spoken interaction is delivered via TTS with synchronized blend-shape visemes, while STT transcribes responses. Practice interviews are debited from the Candidate's coin wallet upon start (reconnect/resume of the same session is not recharged). Recruitment interviews consume a prepaid Recruiter slot upon first start (reconnect/resume is free; Candidate is never charged). Follow-up decision logic and question wording generation remain decoupled without premature vendor lock-in.
 4. **Automated Multi-Dimensional Evaluation:**
    Grades completed sessions across technical competencies against the session's immutable snapshot (preserving historical question-bank context and the evaluation configuration actually used). Recruiters can adjust evaluation weights at the posting level. Generates comprehensive performance reports with radar charts and personalized improvement roadmaps. Evaluation scores provide evidence for human review, not automated hiring authority.
 5. **Lightweight Job Posting & CV-First Application:**
-   Recruiters publish Job Postings (company JDs) subject to Admin approval, lock the company 3D interviewer model and Voice Profile, control intake (Open/Close), and fund interview slots using coins. Candidates submit applications with a CV/resume. Submitted applications and CVs are immediately visible to the owning Recruiter. The Recruiter conducts CV screening; approved applicants become eligible to interview using a funded slot. Recruitment interviews capture audio/video recordings and transcripts for the owning Recruiter's review. Candidates view their evaluation score, but cannot view recruitment transcripts or recordings during recruitment. Recruitment terminates at final **Approve** or **Reject**. Ending recruitment refunds eligible unused interview slots as coins to the Recruiter's wallet.
+   Recruiters publish Job Postings (company JDs) subject to Admin approval, lock the company 3D interviewer model and Voice Profile, and fund `interview_slot` capacity using coins. While intake is open, Candidates may submit an unlimited number of Applications with CV/resume (not capped by `interview_slot`). Submitted applications and CVs are immediately visible to the owning Recruiter in View Application Detail. The Recruiter screens CVs and may approve at most `interview_slot` Candidates to proceed to recruitment interviews (approval grants interview eligibility; deadline is `cv_approved_at + 24 hours`; no-show transitions to terminal rejection). Closing intake (manually or automatically via *Close Job Posting When Meet Configured Limitation*) halts new applications and automatically rejects remaining unscreened/not-approved applications, while already-approved Candidates remain interview-eligible. Starting the recruitment interview consumes one funded slot on the candidate's first successful start. Recruitment interviews capture audio/video recordings and transcripts for the owning Recruiter's review. Candidates view their evaluation score, but cannot view recruitment transcripts or recordings during recruitment. Recruiter final decisions are hard-gated until `MAX(interview_deadline)` across interview-eligible applications for that posting. After the gate, the Recruiter reviews candidate CV and interview results inside View Application Detail and renders the final Approve or Reject decision. When every application reaches a terminal result (`APPROVED` or `REJECTED`), the Job Posting automatically reaches terminal closed state, and all still-unused interview slots are refunded to the Recruiter's wallet as internal coins (`Refund unused JP Candidate Slot`). There is no manual End Recruitment command.
 6. **Personal 3D Avatar Inventory & Coin Wallets:**
-   Candidates and Recruiters maintain personal avatar inventories with storage slot capacity. RoleCue embeds the free Avaturn iframe experience (capture, validation, preview, customization, final GLB); RoleCue receives the GLB, converts it to VRM, and persists it. A generation fee is charged only upon successful VRM persistence in RoleCue. Coin wallets for Candidates and Recruiters (replacing memberships) manage internal coin transactions and real-money package orders.
+   Candidates and Recruiters maintain personal avatar inventories with storage slot capacity. RoleCue embeds the free Avaturn iframe experience (capture, validation, preview, customization, final GLB); RoleCue receives the GLB, converts it to VRM, and persists it. A generation fee is charged only upon successful VRM persistence in RoleCue. Coin wallets for Candidates and Recruiters manage internal coin movements and real-money package orders via PayOS under a unified transaction model.
 
 ---
 
@@ -132,6 +135,8 @@ To maintain focus on interview simulation and delivery excellence, RoleCue estab
   There is no community asset store, creator marketplace, or user-published 3D model sharing. Avatars and environments are curated platform presets or candidate-generated personal avatars.
 * **NOT a Soft-Skills or Behavioral Grader:**
   JD extraction, blueprint generation, and interview scoring concentrate strictly on **technical competencies**. Personality analysis, micro-expression tracking, and non-technical behavioral scoring are intentionally excluded.
+* **NOT a Company Headcount Management System:**
+  RoleCue does not persist or enforce company hiring headcount or target hire counts. The `job_postings.interview_slot` field represents maximum recruitment interview capacity only.
 
 ---
 

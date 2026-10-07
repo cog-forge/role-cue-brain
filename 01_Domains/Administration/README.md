@@ -36,12 +36,12 @@ Empower platform administrators with centralized governance tools to enforce acc
 * **Voice Profile Catalog Management:**
   Administrative management of Text-to-Speech (TTS) voice profiles made available during session configuration. Supports viewing voice profiles, fetching new voice profiles from TTS providers, and deleting obsolete voice profiles.
 * **Financial Audit & Reporting:**
-  Administrative oversight of platform revenue. Supports viewing payment orders, inspecting internal coin transactions, and generating revenue reports.
-* **Capabilities Awaiting Confirmation:**
-  * *Global AI Behaviour Management:* Admin prompt engineering and conversational AI calibration templates remain open product decisions awaiting formal ratification.
-  * *Global Evaluation Criteria Calibration:* Admin editing of global evaluation rubrics, criteria, and weights remains an open scope question awaiting confirmation.
-  * *Interview Feature Configuration / Runtime Toggles:* System-wide configuration of interview features, parameter boundaries, and operational toggles is NOT confirmed and remains an open scope question awaiting formal confirmation.
-  * *Coin Package Pricing Administration:* Administrative updating of coin package pricing tiers remains awaiting confirmation.
+  Administrative oversight of platform revenue. Supports viewing and filtering unified financial transactions (`transactions` table, recording real-money PayOS orders and internal coin movements) and generating revenue reports.
+* **Capabilities Excluded from Frozen Scope:**
+  * *Global AI Behaviour Management:* Admin prompt engineering and conversational AI calibration templates are excluded from current scope.
+  * *Global Evaluation Criteria Calibration:* Admin editing of global evaluation rubrics, criteria, and weights is excluded from current scope.
+  * *Interview Feature Configuration / Runtime Toggles:* System-wide configuration of interview features and runtime toggles is excluded from current scope.
+  * *Coin Package Pricing Administration:* Administrative editing of coin package pricing tiers is excluded from current scope.
 
 ---
 
@@ -62,8 +62,7 @@ flowchart TD
     CONSOLE --> JP["Job Posting Moderation<br/>(View/Filter Postings, Approve/Reject)"]
     CONSOLE --> SESS["Session Operational Oversight<br/>(Search/Filter Sessions, Inspect Metadata)"]
     CONSOLE --> VOICE["Voice Profile Management<br/>(View Profiles, Fetch from TTS Provider, Delete)"]
-    CONSOLE --> FIN["Financial Audit<br/>(Inspect Orders & Coins, Generate Revenue Report)"]
-    CONSOLE -.-> OPEN["Capabilities Awaiting Confirmation<br/>(Global AI Prompts, Rubric Calibration, Feature Toggles, Coin Pricing)"]
+    CONSOLE --> FIN["Financial Audit<br/>(Inspect Transactions, Generate Revenue Report)"]
 ```
 
 ---
@@ -75,7 +74,7 @@ flowchart TD
    * **Admin does NOT manage:** 3D avatar meshes or 3D background presets (which are built-in platform presets).
    * **No Wallets or Avatar Inventories:** Administrators do not hold personal coin wallets or personal avatar inventories.
    * **No Recruitment Recording Access by Inference:** Session operational oversight does not grant Admin access to applicant recruitment audio/video recordings or transcripts, which are private to the owning Recruiter.
-   * **No Dispute Queues:** The platform does not model refund dispute adjudication queues or cash refund forms. Unused slot refunds execute automatically as internal coin movements upon End Recruitment.
+   * **No Dispute Queues:** The platform does not model refund dispute adjudication queues or cash refund forms. Unused slot refunds execute automatically as internal coin movements (`Refund unused JP Candidate Slot`) upon terminal Job Posting auto-close.
 2. **Immediate Account Revocation:**
    Locking a user account immediately invalidates active sessions and prevents subsequent login attempts.
 3. **Candidate Session Privacy:**
@@ -96,11 +95,11 @@ flowchart TD
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
   Enables administrative review, filtering, and approval/rejection of submitted Job Postings.
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Allows Administrators to search, filter, and inspect operational interview session metadata and diagnostics. (Interview feature configurations and runtime toggles remain awaiting confirmation).
+  Allows Administrators to search, filter, and inspect operational interview session metadata and diagnostics.
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
   Maintains the active catalog of Voice Profiles sourced from TTS providers.
 * **[[01_Domains/Payment/README|Payment Domain]]:**
-  Provides payment order and coin transaction inspection and revenue report generation.
+  Provides unified transaction (`transactions`) inspection and revenue report generation.
 
 ---
 

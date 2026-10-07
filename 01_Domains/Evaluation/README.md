@@ -35,7 +35,7 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
   5. *Communication Clarity:* Technical articulation precision, structure, and professional clarity.
   * **Specification Status Invariant:** The existing five dimensions serve strictly as an illustrative baseline set and are **NOT** a finalized, immutable platform contract. Recruiter posting-level evaluation criteria and weights are configurable. Exact criteria, defaults, formulas, validation constraints, and score thresholds remain unresolved product decisions. Illustrative ratios (e.g., hard skill 40% / soft skill 30%) are **not** an approved global formula.
 * **Recruiter Posting-Level Evaluation Settings:**
-  Evaluation weights and settings are configured at the Job Posting level, **separate from the question bank Blueprint**. The platform provides basic baseline settings, and the Recruiter adjusts evaluation weights to fit their specific posting and hiring criteria.
+  Evaluation weights and settings are configured at the Job Posting level, **separate from the core question bank (`core_questions`)**. The platform provides basic baseline settings, and the Recruiter adjusts evaluation weights to fit their specific posting and hiring criteria.
 * **Performance Report (`performance_reports`):**
   The authoritative evaluation record generated upon session completion. Contains:
   * Overall numerical score (0–100 scale).
@@ -46,9 +46,9 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
   * **Practice Interviews:** The Candidate has full access to their performance report, radar chart, turn-by-turn critiques, model answers, and study roadmaps.
   * **Recruitment Interviews:**
     * The **Candidate** can view their overall recruitment score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. These assets must not be exposed indirectly through history, result APIs, exports, or asset URLs.
-    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and recruitment audio/video recordings and transcripts.
+    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**.
 * **Historical Context Preservation:**
-  The evaluation configuration and weights active at session runtime are captured within the session's immutable snapshot (`blueprint_snapshot` / execution context). Later modifications to posting evaluation weights or system prompt templates must **never** retroactively alter or recalculate completed historical Performance Reports (evaluation criteria are not modeled as part of the current Blueprint).
+  The evaluation configuration and weights active at session runtime are captured within the session's immutable snapshot (`blueprint_snapshot` / execution context). Later modifications to posting evaluation weights or system prompt templates must **never** retroactively alter or recalculate completed historical Performance Reports (evaluation criteria are not modeled as part of `core_questions`).
 * **Human Review Evidence (No Automated Hiring Authority):**
   Evaluation scores and reports serve as structured evidence to assist human judgment. Evaluation thresholds and scores carry **no automated hiring or rejection authority**.
 
@@ -57,8 +57,8 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 ## 3. Actors Involved
 
 * **Candidate:** Views personal practice interview history, performance reports, competency breakdowns, radar visualizations, turn critiques, and actionable study roadmaps; exports practice reports; views overall recruitment evaluation score (transcripts and recordings remain hidden).
-* **Recruiter:** Adjusts posting-level evaluation weights for own Job Postings; reviews the Interview Result, competency breakdowns, turn critiques, and recruitment audio/video recordings and transcripts attached to applicant Applications.
-* **Administrator:** Inspects session operational records. (Global calibration of AI prompts, evaluation criteria/rubrics, and Interview Feature Configuration / runtime toggles remains an open scope decision awaiting formal confirmation).
+* **Recruiter:** Adjusts posting-level evaluation weights for own Job Postings; inspects candidate profile, CV, interview result scores, competency breakdowns, turn critiques, and recruitment audio/video recordings and transcripts consolidated directly inside **View Application Detail**.
+* **Administrator:** Inspects session operational records. (Global calibration of AI prompts, evaluation criteria/rubrics, and Interview Feature Configuration / runtime toggles are excluded from the frozen scope).
 
 ---
 
@@ -75,7 +75,7 @@ flowchart TD
     F --> G1["Practice Session: Candidate Dashboard<br/>(Full report, radar chart, critiques, roadmap)"]
     F --> G2["Recruitment Session: Role-Specific Delivery"]
     G2 --> H1["Candidate View: Overall Score Only<br/>(Transcripts & recordings strictly hidden)"]
-    G2 --> H2["Recruiter View: Full Dossier<br/>(Scores, critiques, full recordings & transcript)"]
+    G2 --> H2["Recruiter View: Consolidated Dossier<br/>(Scores, critiques, full recordings & transcript inside View Application Detail)"]
 ```
 
 ---
@@ -85,31 +85,31 @@ flowchart TD
 1. **Strict Configuration Adherence:**
    Evaluations must strictly grade against the evaluation configuration and weights recorded in the session's immutable snapshot. The grading engine cannot introduce arbitrary criteria outside the snapshot.
 2. **Posting Settings Separated from Question Bank:**
-   Evaluation weights and scoring criteria are managed separately from the core-question bank Blueprint. Recruiters configure evaluation weights at the posting level without mutating the question bank.
+   Evaluation weights and scoring criteria are managed separately from the core question bank (`core_questions`). Recruiters configure evaluation weights at the posting level without mutating the question bank.
 3. **Historical Evaluation Immutability:**
    Once generated and persisted, a Performance Report is **immutable**. Historical scores, critiques, and radar values can never be altered or recalculated if source configurations change.
 4. **Role-Specific Disclosure Boundaries:**
    * In recruitment, the Candidate can view only their overall evaluation score; recruitment transcripts and audio/video recordings are hidden from the Candidate during recruitment and must not be exposed via exports, history APIs, or asset URLs.
    * No Candidate recruitment recording replay feature exists.
-   * The owning Recruiter has exclusive review access to recruitment transcripts and recordings.
+   * The owning Recruiter has exclusive review access to recruitment transcripts and recordings within `View Application Detail`.
 5. **Formative & Diagnostic Purpose (No Auto-Hiring):**
    RoleCue evaluations provide educational and diagnostic evidence. Evaluation scores carry **no autonomous hiring or disqualification authority**.
 6. **Single Performance Report per Session (1:1):**
    Every completed Interview Session produces at most one Performance Report:
-   $$\text{Interview Session (1)} \longleftrightarrow \text{Performance Report (0..1)}$$
+   $$\text{interviews (1)} \longleftrightarrow \text{performance_reports (0..1)}$$
 
 ---
 
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Consumes completed interview turns, session execution context, and `blueprint_snapshot` from interview sessions.
+  Consumes completed interview turns, session execution context, and `blueprint_snapshot` from interview sessions (`interviews`, `conversation_turns`).
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
-  Attaches the Performance Report (Interview Result) and recruitment recordings to the completed Application. Enforces role-specific visibility rules between Candidates and Recruiters.
+  Attaches the Performance Report (Interview Result) and recruitment recordings to the completed Application. Enforces role-specific visibility rules between Candidates and Recruiters (consolidated in `View Application Detail`).
 * **[[01_Domains/Job-Description/README|Job-Description Domain]]:**
   Uses the technical competencies confirmed in the JD to ground technical accuracy and relevance scoring.
 * **[[01_Domains/Administration/README|Administration Domain]]:**
-  Administrators oversee operational session records. (Global evaluation criteria editing flagged as awaiting confirmation).
+  Administrators oversee operational session records. (Global evaluation criteria editing is excluded from the frozen scope).
 
 ---
 
