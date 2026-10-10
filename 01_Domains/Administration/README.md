@@ -75,8 +75,10 @@ flowchart TD
    * **No Wallets or Avatar Inventories:** Administrators do not hold personal coin wallets or personal avatar inventories.
    * **No Recruitment Recording Access by Inference:** Session operational oversight does not grant Admin access to applicant recruitment audio/video recordings or transcripts, which are private to the owning Recruiter.
    * **No Dispute Queues:** The platform does not model refund dispute adjudication queues or cash refund forms. Unused slot refunds execute automatically as internal coin movements (`Refund unused JP Candidate Slot`) upon terminal Job Posting auto-close.
-2. **Immediate Account Revocation:**
-   Locking a user account immediately invalidates active sessions and prevents subsequent login attempts.
+2. **Immediate Account Revocation & Notification:**
+   * Locking a user account immediately invalidates active sessions and causes Go API middleware to deny subsequent authenticated actions.
+   * **Lock/Unlock Notification:** Account lock/unlock operations should trigger transactional email notifications through the configured Email Provider.
+   * **Decoupling Invariant:** Successful account state transitions in the database must **never** depend on successful email delivery; network timeouts or email dispatch errors do not roll back the lock/unlock state. (Implementation status: email dispatch on lock/unlock is pending verification in application code).
 3. **Candidate Session Privacy:**
    Administrative session oversight is focused on operational diagnostics and session status. Unrestricted administrative browsing of candidate practice content is bounded by privacy invariants.
 4. **Historical Evaluation Integrity:**

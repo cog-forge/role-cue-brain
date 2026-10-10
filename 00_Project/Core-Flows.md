@@ -34,7 +34,7 @@ flowchart TD
     F --> G["Configure Interview Session<br/>(Interviewer, Voice, Environment, Difficulty, Time)"]
     G --> H["Readiness & Session Start<br/>(Audio test; Practice fee debited from Coin Wallet)"]
     H --> I["Live 3D Virtual Interview Simulation<br/>(Random x core questions + bounded follow-ups)"]
-    I --> J["Multi-Dimensional Evaluation Report<br/>(Scored against session snapshot; Radar chart & Roadmap)"]
+    I --> J["Multi-Dimensional Evaluation Report<br/>(Scored against assigned questions; Radar chart & Roadmap)"]
 ```
 
 ### Step-by-Step Breakdown
@@ -81,7 +81,7 @@ flowchart TD
 * If a session experiences a network disconnect or is paused, reconnecting or resuming the same session incurs **no second charge**.
 
 #### 7. Live Virtual Interview Simulation
-* The session initializes an immutable snapshot capturing the exact question-bank/question selection context AND the evaluation configuration actually used (without modeling evaluation criteria as part of the current Blueprint).
+* The session assigns its selected questions via `interview_questions` (linking each turn position to its persistent `core_questions` record) and applies the evaluation configuration actually used (without modeling evaluation criteria as part of the current Blueprint).
 * The simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups based on the candidate's answers and interview context.
 * Execution loop:
   1. The interviewer articulates the question via TTS with synchronized blend-shape visemes.
@@ -92,8 +92,8 @@ flowchart TD
 * If client hardware cannot sustain WebGL 3D rendering, the interface gracefully degrades to a 2D animated waveform display without dropping voice dialogue.
 
 #### 8. Evaluation & Learning Roadmap
-* Upon session completion, the turn transcript is graded against the session snapshot's evaluation configuration across technical competencies.
-* An immutable Performance Report is stored and displayed on the candidate's dashboard, featuring an overall score (0–100), competency breakdown, radar chart, turn-by-turn critiques with model answers, and a prioritized study roadmap.
+* Upon session completion, the turn transcript is graded against the assigned questions and evaluation configuration across technical competencies.
+* Evaluation results are stored relationally across `interviews.score`, `interviews.feedback`, `score_details (interview_id, metric_id, score)`, and `conversation_turns.feedback`, and displayed on the candidate's dashboard featuring an overall score (0–100), competency breakdown, radar chart, turn-by-turn critiques with model answers, and a prioritized study roadmap.
 
 ---
 

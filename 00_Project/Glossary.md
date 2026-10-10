@@ -51,13 +51,13 @@ A conceptual and product term for the core-question bank generated following hum
 * **Access Boundary:** Strictly **internal and hidden from the Candidate**. Candidates never view, edit, or directly confirm an Interview Blueprint. Recruiters **can** view and edit core questions within the question bank generated for their own Job Postings.
 
 ### Interview Session
-A concrete execution attempt of an interview (persisted as `interviews`). It may originate from a Candidate Target JD (practice) or a Recruiter Job Posting (recruitment). Tracks real-time conversational turns (`conversation_turns`), candidate speech transcripts, Question delivery, audio playback, and (for recruitment) video/audio recordings. Holds an immutable snapshot preserving the historical question-bank context and evaluation configuration used.
+A concrete execution attempt of an interview (persisted as `interviews`). It may originate from a Candidate Target JD (practice) or a Recruiter Job Posting (recruitment). Tracks real-time conversational turns (`conversation_turns`), candidate speech transcripts, Question delivery, audio playback, and (for recruitment) video/audio recordings (`record_path`). Explicitly links assigned questions via `interview_questions (interview_id, position, core_question_id)` and records evaluation results in `interviews.score`, `interviews.feedback`, and `score_details`.
 
 ### Question
 The generic runtime unit spoken by the 3D interviewer during an Interview Session (modeled via `interview_questions`). An interview conducts a random selection of $x$ core questions from the question bank, with bounded follow-ups determined by candidate answers and interview context. Deciding whether to follow up and generating follow-up wording are decoupled responsibilities without premature vendor lock-in.
 
-### Blueprint Snapshot / Session Historical Context
-An immutable snapshot captured at the moment an Interview Session is initialized. Preserves the exact question-bank/question selection context AND the evaluation configuration actually used by the historical session. Ensures that historical evaluations, scoring, and performance reports remain 100% reproducible and tamper-proof even if the parent JD, question bank, or evaluation settings later evolve, without modeling evaluation criteria as part of the current question bank.
+### Relational Session Historical Context (Replaces Blueprint Snapshot)
+The immutable historical record established when an Interview Session is created. Rather than storing an unnormalized JSON `blueprint_snapshot` column, RoleCue relationally links each session turn position (`(interview_id, position)`) to its persistent `core_question_id REFERENCES core_questions(id)` in `interview_questions`. Evaluation weights are maintained in `metrics_percentage`, while results are recorded in `score_details` and `conversation_turns.feedback`. This relational architecture ensures that historical evaluations and questions remain 100% reproducible and tamper-proof even if the parent JD or question bank evolves.
 
 ### Application
 A candidate submission to a Recruiter's Job Posting containing Candidate profile information and an uploaded CV/resume.
@@ -106,10 +106,10 @@ A customized 3D humanoid avatar created through RoleCue's embedded free Avaturn 
 *Status: Superseded by Coin Wallets.* Formerly described recurring subscriptions and membership renewals. Completely replaced by coin packages, personal wallets, and slot funding.
 
 ### Core Technical Competencies
-The evaluation dimensions used to score technical interview performance (Technical Accuracy, Depth of Understanding, Problem-Solving, Answer Relevance, Communication Clarity). Evaluated against the session's immutable blueprint snapshot and configured weights.
+The evaluation dimensions used to score technical interview performance (`metrics`). Evaluated against the session's assigned questions and configured weights (`metrics_percentage`), with scores persisted in `score_details`.
 
 ### Performance Report
-The comprehensive evaluation artifact generated upon completion of an Interview Session. Includes an overall score (0–100), competency breakdowns, radar chart, turn-by-turn question reviews with model answers, and a prioritized study roadmap.
+The comprehensive evaluation summary generated upon completion of an Interview Session. Persisted directly across `interviews.score`, `interviews.feedback`, `score_details (interview_id, metric_id, score)`, and `conversation_turns.feedback`. Displays an overall score (0–100), competency breakdowns, radar chart, turn-by-turn question reviews with model answers, and a prioritized study roadmap.
 
 ### Blend-Shape Visemes
 Facial morph target blend-shapes corresponding to phonemic sounds, used to animate the virtual interviewer's mouth in real-time synchronization with TTS audio.

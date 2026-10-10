@@ -31,17 +31,17 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
   A rigged humanoid 3D mesh rendered client-side using WebGL. Supports real-time head movements, idle animations, eye blinks, and facial blend-shape morph targets.
 * **Blend-Shape Visemes:**
   Standardized mouth blend-shapes corresponding to phonemic sounds. Morph target weights are interpolated in real time based on timestamped viseme frames delivered with TTS audio.
-* **Personal 3D Avatar (`personal_avatars`):**
-  An accepted capability delivered through RoleCue's embedded free Avaturn iframe experience. Avaturn handles capture instructions, photo validation, retakes, preview generation, customization, and final GLB generation. RoleCue receives the GLB, converts it to VRM, persists the VRM production asset, and associates it with the owning user.
+* **Personal 3D Avatar (`avatars`) & Inventory (`inventories`):**
+  An accepted capability delivered through RoleCue's embedded free Avaturn iframe experience. Avaturn handles capture instructions, photo validation, retakes, preview generation, customization, and final GLB generation. RoleCue receives the GLB, converts it to VRM, persists the VRM production asset in `avatars (inventory_id, name, model_path, personality)`, and associates it with the owning user's inventory (`inventories`).
 * **Both-Role Avatar Inventory Ownership:**
-  Both **Candidates** and **Recruiters** maintain a personal avatar inventory in their profile library. **Administrators do NOT have a personal avatar inventory.**
+  Both **Candidates** and **Recruiters** maintain a personal avatar inventory (`inventories`) in their profile library. **Administrators do NOT have a personal avatar inventory.**
 * **Avatar Storage Capacity vs. Generation Fee:**
-  * **Storage Capacity (Avatar Slots):** Avatar slots represent storage capacity in a user's library, **not** generation credits. When inventory capacity is full, the user must either remove an existing avatar or purchase an additional capacity slot using coins from their wallet.
+  * **Storage Capacity (Avatar Slots):** Avatar slots (`inventories.slot`) represent storage capacity in a user's library, **not** generation credits. When inventory capacity is full, the user must either remove an existing avatar or purchase an additional capacity slot using coins from their wallet.
   * **Generation Fee:** A separate fee debited in coins from the user's personal wallet **strictly upon successful VRM persistence in RoleCue**.
 * **Charging Boundary at Successful VRM Save:**
   Opening the avatar creator, uploading photos, generating a preview or GLB in Avaturn, and initiating GLB-to-VRM conversion do **not** incur a generation fee. The fee is charged only after RoleCue successfully validates, converts, and persists the production VRM asset.
-* **Voice Profile (`voice_profiles`):**
-  A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates external voice IDs, language, accent, gender, and speaking rate parameters. Curated and managed exclusively by Administrators.
+* **Voice Profile (`voices`):**
+  A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider parameters. Curated and managed exclusively by Administrators.
 * **3D Environment Presets:**
   Curated virtual 3D room backgrounds rendered behind the virtual interviewer. Built-in platform presets.
 * **2D Waveform Fallback Mode:**

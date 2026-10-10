@@ -135,7 +135,9 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   Dispatches transactional system emails:
   * Account registration verification tokens.
   * Forgot Password recovery links.
+  * Account lock and unlock notifications (notifying users when an Administrator locks or unlocks their account, including lock reason).
   * Application submission confirmations, CV screening outcome notices, and final application decisions (Approved/Rejected).
   * Security alerts and account notifications.
 * **Operational Invariants:**
-  Asynchronous queue-based dispatch; failures in email delivery must never block core transactional API flows.
+  * Asynchronous queue-based dispatch; failures in email delivery must never block core transactional API flows.
+  * **Decoupling Invariant for Account Locks:** The database status transition (`is_locked`, `lock_reason`) executes immediately and independently of email transmission. A failure in the external email service must never roll back or block an administrative lock or unlock action.

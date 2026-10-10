@@ -31,8 +31,13 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * **Canonical Equivalence:** `Job Posting` **is** the company's Job Description. There is no separate "Corporate JD" entity or company-tenant system.
   * **Question Bank & Settings:** Generates a single internal core-question bank Blueprint (persisted in `core_questions`). The owning Recruiter can view and edit core questions for their own posting. The Recruiter also configures posting-level evaluation weights separately from the question bank.
   * **Interview Presentation:** Company 3D interviewer model and Voice Profile selected by the Recruiter before Admin approval. Candidates cannot override either setting for a recruitment interview.
-  * **Lifecycle Status:** `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `CLOSED`.
-  * **Intake Control (`intake_status`):** `OPEN` or `CLOSED`.
+  * **Lifecycle & Intake Status (`job_postings.status`):**
+    Enforced by the PostgreSQL enum `job_posting_status`:
+    * `pending`: Submitted by Recruiter, awaiting Admin moderation.
+    * `open`: Approved by Admin, actively receiving Applications and CVs.
+    * `intake_closed`: Application intake closed (manually or automatically); remaining unscreened applications rejected; eligible candidates may interview.
+    * `closed`: Terminal closed state reached when all applications are terminal `approved` or `rejected`; unused capacity refunded.
+    * `rejected`: Moderated and rejected by Administrator.
   * **Removal of Archive:** `Archive Job Posting` is removed from RoleCue's product contract. It is not a supported capability or lifecycle state.
 * **Interview Slot (`job_postings.interview_slot`):**
   The frozen ERD field defining maximum recruitment interview capacity:
@@ -43,21 +48,28 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * Starting the interview consumes one funded slot strictly on the Candidate's **first successful start**. Reconnecting to or resuming that active session does **not** consume another.
   * Unused interview capacity is refunded as coins back into the Recruiter's personal wallet upon **terminal Job Posting auto-close** (`Refund unused JP Candidate Slot`).
 * **Application Intake (Open vs. Close):**
-  * `Open intake`: Actively accepts new candidate applications and CV submissions. Candidates may submit an **UNLIMITED** number of Applications/CVs; submissions are **NOT limited by interview capacity**.
-  * `Close intake`: Halts receiving new applications. Executed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
-  * **Close Intake Invariant:** Closing intake automatically **REJECTS** all remaining Applications that are still unscreened or not approved to proceed to interview. Candidates already approved for interview remain interview-eligible and may complete their interviews. Close intake does **not** refund interview capacity and is **not** terminal Job Posting close. There is **NO Reopen Intake flow** and **NO manual End Recruitment command**.
+  * `Open intake (`status = 'open'`)`: Actively accepts new candidate applications and CV submissions. Candidates may submit an **UNLIMITED** number of Applications/CVs; submissions are **NOT limited by interview capacity**.
+  * `Close intake (`status = 'intake_closed'`)`: Halts receiving new applications. Executed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
+  * **Close Intake Invariant:** Closing intake automatically **REJECTS** all remaining Applications that are still unscreened or not approved to proceed to interview. Candidates already approved for interview (`interview_eligible`) remain eligible and may complete their interviews. Close intake does **not** refund interview capacity and is **not** terminal Job Posting close. There is **NO Reopen Intake flow** and **NO manual End Recruitment command**.
 * **Application (`applications`):**
-  A candidate submission to an approved Job Posting containing candidate profile information and an uploaded CV/resume.
+  A candidate submission to an approved Job Posting containing `candidate_id`, `job_posting_id`, `cv_path`, `interview_deadline`, and `status`:
+  * **Application Lifecycle Statuses (`application_status` enum):**
+    * `pending`: Application submitted with CV; awaiting Recruiter CV screening.
+    * `interview_eligible`: Recruiter approved CV; candidate has 24-hour deadline to interview.
+    * `interviewed`: Candidate completed technical interview; awaiting hard-gated final review.
+    * `approved`: Terminal Recruiter approval.
+    * `rejected`: Terminal rejection (CV rejection, deadline expiration, intake close cleanup, or final recruiter rejection).
+  * **Relational Association:** `applications` exists before any interview occurs. The relationship is maintained by `interviews.application_id` (`UNIQUE REFERENCES applications(id)`), **not** by an `interview_id` foreign key on `applications`.
   * **Immediate Recruiter Visibility:** The Application and CV are immediately visible to the owning Recruiter upon submission inside **View Application Detail**, prior to any interview taking place.
-  * **24-Hour Interview Deadline:** When an Application is approved by the Recruiter, it is assigned:
+  * **24-Hour Interview Deadline:** When an Application is CV-approved (`interview_eligible`), it is assigned:
     $$\text{interview\_deadline} = \text{cv\_approved\_at} + 24\text{ hours}$$
-    If the candidate fails to complete the interview by this deadline, the Application automatically transitions to terminal `REJECTED`.
+    If the candidate fails to complete the interview by this deadline, the Application automatically transitions to terminal `rejected`.
 * **Two Distinct Decisions Consolidated in View Application Detail:**
-  1. **CV Screening Decision:** The Recruiter's initial evaluation of the uploaded CV/resume within View Application Detail. Recruiter may approve at most `interview_slot` Candidates to proceed to interview. Approving grants interview eligibility and starts the 24-hour deadline; it does not consume a funded slot yet.
-  2. **Hard-Gated Final Decision:** The definitive, terminal verdict rendered by the Recruiter (`Approve` or `Reject` Application) inside View Application Detail. This decision is **HARD-GATED until MAX(interview_deadline)** across all interview-eligible Applications for the posting. After the gate, the Recruiter reviews candidate profile, CV, and authorized Interview Result and recordings/transcripts to render the decision.
+  1. **CV Screening Decision:** The Recruiter's initial evaluation of the uploaded CV/resume within View Application Detail. Recruiter may approve at most `interview_slot` Candidates to proceed to interview (`status` moves from `pending` to `interview_eligible`). Approving grants interview eligibility and starts the 24-hour deadline; it does not consume a funded slot yet.
+  2. **Hard-Gated Final Decision:** The definitive, terminal verdict rendered by the Recruiter (`approved` or `rejected`) inside View Application Detail. This decision is **HARD-GATED until MAX(interview_deadline)** across all interview-eligible Applications for the posting. After the gate, the Recruiter reviews candidate profile, CV, and authorized Interview Result and recordings/transcripts to render the decision.
   * **Consolidated Review Invariant:** Recruiter viewing of CV, results, evaluations, and recordings is consolidated inside **View Application Detail**. Do not maintain separate current top-level review use cases.
 * **Terminal Job Posting Close:**
-  A Job Posting automatically reaches terminal closed state when **EVERY Application in scope reaches a terminal result** (`APPROVED` or `REJECTED`). Unused interview capacity is refunded to the Recruiter's wallet as internal coins upon terminal close. There is no manual End Recruitment command.
+  A Job Posting automatically transitions to terminal `closed` when **EVERY Application in scope reaches a terminal result** (`approved` or `rejected`). Unused interview capacity is refunded to the Recruiter's wallet as internal coins upon terminal close (`Refund unused JP Candidate Slot`). There is no manual End Recruitment command.
 
 ---
 

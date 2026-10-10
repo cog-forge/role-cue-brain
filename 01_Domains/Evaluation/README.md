@@ -26,29 +26,25 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 
 ## 2. Core Concepts
 
-* **Technical Competency Dimensions (Illustrative Baseline):**
-  The evaluation dimensions used to evaluate technical interview performance. A baseline illustrative set includes:
-  1. *Technical Accuracy:* Correctness of technical concepts, code syntax, architectural patterns, and algorithmic complexity.
-  2. *Depth of Understanding:* Ability to explain underlying system mechanisms, trade-offs, and boundary edge cases.
-  3. *Problem-Solving & Approach:* Structured reasoning, decomposing requirements, and systematic problem formulation.
-  4. *Answer Relevance:* Direct alignment with the asked question without drifting or evasiveness.
-  5. *Communication Clarity:* Technical articulation precision, structure, and professional clarity.
-  * **Specification Status Invariant:** The existing five dimensions serve strictly as an illustrative baseline set and are **NOT** a finalized, immutable platform contract. Recruiter posting-level evaluation criteria and weights are configurable. Exact criteria, defaults, formulas, validation constraints, and score thresholds remain unresolved product decisions. Illustrative ratios (e.g., hard skill 40% / soft skill 30%) are **not** an approved global formula.
-* **Recruiter Posting-Level Evaluation Settings:**
-  Evaluation weights and settings are configured at the Job Posting level, **separate from the core question bank (`core_questions`)**. The platform provides basic baseline settings, and the Recruiter adjusts evaluation weights to fit their specific posting and hiring criteria.
-* **Performance Report (`performance_reports`):**
-  The authoritative evaluation record generated upon session completion. Contains:
-  * Overall numerical score (0–100 scale).
-  * Competency score breakdown across evaluated dimensions.
-  * Turn-by-turn critiques comparing candidate responses against model answers.
-  * Identified knowledge gaps, misconceptions, and prioritized study roadmaps.
+* **Technical Competency Dimensions (`metrics`):**
+  The platform metrics used to evaluate technical interview performance:
+  * Each dimension is defined in the `metrics` table (`id`, `name`).
+  * A baseline illustrative set includes *Technical Accuracy*, *Depth of Understanding*, *Problem-Solving & Approach*, *Answer Relevance*, and *Communication Clarity*.
+  * **Specification Status Invariant:** The existing baseline dimensions serve as an illustrative set and are configurable. Recruiter posting-level evaluation criteria and weights are configurable. Exact criteria, defaults, formulas, and validation constraints remain unresolved product decisions.
+* **Posting-Level Metric Weights (`metrics_percentage`):**
+  Evaluation weights are configured at the Job Posting level through `metrics_percentage (job_posting_id, metric_id, percentage)`, **separate from the core question bank (`core_questions`)**. Recruiters adjust competency percentages to match their hiring requirements.
+* **Evaluation Results Persistence (`interviews`, `score_details`, `conversation_turns`):**
+  Evaluation outcomes are persisted directly in the relational schema upon session conclusion:
+  * **Overall Assessment:** Stored in `interviews.score` (numerical score) and `interviews.feedback` (narrative evaluation).
+  * **Competency Breakdown:** Persisted in `score_details` (`interview_id`, `metric_id`, `score`).
+  * **Turn-by-Turn Critiques:** Persisted in `conversation_turns.feedback` for each answered question turn.
 * **Role-Specific Result Disclosure:**
-  * **Practice Interviews:** The Candidate has full access to their performance report, radar chart, turn-by-turn critiques, model answers, and study roadmaps.
+  * **Practice Interviews:** The Candidate has full access to their evaluation scores, competency breakdowns (`score_details`), turn critiques (`conversation_turns.feedback`), and overall feedback (`interviews.feedback`).
   * **Recruitment Interviews:**
     * The **Candidate** can view their overall recruitment score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. These assets must not be exposed indirectly through history, result APIs, exports, or asset URLs.
-    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**.
+    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation score, competency breakdown (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**.
 * **Historical Context Preservation:**
-  The evaluation configuration and weights active at session runtime are captured within the session's immutable snapshot (`blueprint_snapshot` / execution context). Later modifications to posting evaluation weights or system prompt templates must **never** retroactively alter or recalculate completed historical Performance Reports (evaluation criteria are not modeled as part of `core_questions`).
+  The evaluation criteria and weights active for an interview remain anchored to the posting's `metrics_percentage` and the immutable turn feedback and `score_details` records generated at completion.
 * **Human Review Evidence (No Automated Hiring Authority):**
   Evaluation scores and reports serve as structured evidence to assist human judgment. Evaluation thresholds and scores carry **no automated hiring or rejection authority**.
 
@@ -56,8 +52,8 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 
 ## 3. Actors Involved
 
-* **Candidate:** Views personal practice interview history, performance reports, competency breakdowns, radar visualizations, turn critiques, and actionable study roadmaps; exports practice reports; views overall recruitment evaluation score (transcripts and recordings remain hidden).
-* **Recruiter:** Adjusts posting-level evaluation weights for own Job Postings; inspects candidate profile, CV, interview result scores, competency breakdowns, turn critiques, and recruitment audio/video recordings and transcripts consolidated directly inside **View Application Detail**.
+* **Candidate:** Views personal practice interview history, evaluation scores, competency breakdowns, turn critiques, and feedback; views overall recruitment evaluation score (transcripts and recordings remain hidden).
+* **Recruiter:** Adjusts posting-level evaluation weights (`metrics_percentage`) for own Job Postings; inspects candidate profile, CV, interview scores, competency breakdowns (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly inside **View Application Detail**.
 * **Administrator:** Inspects session operational records. (Global calibration of AI prompts, evaluation criteria/rubrics, and Interview Feature Configuration / runtime toggles are excluded from the frozen scope).
 
 ---
@@ -66,16 +62,15 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 
 ```mermaid
 flowchart TD
-    A["Interview Session Concluded<br/>(Turn Transcript + Session Blueprint Snapshot)"] --> B["Evaluation Engine Compiles Payload"]
-    B --> C["Multi-Turn Grading Engine<br/>(Scored against Snapshot Evaluation Configuration)"]
-    D --> E["Roadmap & Recommendation Synthesis<br/>(Generate targeted topic links & study tasks)"]
-    C --> D["Deterministic Metric Aggregator<br/>(Apply Configured Weights -> 0–100 Score)"]
-    E --> F["Persist Immutable Performance Report<br/>(Attached to Session / Application)"]
+    A["Interview Session Concluded<br/>(Turns in conversation_turns + Assigned Questions)"] --> B["Evaluation Engine Compiles Turns"]
+    B --> C["Multi-Turn Grading Engine<br/>(Scored against Configured Metrics)"]
+    C --> D["Deterministic Metric Aggregator<br/>(Apply Configured metrics_percentage Weights)"]
+    D --> E["Persist Evaluation Outcomes<br/>(interviews.score, interviews.feedback, score_details)"]
     
-    F --> G1["Practice Session: Candidate Dashboard<br/>(Full report, radar chart, critiques, roadmap)"]
-    F --> G2["Recruitment Session: Role-Specific Delivery"]
+    E --> G1["Practice Session: Candidate Dashboard<br/>(Overall score, feedback, score_details, turn critiques)"]
+    E --> G2["Recruitment Session: Role-Specific Delivery"]
     G2 --> H1["Candidate View: Overall Score Only<br/>(Transcripts & recordings strictly hidden)"]
-    G2 --> H2["Recruiter View: Consolidated Dossier<br/>(Scores, critiques, full recordings & transcript inside View Application Detail)"]
+    G2 --> H2["Recruiter View: Consolidated Dossier<br/>(Scores, score_details, critiques, full recordings in View Application Detail)"]
 ```
 
 ---
@@ -83,29 +78,29 @@ flowchart TD
 ## 5. Business Rules & Invariants
 
 1. **Strict Configuration Adherence:**
-   Evaluations must strictly grade against the evaluation configuration and weights recorded in the session's immutable snapshot. The grading engine cannot introduce arbitrary criteria outside the snapshot.
+   Evaluations must grade against the evaluation metrics and weights configured for that posting (`metrics_percentage`). The grading engine cannot introduce arbitrary criteria outside configured metrics.
 2. **Posting Settings Separated from Question Bank:**
-   Evaluation weights and scoring criteria are managed separately from the core question bank (`core_questions`). Recruiters configure evaluation weights at the posting level without mutating the question bank.
+   Evaluation weights (`metrics_percentage`) are managed separately from the core question bank (`core_questions`). Recruiters configure evaluation weights at the posting level without mutating the question bank.
 3. **Historical Evaluation Immutability:**
-   Once generated and persisted, a Performance Report is **immutable**. Historical scores, critiques, and radar values can never be altered or recalculated if source configurations change.
+   Once generated and persisted, evaluation scores (`interviews.score`, `score_details`) and feedback are **immutable**. Historical scores and critiques can never be altered or recalculated if source configurations change.
 4. **Role-Specific Disclosure Boundaries:**
    * In recruitment, the Candidate can view only their overall evaluation score; recruitment transcripts and audio/video recordings are hidden from the Candidate during recruitment and must not be exposed via exports, history APIs, or asset URLs.
    * No Candidate recruitment recording replay feature exists.
    * The owning Recruiter has exclusive review access to recruitment transcripts and recordings within `View Application Detail`.
 5. **Formative & Diagnostic Purpose (No Auto-Hiring):**
    RoleCue evaluations provide educational and diagnostic evidence. Evaluation scores carry **no autonomous hiring or disqualification authority**.
-6. **Single Performance Report per Session (1:1):**
-   Every completed Interview Session produces at most one Performance Report:
-   $$\text{interviews (1)} \longleftrightarrow \text{performance_reports (0..1)}$$
+6. **Unique Metric Evaluation per Session:**
+   Every evaluated Interview Session produces at most one score entry per evaluated metric, enforced by:
+   $$\text{UNIQUE}(interview\_id, metric\_id)\text{ on score_details}$$
 
 ---
 
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Consumes completed interview turns, session execution context, and `blueprint_snapshot` from interview sessions (`interviews`, `conversation_turns`).
+  Consumes completed interview turns (`conversation_turns`) and records evaluation results on `interviews` (`score`, `feedback`) and `score_details`.
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
-  Attaches the Performance Report (Interview Result) and recruitment recordings to the completed Application. Enforces role-specific visibility rules between Candidates and Recruiters (consolidated in `View Application Detail`).
+  For recruitment interviews, links evaluations to the Application via `interviews.application_id`. Enforces role-specific visibility rules between Candidates and Recruiters (consolidated in `View Application Detail`).
 * **[[01_Domains/Job-Description/README|Job-Description Domain]]:**
   Uses the technical competencies confirmed in the JD to ground technical accuracy and relevance scoring.
 * **[[01_Domains/Administration/README|Administration Domain]]:**

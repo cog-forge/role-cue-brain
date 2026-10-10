@@ -39,18 +39,18 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
   * *Separation:* Evaluation weights and scoring settings are configured separately and are not embedded into the question bank.
 * **Interview Session (`interviews`):**
   A concrete execution attempt of an interview executing from the core-question bank:
-  * **Practice Session:** Debited in coins from the Candidate's personal wallet upon session start; reconnecting to or resuming the same active session is free.
-  * **Recruitment Session:** Requires the Candidate to have submitted an application with a CV and received CV approval from the Recruiter. Consumes one prepaid interview slot strictly upon the Candidate's **first successful interview start**; reconnecting to or resuming that session consumes no additional slot. The Candidate is never charged.
-  * **24-Hour Interview Deadline:** Approved Candidates must complete the interview before `interview_deadline = cv_approved_at + 24 hours`; failure to complete by deadline results in automatic terminal `REJECTED`.
+  * **Practice Session (`type = 'practice'`):** Executed for personal skill development; `application_id IS NULL`. Debited in coins from the Candidate's personal wallet upon session start; reconnecting to or resuming the same active session is free.
+  * **Recruitment Session (`type = 'recruitment'`):** Linked directly to the Candidate's Application via `application_id UNIQUE REFERENCES applications(id)`. Requires prior CV approval (`interview_eligible`). Consumes one prepaid interview slot strictly upon the Candidate's **first successful interview start**; reconnecting to or resuming that session consumes no additional slot. The Candidate is never charged.
+  * **24-Hour Interview Deadline:** Approved Candidates must complete the interview before `interview_deadline = cv_approved_at + 24 hours`; failure to complete by deadline results in automatic terminal `rejected`.
 * **Recruitment Audio/Video Recordings:**
-  Recruitment interviews capture audio/video recordings and conversational transcripts.
+  Recruitment interviews capture audio/video recordings (`record_path`) and conversational transcripts.
   * Retained exclusively for review by the Recruiter owning the Job Posting inside View Application Detail.
   * Candidates view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment.
   * Practice interviews do not record video; they use microphone/STT for spoken dialogue.
-* **Session Execution Snapshot / Context (`blueprint_snapshot`):**
-  An immutable copy of the exact question-bank/question selection context AND the evaluation configuration actually used, captured at the moment an Interview Session is initialized. Guarantees that historical turn grading, replay, and scoring remain 100% reproducible even if source questions or evaluation weights change later (without modeling evaluation criteria as part of the current question bank).
+* **Persistent Session Question Mapping (`interview_questions`):**
+  The questions assigned to an interview are explicitly persisted in `interview_questions`, linking each session turn position (`(interview_id, position)`) to its source `core_question_id REFERENCES core_questions(id)`. This relational link guarantees that historical sessions remain permanently traceable and reproducible without requiring an unnormalized `blueprint_snapshot` column.
 * **Conversational Turns (`conversation_turns`):**
-  Sequentially indexed dialogue units capturing interviewer question text, TTS audio playback, candidate transcript, and real-time response data.
+  Sequentially indexed dialogue units capturing interviewer question text, candidate answer transcript, and per-turn feedback (`(interview_id, position, question, answer, feedback)`).
 * **Adaptive Question Loop:**
   During simulation, the runtime samples a random set of $x$ core questions from the bank and may ask bounded follow-ups based on the candidate's answers and interview context.
   * Deciding whether to follow up and generating follow-up question wording are distinct responsibilities.
@@ -125,8 +125,8 @@ stateDiagram-v2
    * The session strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
 6. **Recruitment Recording & Visibility Boundary:**
    Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. Candidates can view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. Practice interviews do not record video.
-7. **Immutable Session Execution Snapshot:**
-   Every session stores an immutable snapshot of the exact question-bank context and evaluation configuration upon creation. Historical evaluations remain reproducible even if the parent question bank or evaluation weights are subsequently modified (without modeling evaluation criteria as part of the current Blueprint).
+7. **Session Question Mapping Preservation:**
+   Every session persists its assigned questions in `interview_questions`, linking each turn position to its `core_question_id`. Historical sessions remain permanently reproducible and auditable even if the JD question bank is modified later.
 8. **Question Selection & Bounded Follow-Up Policy:**
    Simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups. The exact sample size $x$, selection/coverage policy, follow-up limits, and termination details remain unconfirmed product decisions. No specific decision vendor (such as Jev/TypeSafe) is selected; Jev is tentative and unapproved.
 9. **Graceful 2D Degradation:**
@@ -139,13 +139,13 @@ stateDiagram-v2
 ## 6. Relationships to Other Domains
 
 * **[[01_Domains/Job-Description/README|Job-Description Domain]]:**
-  Provides confirmed requirements and refinement notes that feed question-bank Blueprint generation.
+  Provides confirmed requirements and refinement notes that feed question-bank generation (`core_questions`).
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
-  Verifies that applicants have passed CV screening and that the posting has a funded interview slot before initiating recruitment interviews. Attaches results and recordings to the Application.
+  Verifies that applicants have passed CV screening (`interview_eligible`) and that the posting has a funded interview slot before initiating recruitment interviews. Recruitment interviews link back via `interviews.application_id`.
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
-  Supplies 3D avatar models, blend-shape viseme definitions, and TTS Voice Profiles.
+  Supplies 3D avatar models (`avatars`), blend-shape viseme definitions, and TTS Voice Profiles (`voices`).
 * **[[01_Domains/Evaluation/README|Evaluation Domain]]:**
-  Receives the final turn transcript and `blueprint_snapshot` to compute competency scores, radar charts, and learning roadmaps against configured evaluation weights.
+  Receives completed conversation turns (`conversation_turns`) and computes overall scores (`interviews.score`), narrative feedback (`interviews.feedback`), and dimensional metrics (`score_details.score`) mapped to `metrics.id` and weighted by `metrics_percentage`.
 * **[[01_Domains/Payment/README|Payment Domain]]:**
   Debits Candidate wallet coins at practice session start. Consumes prepaid Recruiter interview slots at recruitment session start.
 * **[[01_Domains/Administration/README|Administration Domain]]:**
