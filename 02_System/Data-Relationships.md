@@ -82,8 +82,8 @@ flowchart LR
 
 ### 2.5. Job Posting Application & CV-First Workflow Integrity
 * **Invariant (Intake Open):** Candidates may submit an unlimited number of Applications/CVs while posting status is `open`. Submissions are immediately visible to the Recruiter in `View Application Detail`. Intake is not limited by `interview_slot`.
-* **CV Screening & Deadline:** Recruiter approves at most `interview_slot` Candidates (`interview_eligible`). Approval sets `interview_deadline = cv_approved_at + 24 hours`.
-* **No-Show Enforcement:** If an approved Candidate does not start their interview before `interview_deadline`, the System Handler marks the application as terminal `rejected`.
+* **CV Screening & Deadline:** Recruiter approves at most `interview_slot` Candidates (`interview_eligible`). Approval calculates and persists `interview_deadline = approval_time + 24 hours` (`approval_time` is conceptual/event-time only; only `applications.interview_deadline` is persisted).
+* **Deadline Enforcement:** A Candidate must complete the recruitment interview before `interview_deadline`. Merely starting the interview before the deadline is insufficient. If an approved Candidate does not complete their interview before `interview_deadline`, the System Handler marks the application as terminal `rejected`.
 * **Slot Consumption:** Slot capacity is consumed upon the Candidate's first successful interview start. Reconnects and resumes do not consume additional capacity. Candidates are never charged.
 * **Hard-Gated Final Decisions:** Recruiter final decisions (`approved` or `rejected`) are **HARD-GATED until MAX(interview_deadline)** across all interview-eligible applications for that posting, consolidated in `View Application Detail`.
 * **Terminal Job Posting Close & Slot Refund:** Terminal close is reached automatically when EVERY application in scope has a terminal result (`approved` or `rejected`), transitioning posting status to `closed`. The System Handler executes `Refund unused JP Candidate Slot`, refunding still-unused capacity to the Recruiter's wallet as internal coins. There is no manual End Recruitment flow and no Reopen Intake flow.

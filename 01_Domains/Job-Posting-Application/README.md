@@ -62,8 +62,8 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * **Relational Association:** `applications` exists before any interview occurs. The relationship is maintained by `interviews.application_id` (`UNIQUE REFERENCES applications(id)`), **not** by an `interview_id` foreign key on `applications`.
   * **Immediate Recruiter Visibility:** The Application and CV are immediately visible to the owning Recruiter upon submission inside **View Application Detail**, prior to any interview taking place.
   * **24-Hour Interview Deadline:** When an Application is CV-approved (`interview_eligible`), it is assigned:
-    $$\text{interview\_deadline} = \text{cv\_approved\_at} + 24\text{ hours}$$
-    If the candidate fails to complete the interview by this deadline, the Application automatically transitions to terminal `rejected`.
+    $$\text{interview\_deadline} = \text{approval\_time} + 24\text{ hours}$$
+    (`approval_time` is conceptual/event-time only; only `applications.interview_deadline` is persisted). A Candidate must complete the recruitment interview before this deadline; merely starting the interview before the deadline is insufficient. If the candidate fails to complete the interview before this deadline, the Application automatically transitions to terminal `rejected`.
 * **Two Distinct Decisions Consolidated in View Application Detail:**
   1. **CV Screening Decision:** The Recruiter's initial evaluation of the uploaded CV/resume within View Application Detail. Recruiter may approve at most `interview_slot` Candidates to proceed to interview (`status` moves from `pending` to `interview_eligible`). Approving grants interview eligibility and starts the 24-hour deadline; it does not consume a funded slot yet.
   2. **Hard-Gated Final Decision:** The definitive, terminal verdict rendered by the Recruiter (`approved` or `rejected`) inside View Application Detail. This decision is **HARD-GATED until MAX(interview_deadline)** across all interview-eligible Applications for the posting. After the gate, the Recruiter reviews candidate profile, CV, and authorized Interview Result and recordings/transcripts to render the decision.
@@ -149,7 +149,7 @@ sequenceDiagram
         System->>Mail: Send CV Rejection notice to Candidate
     else Recruiter Approves CV
         Recruiter->>System: Approve CV (Grants eligibility; no slot consumed yet)
-        System->>DB: Set cv_approved_at & interview_deadline = cv_approved_at + 24h
+        System->>DB: Persist interview_deadline = approval_time + 24h
         System->>Mail: Send Interview Eligibility notice with 24h deadline
     end
 
@@ -161,7 +161,7 @@ sequenceDiagram
     end
 
     Note over Candidate,System: 6. Recruitment Technical Interview & Slot Consumption
-    opt Candidate interviews before deadline
+    opt Candidate completes interview before deadline
         Candidate->>System: Start recruitment interview
         System->>DB: Consume 1 funded interview slot on FIRST successful start (Free reconnect)
         Note over Candidate,System: Runs locked company model & Voice Profile; captures video/audio & transcript
@@ -169,7 +169,7 @@ sequenceDiagram
         System->>DB: Attach Interview Result & recordings to Application
         System-->>Candidate: Display overall score (Recordings/transcripts hidden)
     end
-    opt Candidate misses interview_deadline
+    opt Candidate fails to complete interview before interview_deadline
         System->>DB: Deadline expired -> Auto-reject Application (Status: REJECTED - Terminal)
     end
 
@@ -242,8 +242,9 @@ sequenceDiagram
    * When the configured limitation (`interview_slot` approved candidates) is reached, the System Handler automatically executes Close Intake (*Close Job Posting When Meet Configured Limitation*).
 9. **24-Hour Interview Deadline:**
    * When an Application is approved to proceed to interview:
-     $$\text{interview\_deadline} = \text{cv\_approved\_at} + 24\text{ hours}$$
-   * If the Candidate does not complete the recruitment interview by `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
+     $$\text{interview\_deadline} = \text{approval\_time} + 24\text{ hours}$$
+     (`approval_time` is conceptual/event-time only; only `applications.interview_deadline` is persisted).
+   * A Candidate must complete the recruitment interview before `interview_deadline`. Merely starting the interview before the deadline is insufficient. If the Candidate does not complete the recruitment interview before `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
 10. **Hard-Gated Final Recruiter Review:**
     * Recruiter final Approve/Reject decisions are **HARD-GATED** until:
       $$\text{MAX}(\text{interview\_deadline})$$

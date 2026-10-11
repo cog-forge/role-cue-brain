@@ -267,8 +267,8 @@ classDiagram
 * **`Application` (`applications`):** The Candidate's application to a `JobPosting`.
   * **Fields:** `job_posting_id`, `candidate_id`, `cv_path`, `interview_deadline`, `status` (`pending`, `interview_eligible`, `interviewed`, `approved`, `rejected`), `reject_reason`. Note that `applications` exists before the interview occurs and does **NOT** hold an `interview_id`; recruitment interviews link back to applications via `interviews.application_id`.
   * **Intake Submission:** Candidates submit CV/resume while intake is `open`; unlimited submissions permitted.
-  * **CV Screening:** Recruiter reviews CV in **View Application Detail** and approves at most `interview_slot` Candidates (`interview_eligible`). Approval sets `interview_deadline = cv_approved_at + 24 hours`.
-  * **Interview Deadline Enforcement:** If a candidate fails to start their interview before `interview_deadline`, the System Handler automatically marks the application as terminal `rejected`.
+  * **CV Screening:** Recruiter reviews CV in **View Application Detail** and approves at most `interview_slot` Candidates (`interview_eligible`). Approval calculates and persists `interview_deadline = approval_time + 24 hours` (`approval_time` is conceptual/event-time only; only `applications.interview_deadline` is persisted).
+  * **Interview Deadline Enforcement:** A Candidate must complete the recruitment interview before `interview_deadline`. Merely starting the interview before the deadline is insufficient. If a Candidate fails to complete their interview before `interview_deadline`, the System Handler automatically marks the application as terminal `rejected`.
   * **Hard-Gated Final Decisions:** Recruiter final Approve/Reject decisions are **HARD-GATED until MAX(interview_deadline)** across all interview-eligible applications for that posting. After the gate, the Recruiter renders final **Approve / Reject Application** decisions (`approved` or `rejected`) consolidated directly inside **View Application Detail**.
 
 ### 2.4. Audio-Visual Presentation & Avatar Inventory

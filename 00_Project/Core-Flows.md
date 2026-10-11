@@ -141,7 +141,7 @@ sequenceDiagram
         System-->>Candidate: Notify CV rejected
     else Recruiter approves CV
         Recruiter->>System: Approve CV (Grants eligibility; does not consume slot yet)
-        System->>DB: Set cv_approved_at & interview_deadline = cv_approved_at + 24 hours
+        System->>DB: Persist interview_deadline = approval_time + 24h
         System-->>Candidate: Notify interview eligible with 24h deadline
     end
 
@@ -153,7 +153,7 @@ sequenceDiagram
     end
 
     Note over Candidate,System: 6. Recruitment Technical Interview & Slot Consumption
-    opt Approved Candidate interviews before deadline
+    opt Approved Candidate completes interview before deadline
         Candidate->>System: Start recruitment interview
         System->>DB: Consume 1 funded interview slot on FIRST successful start (Free reconnect)
         Note over Candidate,System: Uses locked company 3D model & Voice Profile
@@ -162,7 +162,7 @@ sequenceDiagram
         System->>DB: Attach Interview Result & recordings to Application
         System-->>Candidate: Display overall recruitment score (Transcripts/recordings hidden)
     end
-    opt Candidate fails to interview before interview_deadline
+    opt Candidate fails to complete interview before interview_deadline
         System->>DB: Deadline expired -> Auto-reject Application (Status: REJECTED - Terminal)
     end
 
@@ -207,8 +207,9 @@ sequenceDiagram
    * The Recruiter may approve at most `interview_slot` Candidates to proceed to the recruitment interview stage.
    * **CV Approval Semantics:** Approving a CV grants interview eligibility; it does **not** consume the funded interview slot yet.
    * **Interview Deadline:** When an Application is approved:
-     $$\text{interview\_deadline} = \text{cv\_approved\_at} + 24\text{ hours}$$
-   * If an approved Candidate does not complete the recruitment interview by `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
+     $$\text{interview\_deadline} = \text{approval\_time} + 24\text{ hours}$$
+     (The application service uses the approval instant as `approval_time` to calculate and persist `applications.interview_deadline`; `approval_time` is conceptual and not a persisted column).
+   * A Candidate must COMPLETE the recruitment interview before `interview_deadline`. Merely starting the interview before the deadline is insufficient. If an approved Candidate does not complete the recruitment interview by `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
 5. **Close Intake (Manual or Limitation-Driven):**
    * Intake can be closed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
    * **Close Intake Semantics:**

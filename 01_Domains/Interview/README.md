@@ -41,7 +41,7 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
   A concrete execution attempt of an interview executing from the core-question bank:
   * **Practice Session (`type = 'practice'`):** Executed for personal skill development; `application_id IS NULL`. Debited in coins from the Candidate's personal wallet upon session start; reconnecting to or resuming the same active session is free.
   * **Recruitment Session (`type = 'recruitment'`):** Linked directly to the Candidate's Application via `application_id UNIQUE REFERENCES applications(id)`. Requires prior CV approval (`interview_eligible`). Consumes one prepaid interview slot strictly upon the Candidate's **first successful interview start**; reconnecting to or resuming that session consumes no additional slot. The Candidate is never charged.
-  * **24-Hour Interview Deadline:** Approved Candidates must complete the interview before `interview_deadline = cv_approved_at + 24 hours`; failure to complete by deadline results in automatic terminal `rejected`.
+  * **24-Hour Interview Deadline:** Approved Candidates must complete the interview before `interview_deadline = approval_time + 24 hours` (calculated upon CV approval; `approval_time` is conceptual and only `interview_deadline` is persisted). Merely starting the interview before the deadline is insufficient; failure to complete the interview before the deadline results in automatic terminal `rejected`.
 * **Recruitment Audio/Video Recordings:**
   Recruitment interviews capture audio/video recordings (`record_path`) and conversational transcripts.
   * Retained exclusively for review by the Recruiter owning the Job Posting inside View Application Detail.
@@ -121,7 +121,7 @@ stateDiagram-v2
    * If a session disconnects or is paused, reconnecting to or resuming the same active session incurs **no second charge** and consumes no additional slot.
 5. **Recruitment Interview Eligibility & 24-Hour Deadline:**
    * To launch a recruitment interview, a Candidate must have submitted an application with a CV, and the Recruiter must have approved the CV via View Application Detail. Approval grants interview eligibility, but does not consume a slot yet.
-   * The interview must be completed before `interview_deadline = cv_approved_at + 24 hours`. Missing the deadline automatically transitions the Application to terminal `REJECTED`.
+   * A Candidate must complete the recruitment interview before `interview_deadline = approval_time + 24 hours` (calculated upon CV approval; `approval_time` is conceptual and only `interview_deadline` is persisted). Merely starting before the deadline is insufficient; failing to complete the interview before the deadline automatically transitions the Application to terminal `REJECTED`.
    * The session strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
 6. **Recruitment Recording & Visibility Boundary:**
    Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. Candidates can view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. Practice interviews do not record video.
