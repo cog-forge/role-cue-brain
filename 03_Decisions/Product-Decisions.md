@@ -129,6 +129,31 @@ This document records the ratified, long-lived product decisions that govern the
 
 ---
 
+## 13a. Per-Posting Evaluation Weights & Equal-Split Defaults (KAN-184)
+* **Decision:** Ratified on **2026-10-18**: each Job Posting has its own Evaluation Weights, independent of the Core Question Bank, with equal-split defaults when the Recruiter has not saved a custom configuration.
+* **Rationale:** A valid fallback permits approval without mandatory customization; locking weights once a Posting opens keeps Candidate evaluations consistent.
+* **Rules:**
+  * **Metrics Catalog:** The system manages a Metrics Catalog currently seeded with Technical Accuracy, Depth of Understanding, Problem-Solving & Approach, Answer Relevance, and Communication Clarity. These five metrics are the current baseline, not an immutable platform list.
+  * **Custom Weights:** Recruiters may select a subset of metrics and allocate weights totaling **100%** for each Job Posting.
+  * **Equal-Split Fallback:** Without a saved custom configuration, divide the total **100%** equally among the metrics currently available (five metrics means **20% each**). Compute these defaults on read; do not persist them in `metrics_percentage`.
+  * **API Semantics:** When using defaults, return `configured: false` and `using_defaults: true`. This indicates a valid fallback totaling **100%**, not zero effective weight.
+  * **Approval:** Admin may approve a Posting without Recruiter-customized weights because the fallback provides a valid evaluation configuration.
+  * **Editing Boundary:** Recruiters may edit weights while the Posting is `pending` or `rejected`. Weights are locked in `open`, `intake_closed`, and `closed`.
+  * **Scoring Consistency:** KAN-61 scoring must use the same equal-split fallback when custom weights are absent.
+
+---
+
+## 13b. Locked Recruiter Visibility on the Candidate Job Board (KAN-187)
+* **Decision:** Ratified on **2026-10-18**: the Candidate Job Board displays only Job Postings with `status = open` whose owning Recruiter is not under an effective account lock at query time.
+* **Rationale:** Board visibility must reflect current account access restrictions while preserving existing recruitment data and lifecycle policies.
+* **Rules:**
+  * **Effective Lock:** A Recruiter is locked when `is_locked = true AND (lock_expires_at IS NULL OR lock_expires_at > NOW())`.
+  * **List and Detail:** Apply the same visibility policy to the list and detail page; a hidden Posting's detail URL returns **404**.
+  * **Automatic Visibility:** After Admin unlock or lock expiry, Postings whose status remains `open` automatically become visible again.
+  * **No Lifecycle Side Effects:** Account lock does not change Job Posting status, delete Applications, or trigger refunds. Preserve existing Applications and Interviews; their handling remains governed by separate lifecycle policies.
+
+---
+
 ## 14. Adaptive Question Loop with Decoupled Follow-Up Decisions (Jev is Unselected)
 * **Decision:** The interview runtime selects a random set of $x$ core questions from the question bank (`core_questions`, conceptual Blueprint) and may ask bounded follow-ups based on the candidate's answers and interview context.
 * **Rationale:** Deciding whether to ask a follow-up and generating follow-up question wording are distinct responsibilities. Runtime execution must avoid rigid lock-in to an unverified external vendor or asserting that a single LLM owns all decisions.
@@ -172,8 +197,8 @@ The following operational, numerical, and architectural parameters remain unreso
    * Dedicated follow-up decision mechanism, vendor selection, and fallback behaviors.
    * Rules regarding whether and how Recruiters may edit question bank items during active recruitment.
 4. **Evaluation Dimensions & Formulas:**
-   * Finalized technical competency dimensions, criteria definitions, and default weight distribution (existing five dimensions remain an illustrative/baseline set only and are NOT an immutable platform contract).
-   * Exact criteria, defaults, formulas, validation rules, constraints, and score passing/failing thresholds.
+   * Detailed definitions and criteria for each metric; the current Metrics Catalog baseline is recorded in Decision 13a.
+   * Scoring formulas, passing/failing thresholds, evaluation AI policy, and validation rules or constraints not settled in Decision 13a.
 5. **Recruitment Recording Retention & Post-Recruitment Policies:**
    * Audio/video recording retention periods and automated lifecycle purge schedules.
    * Physical cloud storage architecture and candidate recording consent workflows.
