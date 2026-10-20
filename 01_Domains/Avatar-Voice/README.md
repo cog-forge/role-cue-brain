@@ -34,12 +34,13 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
 * **Personal 3D Avatar (`avatars`) & Inventory (`inventories`):**
   An accepted capability delivered through RoleCue's embedded free Avaturn iframe experience. Avaturn handles capture instructions, photo validation, retakes, preview generation, customization, and final GLB generation. RoleCue receives the GLB, converts it to VRM, persists the VRM production asset in `avatars (inventory_id, name, model_path, personality)`, and associates it with the owning user's inventory (`inventories`).
 * **Both-Role Avatar Inventory Ownership:**
-  Both **Candidates** and **Recruiters** maintain a personal avatar inventory (`inventories`) in their profile library. **Administrators do NOT have a personal avatar inventory.**
+  Every **Candidate** and **Recruiter** starts with **3 personal avatar storage slots** (`inventories.slot`), ratified on **2026-10-20** (Decision 7). **Administrators do NOT have a personal avatar inventory.**
 * **Avatar Storage Capacity vs. Generation Fee:**
   * **Storage Capacity (Avatar Slots):** Avatar slots (`inventories.slot`) represent storage capacity in a user's library, **not** generation credits. When inventory capacity is full, the user must either remove an existing avatar or purchase an additional capacity slot using coins from their wallet.
+  * **Initial Capacity & API Authority:** The initial 3 slots do **not** grant three free generations. The frontend reads actual capacity from the authoritative API because purchases can increase it; 3 is the initial allocation, not a permanent frontend limit.
   * **Generation Fee:** A separate fee debited in coins from the user's personal wallet **strictly upon successful VRM persistence in RoleCue**.
 * **Charging Boundary at Successful VRM Save:**
-  Opening the avatar creator, uploading photos, generating a preview or GLB in Avaturn, and initiating GLB-to-VRM conversion do **not** incur a generation fee. The fee is charged only after RoleCue successfully validates, converts, and persists the production VRM asset.
+  Opening the avatar creator, uploading photos, generating a preview or GLB in Avaturn, and initiating GLB-to-VRM conversion do **not** incur a generation fee. The fee is charged only after RoleCue successfully validates, converts, and persists a usable production VRM asset. Failed/cancelled conversion or persistence incurs no generation fee.
 * **Voice Profile (`voices`):**
   A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider parameters. Curated and managed exclusively by Administrators.
 * **3D Environment Presets:**
@@ -71,7 +72,7 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
 ```mermaid
 flowchart TD
     subgraph PersonalAvatar["Personal 3D Avatar Generation & Inventory Flow"]
-        P1["User (Candidate or Recruiter) opens Avatar Studio"] --> P2{"Inventory Capacity Check<br/>(Slots = Storage Capacity)"}
+        P1["User (Candidate or Recruiter) opens Avatar Studio"] --> P2{"Read Actual Capacity from API<br/>(Initially 3 storage slots)"}
         P2 -->|At Capacity| P3["Free storage by removing avatar<br/>OR purchase capacity slot with Coins"]
         P3 --> P2
         P2 -->|Available Capacity| P4["Embedded free Avaturn iframe"]
@@ -79,8 +80,10 @@ flowchart TD
         P5 --> P6["Avaturn validation / retake, preview, and customization"]
         P6 --> P7["Avaturn final GLB generation"]
         P7 --> P8["RoleCue receives GLB and converts to VRM"]
-        P8 --> P9["RoleCue persists VRM asset in User Avatar Inventory"]
-        P9 --> P10["Debit Avatar Generation Fee in Coins<br/>(Charged strictly on successful VRM persistence)"]
+        P8 -->|Success| P9["RoleCue persists usable VRM asset in User Avatar Inventory"]
+        P9 -->|Success| P10["Debit Avatar Generation Fee in Coins<br/>(Charged strictly on successful VRM persistence)"]
+        P8 -->|Failed or cancelled| P_FAIL["No generation fee"]
+        P9 -->|Failed or cancelled| P_FAIL
         P10 --> P11["Avatar available in personal library"]
     end
 
@@ -103,11 +106,11 @@ flowchart TD
 ## 5. Business Rules & Invariants
 
 1. **Both-Role Avatar Inventory Ownership:**
-   Both Candidates and Recruiters possess personal avatar inventories. Administrators do **not** have an avatar inventory.
+   Every Candidate and Recruiter starts with **3 personal avatar storage slots**. Administrators do **not** have an avatar inventory.
 2. **Avatar Slots Represent Storage Capacity:**
-   Avatar slots represent storage capacity in a user's library, not generation credits. At capacity, the user must remove an existing model or purchase an additional capacity slot using coins.
+   The initial 3 slots represent storage capacity, not three free generations. At capacity, the user must remove an existing model or purchase an additional capacity slot using wallet coins. Capacity purchases and generation fees are separate operations; the frontend reads actual capacity from the authoritative API. Exact generation and capacity prices remain unresolved (Decision 16).
 3. **Successful VRM Persistence Charging Boundary:**
-   The avatar generation fee is debited in coins from the user's wallet **only after successful VRM persistence in RoleCue**. No fee is charged for opening the creator, uploading photos, generating an Avaturn GLB, or starting conversion.
+   The avatar generation fee is debited in coins from the user's wallet **only after a usable VRM asset has been successfully persisted by RoleCue**. No fee is charged for opening the creator, uploading photos, generating an Avaturn GLB, or starting conversion. Failed/cancelled conversion or persistence incurs no generation fee.
 4. **Embedded Avaturn Free Iframe Boundary:**
    RoleCue embeds the free Avaturn iframe directly. Avaturn owns capture instructions, photo collection, validation and retakes, preview generation, customization, and final GLB generation. RoleCue does not orchestrate these steps through Avaturn Pro APIs or backend reconstruction calls.
 5. **VRM is the Production Artifact:**

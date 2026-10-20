@@ -29,10 +29,11 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 * **Technical Competency Dimensions (`metrics`):**
   The platform metrics used to evaluate technical interview performance:
   * Each dimension is defined in the `metrics` table (`id`, `name`).
-  * A baseline illustrative set includes *Technical Accuracy*, *Depth of Understanding*, *Problem-Solving & Approach*, *Answer Relevance*, and *Communication Clarity*.
-  * **Specification Status Invariant:** The existing baseline dimensions serve as an illustrative set and are configurable. Recruiter posting-level evaluation criteria and weights are configurable. Exact criteria, defaults, formulas, and validation constraints remain unresolved product decisions.
+  * The five currently active baseline metrics are *Technical Accuracy*, *Depth of Understanding*, *Problem-Solving & Approach*, *Answer Relevance*, and *Communication Clarity*. This is not an immutable platform list.
+  * **Specification Status Invariant:** Decision 13a (ratified 2026-10-18) settles posting-level custom weights and equal-split defaults. Detailed metric criteria, scoring formulas, and validation constraints beyond that decision remain unresolved.
 * **Posting-Level Metric Weights (`metrics_percentage`):**
-  Evaluation weights are configured at the Job Posting level through `metrics_percentage (job_posting_id, metric_id, percentage)`, **separate from the core question bank (`core_questions`)**. Recruiters adjust competency percentages to match their hiring requirements.
+  Evaluation weights are **separate from the core question bank (`core_questions`)**. Recruiters may select a subset of metrics and save percentages totaling **100%** through `metrics_percentage (job_posting_id, metric_id, percentage)`. Without a saved custom configuration, compute effective equal-split defaults on read across currently available metrics (**20% each** for the current five); do not persist default rows. `configured=false` and `using_defaults=true` indicate valid configuration; Admin approval must not require custom weights.
+  * **Editing Boundary:** Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`. Applying this boundary to conceptual moderation approval, funding, and Open Intake is subject to the finalized technical state mapping (Decisions 13/16); no additional editable state is implied.
 * **Evaluation Results Persistence (`interviews`, `score_details`, `conversation_turns`):**
   Evaluation outcomes are persisted directly in the relational schema upon session conclusion:
   * **Overall Assessment:** Stored in `interviews.score` (numerical score) and `interviews.feedback` (narrative evaluation).
@@ -44,7 +45,7 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
     * The **Candidate** can view their overall recruitment score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. These assets must not be exposed indirectly through history, result APIs, exports, or asset URLs.
     * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation score, competency breakdown (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**.
 * **Historical Context Preservation:**
-  The evaluation criteria and weights active for an interview remain anchored to the posting's `metrics_percentage` and the immutable turn feedback and `score_details` records generated at completion.
+  Scoring uses the effective evaluation configuration (saved custom posting weights or equal-split defaults when absent). Persisted turn feedback and `score_details` remain immutable; later configuration changes must not recalculate historical results. This does not imply persisted default rows or a new snapshot mechanism.
 * **Human Review Evidence (No Automated Hiring Authority):**
   Evaluation scores and reports serve as structured evidence to assist human judgment. Evaluation thresholds and scores carry **no automated hiring or rejection authority**.
 
@@ -63,8 +64,8 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 ```mermaid
 flowchart TD
     A["Interview Session Concluded<br/>(Turns in conversation_turns + Assigned Questions)"] --> B["Evaluation Engine Compiles Turns"]
-    B --> C["Multi-Turn Grading Engine<br/>(Scored against Configured Metrics)"]
-    C --> D["Deterministic Metric Aggregator<br/>(Apply Configured metrics_percentage Weights)"]
+    B --> C["Multi-Turn Grading Engine<br/>(Scored against Effective Session Metrics)"]
+    C --> D["Deterministic Metric Aggregator<br/>(Posting: Custom Weights or Equal-Split Defaults)"]
     D --> E["Persist Evaluation Outcomes<br/>(interviews.score, interviews.feedback, score_details)"]
     
     E --> G1["Practice Session: Candidate Dashboard<br/>(Overall score, feedback, score_details, turn critiques)"]
@@ -78,9 +79,9 @@ flowchart TD
 ## 5. Business Rules & Invariants
 
 1. **Strict Configuration Adherence:**
-   Evaluations must grade against the evaluation metrics and weights configured for that posting (`metrics_percentage`). The grading engine cannot introduce arbitrary criteria outside configured metrics.
+   Recruitment evaluations must use the posting's effective metrics and weights: custom percentages totaling 100%, or equal-split defaults when no custom configuration exists (currently five metrics at 20% each). KAN-61 scoring must apply the same fallback as the configuration API. The grading engine cannot introduce arbitrary criteria outside the effective configuration.
 2. **Posting Settings Separated from Question Bank:**
-   Evaluation weights (`metrics_percentage`) are managed separately from the core question bank (`core_questions`). Recruiters configure evaluation weights at the posting level without mutating the question bank.
+   Evaluation weights are managed separately from the core question bank (`core_questions`). Customization is optional; `configured=false` and `using_defaults=true` are valid and must not block Admin approval. Custom weights are persisted in `metrics_percentage`; defaults are computed on read. Editing is allowed in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping.
 3. **Historical Evaluation Immutability:**
    Once generated and persisted, evaluation scores (`interviews.score`, `score_details`) and feedback are **immutable**. Historical scores and critiques can never be altered or recalculated if source configurations change.
 4. **Role-Specific Disclosure Boundaries:**

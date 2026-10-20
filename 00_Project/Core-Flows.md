@@ -101,6 +101,9 @@ flowchart TD
 
 RoleCue incorporates a lightweight job board and CV-first recruitment flow connecting Candidates and Recruiters. The scope is strictly bounded to eliminate full ATS overhead.
 
+> [!IMPORTANT]
+> The sequence below is the ratified business contract. Moderation approval and the Recruiter's Open Intake action are conceptual steps whose persistence mapping remains unresolved: the frozen `job_posting_status` enum has only `pending`, `open`, `intake_closed`, `closed`, and `rejected`, with no `approved` value or `intake_status` column. Current direct approval-to-`open` code is incomplete; it does not replace the funding gate. See [[02_System/Domain-Model|Domain Model]] and [[03_Decisions/Product-Decisions|Product Decisions]] (Decisions 13 and 16).
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -115,20 +118,26 @@ sequenceDiagram
     System->>System: AI extracts technical requirements
     Recruiter->>System: Review & confirm requirements
     System->>DB: Generate single Question-Bank Blueprint
-    Recruiter->>System: Edit own-posting core questions & configure evaluation weights
+    Recruiter->>System: Edit own-posting core questions & review evaluation settings (custom or defaults)
     Recruiter->>System: Select company 3D interviewer model and Voice Profile
     Recruiter->>System: Submit Job Posting for approval
-    System->>DB: Persist Job Posting (Status: PENDING_APPROVAL)
+    System->>DB: Persist Job Posting (status = pending)
     Admin->>System: Approve Job Posting
-    System->>DB: Set Job Posting Status to APPROVED
+    System-->>Recruiter: Moderation approved (Conceptual, funding required before intake)
 
     Note over Recruiter,System: 2. Slot Funding & Intake Open
     Recruiter->>System: Fund interview capacity using Coins from Wallet (interview_slot)
-    System->>DB: Record interview_slot on Job Posting
-    Recruiter->>System: Open application intake (Intake: OPEN)
+    System->>DB: Atomically debit wallet, record transactions entry & update job_postings.interview_slot (Idempotent)
+    break Funding fails
+        System-->>Recruiter: No partial debit or capacity, intake remains unavailable
+    end
+    System-->>Recruiter: Funding committed (Duplicate requests do not charge or allocate twice)
+    Recruiter->>System: Open application intake after successful funding
+    System->>System: Require moderation approval, committed funding & Recruiter Open Intake action
+    Note over System,DB: Approval / funding / intake persistence mapping unresolved on frozen schema
 
     Note over Candidate,Recruiter: 3. Unlimited Application Intake & Immediate Visibility
-    Candidate->>System: Browse Approved Postings (Intake: OPEN)
+    Candidate->>System: Browse moderated, funded Postings with Recruiter-opened intake
     Candidate->>System: Submit Application with uploaded CV (Unlimited submissions allowed)
     System->>DB: Persist Application with CV (Status: PENDING)
     System-->>Recruiter: Application & CV immediately visible in View Application Detail
@@ -140,14 +149,14 @@ sequenceDiagram
         System->>DB: Update Application (Status: REJECTED - Terminal)
         System-->>Candidate: Notify CV rejected
     else Recruiter approves CV
-        Recruiter->>System: Approve CV (Grants eligibility; does not consume slot yet)
+        Recruiter->>System: Approve CV (Grants eligibility, does not consume slot yet)
         System->>DB: Persist interview_deadline = approval_time + 24h
         System-->>Candidate: Notify interview eligible with 24h deadline
     end
 
     Note over Recruiter,System: 5. Close Intake (Manual or When Limitation Met)
     opt Close Intake triggered (Manual or configured limit met)
-        System->>DB: Stop new applications (Intake: CLOSED)
+        System->>DB: Set Job Posting status = intake_closed (Stop new applications)
         System->>DB: Auto-reject remaining unscreened/not-approved Applications
         Note over System,DB: Approved candidates remain interview-eligible. No refund yet. No reopen flow.
     end
@@ -180,7 +189,7 @@ sequenceDiagram
     opt Every Application reaches terminal state (APPROVED / REJECTED)
         System->>DB: Terminal Job Posting Auto-Close
         System->>DB: Refund unused interview_slot capacity as internal Coins to Recruiter Wallet
-        Note over System,DB: Refund unused JP Candidate Slot (Internal coin movement; no PayOS call)
+        Note over System,DB: Refund unused JP Candidate Slot (Internal coin movement, no PayOS call)
     end
 ```
 
@@ -191,13 +200,13 @@ sequenceDiagram
    * AI extracts structured requirements, and the Recruiter reviews and confirms them.
    * The system generates a single **Interview Blueprint** (core-question bank, persisted in `core_questions`) for the posting.
    * The Recruiter can view and edit core questions within their own posting's question bank.
-   * The Recruiter configures posting-level evaluation weights (separate from the question bank).
+   * The Recruiter prepares valid posting-level evaluation settings (separate from the question bank): optional custom metric percentages total 100%; otherwise use effective equal-split defaults (currently five metrics at 20% each). Custom weights are not required for Admin approval.
    * Before submission for Admin approval, the Recruiter locks the company 3D interviewer model and Voice Profile.
-   * Administrator approves the posting, making it publicly discoverable.
+   * Recruiter submits for moderation; Administrator approval is a moderation decision and does not itself open intake or make the Posting discoverable.
 2. **Interview Slot Funding & Intake Open:**
-   * The Recruiter funds interview capacity for the Job Posting using coins from their personal coin wallet, persisting `job_postings.interview_slot`.
+   * After moderation approval, the Recruiter funds interview capacity using personal wallet coins. The coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently; failures or duplicate requests must not leave inconsistent capacity or double charges. PayOS is only for real-money coin-package top-ups.
    * **`interview_slot` Definition:** Represents exclusively maximum recruitment interview capacity (the maximum number of Candidates that may be approved to proceed into the recruitment interview stage). It does **not** mean total Applications/CVs submitted, company hiring headcount, or final hires. RoleCue does not persist or enforce company hiring headcount.
-   * The Recruiter opens application intake.
+   * Only after successful funding does the Recruiter open application intake. Candidates may discover and apply only when moderation approval, funding, and this intake-opening action are all satisfied; the frozen-schema persistence mapping remains unresolved.
 3. **Application Intake & Immediate Recruiter Visibility:**
    * While Job Posting intake is **OPEN**, Candidates may submit an **UNLIMITED** number of Applications with uploaded CV/resumes.
    * Application submissions are **NOT limited by interview capacity** (`interview_slot`).
@@ -245,11 +254,11 @@ sequenceDiagram
 
 ## Flow C: Personal Avatar Generation & Inventory Flow
 
-RoleCue supports personal 3D avatar generation through an embedded free Avaturn iframe experience. Both Candidates and Recruiters maintain personal avatar inventories. Avaturn owns capture, validation, customization, and final GLB generation; RoleCue converts and persists the final production VRM asset.
+RoleCue supports personal 3D avatar generation through an embedded free Avaturn iframe experience. Every Candidate and Recruiter starts with **3 personal avatar storage slots** (ratified 2026-10-20); Admin has no personal inventory. Avaturn owns capture, validation, customization, and final GLB generation; RoleCue converts and persists the final production VRM asset.
 
 ```mermaid
 flowchart TD
-    START["User opens Avatar Studio in RoleCue<br/>(Candidate or Recruiter)"] --> CAP_CHECK{"Check Avatar Inventory Capacity<br/>(Slots = Storage Capacity)"}
+    START["User opens Avatar Studio in RoleCue<br/>(Candidate or Recruiter)"] --> CAP_CHECK{"Read Actual Capacity from API<br/>(Initially 3 storage slots)"}
     CAP_CHECK -->|At Capacity| MANAGE["Manage Inventory:<br/>Delete existing avatar OR purchase slot with Coins"]
     MANAGE --> CAP_CHECK
     CAP_CHECK -->|Capacity Available| IFRAME["Embedded free Avaturn iframe experience"]
@@ -260,8 +269,10 @@ flowchart TD
     PREVIEW --> GLB["Avaturn final GLB generation"]
     
     GLB --> CONVERT["RoleCue receives GLB and converts it to VRM"]
-    CONVERT --> PERSIST["RoleCue persists VRM asset in User Avatar Inventory"]
-    PERSIST --> CHARGE["Debit Avatar Generation Fee in Coins<br/>(Charged ONLY upon successful VRM persistence)"]
+    CONVERT -->|Success| PERSIST["RoleCue persists usable VRM asset in User Avatar Inventory"]
+    PERSIST -->|Success| CHARGE["Debit Avatar Generation Fee in Coins<br/>(Charged ONLY upon successful VRM persistence)"]
+    CONVERT -->|Failed or cancelled| NO_FEE["No generation fee"]
+    PERSIST -->|Failed or cancelled| NO_FEE
     CHARGE --> READY["Avatar available in personal library for eligible interview selection"]
 ```
 
@@ -269,7 +280,7 @@ flowchart TD
 
 1. **Avatar Inventory Capacity Check:**
    * A Candidate or Recruiter accesses the Personal 3D Avatar Studio from RoleCue.
-   * **Capacity Invariant:** Avatar slots represent **storage capacity**, not generation credits.
+   * **Capacity Invariant:** Each Candidate and Recruiter starts with **3 storage slots**. These are not three free generations. Capacity purchases and generation fees are separate operations; the frontend reads actual capacity from the authoritative API because purchases can increase it.
    * If the user's avatar inventory is at capacity, the user must either remove an existing avatar or purchase an additional avatar capacity slot using coins from their personal wallet before generating a new avatar.
 2. **Avaturn Embedded Experience:**
    * RoleCue embeds the free Avaturn iframe.
@@ -279,7 +290,7 @@ flowchart TD
    * RoleCue receives the GLB and executes deterministic conversion to the standardized VRM format.
 4. **Successful VRM Persistence & Generation Fee Charging:**
    * RoleCue persists the VRM model and associates it with the owning user (`user_id`).
-   * **Charging Boundary:** The avatar generation fee is debited in coins from the user's personal wallet **only after successful VRM persistence**. Opening the creator, uploading photos, generating the Avaturn GLB, or initiating conversion does **not** incur a generation charge.
+   * **Charging Boundary:** The avatar generation fee is debited in coins from the user's personal wallet **only after a usable VRM asset has been successfully persisted by RoleCue**. Opening the creator, uploading photos, generating the Avaturn GLB, or initiating conversion does **not** incur a generation charge. Failed/cancelled conversion or persistence incurs no generation fee.
 5. **Eligible Interview Usage:**
    * Once persisted, the avatar is stored in the user's personal library.
    * A Candidate can select an eligible personal avatar as the interviewer appearance for personal Target JD practice sessions.

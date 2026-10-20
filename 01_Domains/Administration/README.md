@@ -29,7 +29,7 @@ Empower platform administrators with centralized governance tools to enforce acc
 * **Account Governance:**
   Administrative oversight of Candidate and Recruiter accounts. Supports account search and filtering, along with security locking and unlocking.
 * **Job Posting Moderation:**
-  Supervisory review of Job Postings submitted by Recruiters. Supports viewing, filtering, and approving or rejecting Job Postings; only approved postings become publicly available.
+  Supervisory review of Job Postings submitted by Recruiters. Supports viewing, filtering, and approving or rejecting Job Postings. Approval is a moderation decision; public availability and applications additionally require successful wallet-coin funding and the Recruiter's subsequent Open Intake action.
 * **Interview Session Operational Oversight:**
   Supervisory access to interview session records. Enables searching, filtering, and inspecting operational session metadata and diagnostics.
   * **Privacy Invariant:** Operational oversight does **not** grant Administrators access to recruitment audio/video recordings or conversational transcripts.
@@ -86,7 +86,7 @@ flowchart TD
 5. **Two-Party Auditability:**
    All administrative actions (locking accounts, approving/rejecting job postings, modifying voice profiles) are recorded in an immutable audit log.
 6. **Job Posting Publication Gate:**
-   Recruiter Job Postings remain unavailable to Candidates until an Administrator approves them. Admin rejection prevents public availability; Admin does not configure the Job Posting's company 3D interviewer model or Voice Profile.
+   Recruiter Job Postings remain unavailable to Candidates until Admin moderation approval, successful Recruiter wallet-coin funding, and the Recruiter's subsequent Open Intake action are all satisfied, subject also to Decision 13b's account-lock visibility restrictions. Admin approval does not automatically open intake, and must not require custom evaluation weights because Decision 13a's equal-split fallback is valid. Admin rejection prevents public availability; Admin does not configure the company's 3D interviewer model or Voice Profile. The frozen enum has no `approved` Job Posting state or independent `intake_status` column; current direct approval-to-`open` behavior is incomplete implementation. Its mapping to the ratified sequence remains unresolved (Decisions 13/16; [[02_System/Domain-Model|Domain Model]]).
 
 ---
 

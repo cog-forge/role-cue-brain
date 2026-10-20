@@ -70,6 +70,7 @@ classDiagram
         +manageCoinWallet()
         +purchaseCoinPackage()
         +fundInterviewSlots()
+        +openJobPostingIntake()
         +closeJobPostingIntake()
         +searchFilterApplications()
         +viewApplicationDetail()
@@ -133,8 +134,8 @@ classDiagram
   * **Interview Session Lifecycle & Coin Charging:** Create, test audio and interview readiness, join, pause, and resume interview sessions. Practice interviews are debited in coins from the Candidate's personal wallet upon session start; reconnect/resume of the same session incurs no second charge.
   * **Spoken Interaction with 3D AI Interviewer:** Conduct real-time voice conversation with speech-synchronized 3D interviewer animation. Receives a random selection of core questions from the bank with bounded follow-ups.
   * **Practice History & Diagnostic Results:** Review practice performance reports, scores across core technical competencies, radar charts, turn critiques, actionable recommendations, and export results.
-  * **Personal 3D Avatar Inventory:** Access the embedded Avaturn generator to create a personal 3D avatar (RoleCue stores the final VRM asset). Manage personal avatar inventory capacity (delete models or purchase additional capacity slots with coins). Avatar generation fee is charged only upon successful VRM persistence in RoleCue.
-  * **Job Posting Discovery & Application:** Browse, search, filter, and view details of approved recruiter Job Postings with open intake. Submit application with CV/resume.
+  * **Personal 3D Avatar Inventory:** Start with **3 personal avatar storage slots**, separate from generation fees; read actual capacity from the authoritative API. Access the embedded Avaturn generator (RoleCue stores the final VRM asset); delete models or purchase additional capacity with wallet coins. Charge generation only after successful persistence of a usable VRM; failed/cancelled conversion or persistence has no generation fee.
+  * **Job Posting Discovery & Application:** Browse, search, filter, and view moderated, funded recruiter Job Postings with Recruiter-opened intake, subject to account-lock visibility restrictions (Decision 13b). Submit application with CV/resume.
   * **Recruitment Interview Participation:** Upon passing Recruiter CV screening, participate in the required technical interview funded by the Recruiter's prepaid slots (no coin charge to Candidate).
   * **Recruitment Result Visibility:** View overall recruitment evaluation score. Candidates **cannot** view recruitment transcripts or audio/video recordings during recruitment.
   * **Coin Wallet Management:** Purchase coin packages via payment gateway; view wallet coin balance and transaction history.
@@ -146,14 +147,14 @@ classDiagram
   * **Create Job Posting:** Begin a Job Posting (the company's Job Description) from JD-like content; review and confirm AI-extracted structured requirements.
   * **Configure Job Posting Interview:** Select the company 3D interviewer model and Voice Profile that Candidates must use for that Job Posting's interview.
   * **Manage Question Bank (Blueprint):** View and edit core questions within the question bank generated for own Job Postings.
-  * **Configure Evaluation Weights:** Adjust posting-level evaluation weights across technical competencies (separate from the question bank).
+  * **Configure Evaluation Weights:** Optionally select a metric subset totaling 100%, separately from the question bank; otherwise valid equal-split defaults apply (currently five metrics at 20% each). Defaults do not block approval. Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping (Decision 13a).
   * **Update Job Posting:** Modify requirements or description for submitted or active Job Postings.
   * **Close Job Posting Intake:** Close application intake. Halts receiving new Applications; automatically rejects remaining unscreened / not-approved Applications; Candidates already approved for interview remain interview-eligible. There is NO Reopen Intake flow and NO manual End Recruitment command.
   * **View & Search Own Postings:** Inspect, filter, and search own Job Postings.
   * **View Application Detail (Consolidated Review):** Search and filter incoming applications; view Candidate application details and uploaded CV/resume immediately upon submission; render CV screening approval or rejection. Recruiter may approve at most `interview_slot` Candidates to proceed to recruitment interview. Approved Candidates receive an interview deadline of `interview_deadline = approval_time + 24 hours` (calculated from the instant of CV approval; `approval_time` is conceptual and only `interview_deadline` is persisted). The Candidate must complete the interview before this deadline.
   * **Approve / Reject Application (Hard-Gated Final Decision):** Render definitive final decision (`Approve` or `Reject` Application). This decision is HARD-GATED until `MAX(interview_deadline)` across all interview-eligible Applications for the Job Posting. After the gate, the Recruiter opens View Application Detail, reviews Candidate profile, CV, and authorized interview score, result, recordings, and transcripts, and renders the final decision. CV review and interview evidence review are consolidated inside View Application Detail; there are no separate top-level capabilities for reviewing CVs or results.
-  * **Fund Interview Slots:** Fund `interview_slot` capacity for Job Postings using coins from personal wallet.
-  * **Personal Avatar Inventory:** Maintain personal avatar inventory; generate avatars via embedded Avaturn; purchase additional avatar capacity slots with coins.
+  * **Fund Interview Slots & Open Intake:** After Admin moderation approval, fund `interview_slot` with personal wallet coins, then explicitly open Application Intake after successful funding. Approval alone does not open intake; persistence mapping remains unresolved on the frozen schema (Decisions 13/16).
+  * **Personal Avatar Inventory:** Start with **3 personal avatar storage slots**, read actual capacity from the authoritative API, generate avatars via embedded Avaturn, and purchase additional capacity with wallet coins. Capacity purchase and generation fee are separate; charge generation only after RoleCue persists a usable VRM, never for failed/cancelled conversion or persistence.
 * **Boundary Invariant:**
   * **Job Posting IS the Company JD:** No separate "Corporate JD" or company tenant entity exists.
   * **Scope Termination:** Recruitment scope strictly terminates at **Approve / Reject Application**. No multi-stage hiring funnels, panel scheduling, offers, or onboarding.
@@ -215,7 +216,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * Candidate configures a Target JD interview with an available system or eligible personal 3D interviewer model, Voice Profile, 3D environment, difficulty level, and duration
   * System generates a single internal core-question bank Blueprint per JD following confirmed requirements (strictly hidden from Candidate)
   * Recruiter views and edits core questions in the question bank for own Job Posting
-  * Recruiter configures posting-level evaluation weights separately from the question bank
+  * Recruiter may customize posting-level metric weights totaling 100% separately from the question bank; otherwise use valid equal-split defaults (Decision 13a)
   * Candidate uses the Job Posting's locked company 3D interviewer model and Voice Profile for recruitment interviews
 
 ### 2.4. Real-Time Interview Simulation
@@ -244,6 +245,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 * **Capabilities:**
   * Generate personal 3D avatar through embedded free Avaturn iframe; RoleCue converts received final GLB to VRM production asset
   * Generation fee charged in coins only upon successful VRM persistence in RoleCue
+  * Start with 3 personal avatar storage slots (not three free generations); frontend reads actual capacity from the authoritative API
   * View and manage personal avatar inventory capacity
   * Purchase additional avatar inventory capacity slots using coins
   * Remove avatars to free storage capacity
@@ -257,13 +259,14 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * View and search own Job Postings
   * Close Job Posting Intake: Recruiter manually closes intake (halts new applications, automatically rejects remaining unscreened/not-approved applications, preserves interview eligibility for already-approved candidates). There is NO Reopen Intake flow.
   * Close Job Posting When Meet Configured Limitation: System Handler automatically closes intake when `interview_slot` Candidates have been approved for interview.
-  * Fund interview slots (`interview_slot` capacity) for Job Posting using coins from personal wallet
+  * After Admin moderation approval, fund interview slots using personal wallet coins; debit, unified ledger entry, and `job_postings.interview_slot` update are atomic and idempotent
+  * Open Application Intake only after successful funding; only then may Candidates discover and apply, subject to account-lock visibility rules (Decisions 13/13b; frozen-schema persistence mapping unresolved)
   * Terminal Job Posting Close & Refund: System Handler automatically triggers terminal close and `Refund unused JP Candidate Slot` when all applications have reached terminal status (`APPROVED` or `REJECTED`). There is NO manual End Recruitment command.
 
 ### 2.8. Job Application & CV-First Workflow
 * **Actors:** Candidate, Recruiter, System Handler
 * **Capabilities:**
-  * Candidate browses, searches, and views approved Job Postings with open intake
+  * Candidate browses, searches, and views moderated, funded Job Postings with Recruiter-opened intake, subject to account-lock visibility restrictions (Decision 13b)
   * Candidate submits application with uploaded CV/resume (unlimited submissions while intake is open; submissions are NOT capped by `interview_slot`)
   * Application and CV are immediately visible to the owning Recruiter
   * Recruiter reviews submitted application and CV via **View Application Detail**; may approve at most `interview_slot` Candidates to proceed to interview

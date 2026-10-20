@@ -35,7 +35,7 @@ This document records the ratified, long-lived product decisions that govern the
 ## 3. Job Posting is the Recruiter's Company JD
 * **Decision:** The `Job Posting` entity represents the employer's Job Description. A separate "Corporate JD" entity is **not** created.
 * **Rationale:** Introducing both "Corporate JD" and "Job Posting" creates redundant entities and semantic ambiguity. A Recruiter's Job Posting serves as both the public job board opening and the underlying company JD.
-* **Rule:** Maintain single canonical naming: `Job Posting`. Recruiter creation begins from JD-like content and confirms AI-extracted structured requirements. Before submitting for Admin approval, the Recruiter locks the company 3D interviewer model and Voice Profile. Only approved Job Postings are publicly available.
+* **Rule:** Maintain single canonical naming: `Job Posting`. Recruiter creation begins from JD-like content and confirms AI-extracted structured requirements. Before submitting for Admin approval, the Recruiter prepares the core-question bank, valid evaluation settings (custom or defaults), and locked company 3D interviewer model and Voice Profile. Public discovery and applications require moderation approval, successful coin funding, and Recruiter-opened intake, in that order (Decision 13).
 
 ---
 
@@ -70,12 +70,13 @@ This document records the ratified, long-lived product decisions that govern the
 ---
 
 ## 7. Personal 3D Avatar Inventory (Both Roles, Capacity vs. Generation Fee)
-* **Decision:** Both Candidates and Recruiters maintain personal avatar inventories created via the embedded free Avaturn iframe experience and persisted as standardized VRM assets.
+* **Decision:** Both Candidates and Recruiters maintain personal avatar inventories created via the embedded free Avaturn iframe experience and persisted as standardized VRM assets. Ratified on **2026-10-20**: every Candidate and Recruiter starts with **3 personal avatar storage slots**.
 * **Rationale:** Avaturn provides a polished web capture experience without requiring proprietary backend reconstruction pipelines. Separating storage capacity from generation fees allows transparent monetization.
 * **Rule:**
   * Candidates and Recruiters possess personal avatar inventories; Administrators do **not**.
   * Avatar slots represent **storage capacity**, not generation credits. At capacity, users delete existing models or purchase additional capacity slots using coins.
-  * **Charging Boundary:** The avatar generation fee is debited in coins **only after successful VRM persistence in RoleCue**. No fee is charged for opening the studio, uploading photos, generating an Avaturn GLB, or starting conversion.
+  * **Initial Capacity:** The 3 initial slots do **not** grant three free generations. Capacity purchases and generation fees are separate operations. The frontend reads actual capacity from the authoritative API because purchases can increase it.
+  * **Charging Boundary:** The avatar generation fee is debited in coins **only after a usable VRM asset has been successfully persisted in RoleCue**. No fee is charged for opening the studio, uploading photos, generating an Avaturn GLB, or starting conversion. Failed/cancelled conversion or persistence incurs no generation fee.
   * RoleCue embeds the free Avaturn iframe; Avaturn generates the final GLB; RoleCue converts it to VRM and persists it. No Avaturn Pro backend API, marketplace, or admin catalog is supported.
 
 ---
@@ -116,9 +117,12 @@ This document records the ratified, long-lived product decisions that govern the
 ---
 
 ## 13. Recruiter Intake Management, Capacity Limits & View Application Detail Consolidation
-* **Decision:** Recruiter capabilities include managing intake (Close Intake), funding interview capacity (`interview_slot`), editing own question banks and evaluation weights, screening CVs, and reviewing recruitment recordings and transcripts consolidated within View Application Detail.
+* **Decision:** Recruiter capabilities include managing intake (Open Intake after funding, Close Intake), funding interview capacity (`interview_slot`), editing own question banks and evaluation weights, screening CVs, and reviewing recruitment recordings and transcripts consolidated within View Application Detail.
 * **Rationale:** Recruiters require operational control over interview capacity, application intake pacing, and candidate performance evidence without expanding into a full ATS.
 * **Rule:**
+  * **Moderation → Funding → Open Intake (Ratified 2026-10-20):** Recruiter prepares the Posting, confirms requirements, prepares the core-question bank, valid evaluation settings (Decision 13a), and company presentation, then submits for Admin moderation. Admin approval is a moderation decision. After approval, Recruiter funds `interview_slot` using wallet coins and, only after successful funding, opens Application Intake. Candidates may discover and apply only when all three conditions hold; approval alone does **not** open intake.
+  * **Frozen Schema & Implementation Gap:** Moderation approval is conceptual, not a persisted `approved` Job Posting status. The frozen `job_posting_status` enum contains only `pending`, `open`, `intake_closed`, `closed`, and `rejected`; there is no independent `intake_status` column. Current code maps Admin approval directly to `open`; this is incomplete implementation, not the product contract. The Approval → Funding → Open Intake persistence mapping remains unresolved (Decision 16; [[02_System/Domain-Model|Domain Model]]). Do not invent a state, column, transition, or storage mechanism, or relax the funding gate.
+  * **Atomic, Idempotent Funding:** Recruiter wallet coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently. Failed operations leave no partial debit/capacity; retries or duplicates cannot double-charge or allocate capacity twice. Internal funding never invokes PayOS.
   * **Intake Control:** Open intake receives unlimited applications; Close intake (`Close Job Posting Intake` or automated `Close Job Posting When Meet Configured Limitation` when approved count reaches `interview_slot`) permanently closes intake and automatically marks all unscreened/unapproved applications as terminal `REJECTED`. Candidates who already passed CV screening can still complete their interviews within their 24-hour deadline (`interview_deadline = approval_time + 24 hours`, where `approval_time` is conceptual). Close intake does **not** refund slots.
   * **No Reopen Intake Flow:** There is **NO Reopen Intake** flow. Once closed, intake cannot be reopened.
   * **No Manual End Recruitment Flow:** There is **NO manual End Recruitment** capability.
@@ -138,18 +142,18 @@ This document records the ratified, long-lived product decisions that govern the
   * **Equal-Split Fallback:** Without a saved custom configuration, divide the total **100%** equally among the metrics currently available (five metrics means **20% each**). Compute these defaults on read; do not persist them in `metrics_percentage`.
   * **API Semantics:** When using defaults, return `configured: false` and `using_defaults: true`. This indicates a valid fallback totaling **100%**, not zero effective weight.
   * **Approval:** Admin may approve a Posting without Recruiter-customized weights because the fallback provides a valid evaluation configuration.
-  * **Editing Boundary:** Recruiters may edit weights while the Posting is `pending` or `rejected`. Weights are locked in `open`, `intake_closed`, and `closed`.
+  * **Editing Boundary:** Recruiters may edit weights while the Posting is `pending` or `rejected`. Weights are locked in `open`, `intake_closed`, and `closed`. Applying this boundary to the conceptual approval/funding/intake stages is subject to the finalized technical state mapping; no additional editable state is implied.
   * **Scoring Consistency:** KAN-61 scoring must use the same equal-split fallback when custom weights are absent.
 
 ---
 
 ## 13b. Locked Recruiter Visibility on the Candidate Job Board (KAN-187)
-* **Decision:** Ratified on **2026-10-18**: the Candidate Job Board displays only Job Postings with `status = open` whose owning Recruiter is not under an effective account lock at query time.
+* **Decision:** Ratified on **2026-10-18**: the Candidate Job Board displays only Job Postings with `status = open` whose owning Recruiter is not under an effective account lock at query time. The moderation, funding, and Recruiter-opened intake prerequisites in Decision 13 also apply; `open` alone does not prove those gates were satisfied by current code.
 * **Rationale:** Board visibility must reflect current account access restrictions while preserving existing recruitment data and lifecycle policies.
 * **Rules:**
   * **Effective Lock:** A Recruiter is locked when `is_locked = true AND (lock_expires_at IS NULL OR lock_expires_at > NOW())`.
   * **List and Detail:** Apply the same visibility policy to the list and detail page; a hidden Posting's detail URL returns **404**.
-  * **Automatic Visibility:** After Admin unlock or lock expiry, Postings whose status remains `open` automatically become visible again.
+  * **Automatic Visibility:** After Admin unlock or lock expiry, Postings whose status remains `open` automatically become visible again when Decision 13's publication prerequisites remain satisfied.
   * **No Lifecycle Side Effects:** Account lock does not change Job Posting status, delete Applications, or trigger refunds. Preserve existing Applications and Interviews; their handling remains governed by separate lifecycle policies.
 
 ---
@@ -184,7 +188,8 @@ The following operational, numerical, and architectural parameters remain unreso
 
 1. **Commercial Parameters & Precision:**
    * Exact monetary pricing for coin packages.
-   * Coin exchange ratios, currency precision (integer vs. decimal), package sizes, and initial free avatar storage capacity.
+   * Coin exchange ratios, currency precision (integer vs. decimal), and package sizes.
+   * Exact avatar generation fee and additional storage-capacity price.
 2. **Interview Slot Policies:**
    * Slot reservation mechanics and concurrency limits during high application traffic.
    * Handling in-flight active interview sessions during terminal auto-close.
@@ -206,3 +211,6 @@ The following operational, numerical, and architectural parameters remain unreso
    * Session recovery timeout window (older conflicting reports cite 10 minutes vs. 15 minutes; unresolved).
 6. **Global Administrative Management (Excluded from Frozen Scope):**
    * Global AI prompt templates, global evaluation criteria editing, runtime interview feature toggles, and coin package pricing tier editing are excluded from the current frozen scope.
+7. **Approval, Funding & Intake Implementation Mapping:**
+   * How to represent conceptual moderation approval, successful funding, and the Recruiter's explicit Open Intake action using the frozen Job Posting schema remains an implementation/design gap. Current direct approval-to-`open` behavior does not satisfy the ratified sequence.
+   * The mapping must also preserve Decision 13a's evaluation editing boundary and Decision 13b's visibility restrictions. No persistence mechanism or new transition is ratified here; resolution requires evidence or product-owner approval.

@@ -62,7 +62,7 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
 ## 3. Actors Involved
 
 * **Candidate:** Configures Target JD interview parameters, completes Test Audio and Interview Readiness, joins, pauses, resumes, and concludes practice and recruitment interviews. For a Job Posting interview, uses the locked company presentation configured by the Recruiter.
-* **Recruiter:** Views and edits core questions in the question bank for own Job Postings; configures posting-level evaluation weights; funds interview slots; reviews applicant results, transcripts, and audio/video recordings.
+* **Recruiter:** Views and edits core questions in the question bank for own Job Postings; may customize posting-level evaluation weights or use valid equal-split defaults (Decision 13a); funds interview slots; reviews applicant results, transcripts, and audio/video recordings.
 * **System Handler (Internal Handler):** Detects and terminates abandoned or orphaned interview sessions after extended inactivity.
 * **Administrator:** Searches and filters interview sessions and views operational session metadata and diagnostics. (Global AI prompts, global evaluation criteria, and Interview Feature Configuration / runtime toggles remain awaiting confirmation).
 
@@ -145,7 +145,7 @@ stateDiagram-v2
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
   Supplies 3D avatar models (`avatars`), blend-shape viseme definitions, and TTS Voice Profiles (`voices`).
 * **[[01_Domains/Evaluation/README|Evaluation Domain]]:**
-  Receives completed conversation turns (`conversation_turns`) and computes overall scores (`interviews.score`), narrative feedback (`interviews.feedback`), and dimensional metrics (`score_details.score`) mapped to `metrics.id` and weighted by `metrics_percentage`.
+  Receives completed conversation turns (`conversation_turns`) and computes overall scores (`interviews.score`), narrative feedback (`interviews.feedback`), and dimensional metrics (`score_details.score`) mapped to `metrics.id`. Recruitment scoring uses custom `metrics_percentage` weights or the same effective equal-split fallback as the configuration API when custom weights are absent (currently five metrics at 20% each; Decision 13a).
 * **[[01_Domains/Payment/README|Payment Domain]]:**
   Debits Candidate wallet coins at practice session start. Consumes prepaid Recruiter interview slots at recruitment session start.
 * **[[01_Domains/Administration/README|Administration Domain]]:**

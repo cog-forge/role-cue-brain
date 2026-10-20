@@ -29,30 +29,31 @@ Bridge the gap between technical interview preparation and career discovery. Rec
 * **Job Posting (`job_postings`):**
   A formal job vacancy created by a Recruiter from JD-like content, serving as the company's Job Description.
   * **Canonical Equivalence:** `Job Posting` **is** the company's Job Description. There is no separate "Corporate JD" entity or company-tenant system.
-  * **Question Bank & Settings:** Generates a single internal core-question bank Blueprint (persisted in `core_questions`). The owning Recruiter can view and edit core questions for their own posting. The Recruiter also configures posting-level evaluation weights separately from the question bank.
+  * **Question Bank & Settings:** Generates a single internal core-question bank Blueprint (persisted in `core_questions`). The owning Recruiter can view and edit core questions for their own posting. Evaluation settings are separate: optional custom weights for a subset of metrics must total 100%; otherwise effective equal-split defaults apply (currently five active metrics at 20% each). `configured=false` and `using_defaults=true` are valid; Admin approval does not require custom weights. Editing is allowed in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping (Decision 13a).
   * **Interview Presentation:** Company 3D interviewer model and Voice Profile selected by the Recruiter before Admin approval. Candidates cannot override either setting for a recruitment interview.
-  * **Lifecycle & Intake Status (`job_postings.status`):**
-    Enforced by the PostgreSQL enum `job_posting_status`:
+  * **Persisted Lifecycle Status (`job_postings.status`):**
+    The frozen PostgreSQL enum `job_posting_status` contains only:
     * `pending`: Submitted by Recruiter, awaiting Admin moderation.
-    * `open`: Approved by Admin, actively receiving Applications and CVs.
+    * `open`: The existing status for active intake. The product contract additionally requires moderation approval, successful funding, and the Recruiter's explicit Open Intake action; current code setting `open` at approval alone is incomplete.
     * `intake_closed`: Application intake closed (manually or automatically); remaining unscreened applications rejected; eligible candidates may interview.
     * `closed`: Terminal closed state reached when all applications are terminal `approved` or `rejected`; unused capacity refunded.
     * `rejected`: Moderated and rejected by Administrator.
+    * **Unresolved Mapping:** Moderation approval is a conceptual decision, not a persisted `approved` status; no independent `intake_status` column exists. How Approval → Funding → Open Intake maps to this frozen schema remains unresolved. No additional state, column, transition, or storage mechanism is implied (see [[02_System/Domain-Model|Domain Model]] and Decisions 13/16 in [[03_Decisions/Product-Decisions|Product Decisions]]).
   * **Removal of Archive:** `Archive Job Posting` is removed from RoleCue's product contract. It is not a supported capability or lifecycle state.
 * **Interview Slot (`job_postings.interview_slot`):**
   The frozen ERD field defining maximum recruitment interview capacity:
   * Specifies the maximum number of Candidates that may be approved to proceed into the recruitment interview stage.
-  * Funded by the Recruiter using coins from their personal wallet upon posting setup.
+  * Funded by the Recruiter using wallet coins **after moderation approval and before opening intake**. Coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must be atomic and idempotent; failures and duplicate requests cannot cause partial capacity or double charges. Funding never invokes PayOS.
   * **Non-Headcount Invariant:** It does **NOT** mean total Applications/CVs submitted, company hiring headcount, or final hires. RoleCue does **NOT** persist or enforce company hiring headcount.
   * Passing CV screening does **not** consume a slot yet.
   * Starting the interview consumes one funded slot strictly on the Candidate's **first successful start**. Reconnecting to or resuming that active session does **not** consume another.
   * Unused interview capacity is refunded as coins back into the Recruiter's personal wallet upon **terminal Job Posting auto-close** (`Refund unused JP Candidate Slot`).
 * **Application Intake (Open vs. Close):**
-  * `Open intake (`status = 'open'`)`: Actively accepts new candidate applications and CV submissions. Candidates may submit an **UNLIMITED** number of Applications/CVs; submissions are **NOT limited by interview capacity**.
-  * `Close intake (`status = 'intake_closed'`)`: Halts receiving new applications. Executed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
+  * **Open intake:** Recruiter opens intake only after moderation approval and successful funding. Candidates can discover and submit only after all three gates hold; `status = 'open'` alone in current code is insufficient evidence. Candidates may submit an **UNLIMITED** number of Applications/CVs; submissions are **NOT limited by interview capacity**.
+  * **Close intake (`status = 'intake_closed'`):** Halts receiving new applications. Executed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
   * **Close Intake Invariant:** Closing intake automatically **REJECTS** all remaining Applications that are still unscreened or not approved to proceed to interview. Candidates already approved for interview (`interview_eligible`) remain eligible and may complete their interviews. Close intake does **not** refund interview capacity and is **not** terminal Job Posting close. There is **NO Reopen Intake flow** and **NO manual End Recruitment command**.
 * **Application (`applications`):**
-  A candidate submission to an approved Job Posting containing `candidate_id`, `job_posting_id`, `cv_path`, `interview_deadline`, and `status`:
+  A candidate submission to a moderated, funded Job Posting with Recruiter-opened intake, containing `candidate_id`, `job_posting_id`, `cv_path`, `interview_deadline`, and `status`:
   * **Application Lifecycle Statuses (`application_status` enum):**
     * `pending`: Application submitted with CV; awaiting Recruiter CV screening.
     * `interview_eligible`: Recruiter approved CV; candidate has 24-hour deadline to interview.
@@ -78,16 +79,16 @@ Bridge the gap between technical interview preparation and career discovery. Rec
 * **Recruiter:**
   * Creates Job Postings from JD-like content; reviews and confirms AI-extracted structured requirements.
   * Views and edits core questions in the question bank (`core_questions`) for own Job Postings.
-  * Configures posting-level evaluation weights across technical competencies.
+  * Reviews posting-level evaluation settings; may customize metric weights or use valid equal-split defaults.
   * Selects the company 3D interviewer model and Voice Profile before submitting for Admin approval.
-  * Funds interview capacity (`interview_slot`) for the Job Posting using coins from personal wallet.
+  * After moderation approval, funds interview capacity (`interview_slot`) using personal wallet coins, then explicitly opens Application Intake after successful funding.
   * Manually triggers Close Job Posting Intake when desired (halts new applications; rejects unscreened/unapproved applications).
   * Inspects incoming Applications and CVs immediately upon submission inside View Application Detail.
   * Performs CV screening approval (max `interview_slot` approvals).
   * After the `MAX(interview_deadline)` hard gate, reviews applicant dossier, CV, technical evaluation scores, and recordings/transcripts in View Application Detail.
   * Renders definitive final decision: **Approve** or **Reject** Application.
 * **Candidate:**
-  * Browses and searches approved public Job Postings with open intake.
+  * Browses and searches moderated, funded public Job Postings with Recruiter-opened intake, subject to Recruiter account-lock visibility rules (Decision 13b).
   * Submits an unlimited number of applications with uploaded CV/resumes while intake is open.
   * Tracks application status.
   * Upon receiving CV approval, participates in the required technical interview within the 24-hour deadline using the Job Posting's locked presentation and funded slot (Candidate is never charged).
@@ -103,6 +104,8 @@ Bridge the gap between technical interview preparation and career discovery. Rec
 ---
 
 ## 4. Main Domain Flow
+
+This is the ratified business sequence. Conceptual moderation approval and Open Intake are not database writes to invented statuses or fields; their persistence mapping is unresolved on the frozen schema.
 
 ```mermaid
 sequenceDiagram
@@ -120,21 +123,26 @@ sequenceDiagram
     System->>System: AI extracts technical requirements
     Recruiter->>System: Review & confirm requirements
     System->>DB: Generate single Question Bank (core_questions)
-    Recruiter->>System: View/edit core questions & set evaluation weights
+    Recruiter->>System: View/edit core questions & review evaluation settings (custom or defaults)
     Recruiter->>System: Select company 3D model and Voice Profile
     Recruiter->>System: Submit Job Posting for approval
-    System->>DB: Store Job Posting (Status: PENDING_APPROVAL)
+    System->>DB: Store Job Posting (status = pending)
     Admin->>System: Approve Job Posting
-    System->>DB: Update Job Posting Status to APPROVED
+    System-->>Recruiter: Moderation approved (Conceptual, funding required before intake)
 
     Note over Recruiter,Pay: 2. Slot Funding & Intake Open
     Recruiter->>Pay: Fund interview capacity using Coins from Wallet (interview_slot)
-    Pay->>DB: Record interview_slot on Job Posting
-    Recruiter->>System: Open Application Intake (Intake: OPEN)
-    System->>DB: Set intake_status = OPEN
+    Pay->>DB: Atomically debit wallet, record transactions entry & update job_postings.interview_slot (Idempotent)
+    break Funding fails
+        Pay-->>Recruiter: No partial debit or capacity, intake remains unavailable
+    end
+    Pay-->>Recruiter: Funding committed (Duplicate requests do not charge or allocate twice)
+    Recruiter->>System: Open Application Intake after successful funding
+    System->>System: Require moderation approval, committed funding & Recruiter Open Intake action
+    Note over System,DB: Approval / funding / intake persistence mapping unresolved on frozen schema
 
     Note over Candidate,Recruiter: 3. Unlimited Application Intake & Immediate Visibility
-    Candidate->>System: Browse Approved Postings (Intake: OPEN)
+    Candidate->>System: Browse moderated, funded Postings with Recruiter-opened intake
     Candidate->>System: Submit Application & upload CV (Unlimited submissions)
     System->>DB: Create Application with CV (Status: PENDING)
     System-->>Recruiter: Application & CV immediately visible in View Application Detail
@@ -148,14 +156,14 @@ sequenceDiagram
         System->>DB: Update Application (Status: REJECTED - Terminal)
         System->>Mail: Send CV Rejection notice to Candidate
     else Recruiter Approves CV
-        Recruiter->>System: Approve CV (Grants eligibility; no slot consumed yet)
+        Recruiter->>System: Approve CV (Grants eligibility, no slot consumed yet)
         System->>DB: Persist interview_deadline = approval_time + 24h
         System->>Mail: Send Interview Eligibility notice with 24h deadline
     end
 
     Note over Recruiter,System: 5. Close Intake (Manual or When Limitation Met)
     opt Close Intake Triggered (Manual or Configured Limitation Met)
-        System->>DB: Set intake_status = CLOSED (Stop new applications)
+        System->>DB: Set Job Posting status = intake_closed (Stop new applications)
         System->>DB: Auto-reject remaining unscreened/not-approved Applications
         Note over System,DB: Approved candidates remain interview-eligible. No refund yet. No reopen flow.
     end
@@ -164,7 +172,7 @@ sequenceDiagram
     opt Candidate completes interview before deadline
         Candidate->>System: Start recruitment interview
         System->>DB: Consume 1 funded interview slot on FIRST successful start (Free reconnect)
-        Note over Candidate,System: Runs locked company model & Voice Profile; captures video/audio & transcript
+        Note over Candidate,System: Runs locked company model & Voice Profile, captures video/audio & transcript
         System->>DB: Store Interview Result & recruitment recordings
         System->>DB: Attach Interview Result & recordings to Application
         System-->>Candidate: Display overall score (Recordings/transcripts hidden)
@@ -193,7 +201,7 @@ sequenceDiagram
         System->>DB: Set Job Posting Status to CLOSED (Terminal auto-close)
         System->>Pay: Trigger Refund unused JP Candidate Slot
         Pay->>DB: Credit still-unused interview_slot capacity as internal Coins to Recruiter Wallet
-        Note over Pay,DB: Internal coin ledger credit; no PayOS call
+        Note over Pay,DB: Internal coin ledger credit, no PayOS call
     end
 ```
 
@@ -214,10 +222,10 @@ sequenceDiagram
    * Do not create or introduce a separate "Corporate JD" entity or database table.
 3. **Question Bank & Evaluation Settings Independence:**
    * A Job Posting holds at most one current core-question bank Blueprint. The owning Recruiter can view and edit core questions within this bank.
-   * Posting-level evaluation weights are configured separately by the Recruiter and are not embedded into the question bank.
+   * Posting-level evaluation weights are separate from the question bank; Recruiters may customize them or use the valid equal-split defaults defined in Decision 13a.
 4. **Approval and Interview Presentation Lock:**
    * A Recruiter must select the company 3D interviewer model and Voice Profile before submitting a Job Posting for Admin approval.
-   * Only `APPROVED` Job Postings with `OPEN` intake are discoverable and accept applications.
+   * Discovery and applications require moderation approval, successful wallet-coin funding, and the Recruiter's subsequent Open Intake action. Approval alone does not open intake. The persistence mapping is unresolved; no `approved` Job Posting status or `intake_status` field exists in the frozen schema.
    * A Job Posting interview always uses its locked company 3D model and Voice Profile. The Candidate cannot override them.
 5. **Immediate Application & CV Visibility:**
    * The Application and uploaded CV/resume exist and are immediately visible to the owning Recruiter upon submission.
@@ -268,7 +276,7 @@ sequenceDiagram
     * There are no Company tenants, company workspaces, tenant isolation middleware, or Row-Level Security tenant policies.
     * Job Postings are owned relationally by `recruiter_id`.
 15. **Ownership & Access Isolation:**
-    * Candidates can browse approved public Job Postings and view only their own submitted applications and recruitment scores.
+    * Candidates can browse moderated, funded public Job Postings with Recruiter-opened intake and view only their own submitted applications and recruitment scores. Decision 13b's Recruiter account-lock visibility restrictions also apply.
     * Recruiters can only view and manage Job Postings and applications belonging to their own account.
 16. **Final Decision Immutability:**
     * Once an application moves to `APPROVED` or `REJECTED`, the final decision cannot be reverted back to `PENDING`.
