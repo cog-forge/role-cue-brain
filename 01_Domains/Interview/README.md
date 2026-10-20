@@ -64,7 +64,7 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
 * **Candidate:** Configures Target JD interview parameters, completes Test Audio and Interview Readiness, joins, pauses, resumes, and concludes practice and recruitment interviews. For a Job Posting interview, uses the locked company presentation configured by the Recruiter.
 * **Recruiter:** Views and edits core questions in the question bank for own Job Postings; may customize posting-level evaluation weights or use valid equal-split defaults (Decision 13a); funds interview slots; reviews applicant results, transcripts, and audio/video recordings.
 * **System Handler (Internal Handler):** Detects and terminates abandoned or orphaned interview sessions after extended inactivity.
-* **Administrator:** Searches and filters interview sessions and views operational session metadata and diagnostics. (Global AI prompts, global evaluation criteria, and Interview Feature Configuration / runtime toggles remain awaiting confirmation).
+* **Administrator:** Searches and filters interview sessions, views operational session metadata and diagnostics, and Configures Interview Behavior Guidelines (mandatory registered scope, ratified 2026-10-20). Guidelines influence intended AI interviewer behavior, require Admin authorization, and preserve completed historical results. Guideline implementation details remain TBD; unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime toggles, provider configuration management, and pricing administration remain excluded (Decision 16).
 
 ---
 
@@ -149,7 +149,7 @@ stateDiagram-v2
 * **[[01_Domains/Payment/README|Payment Domain]]:**
   Debits Candidate wallet coins at practice session start. Consumes prepaid Recruiter interview slots at recruitment session start.
 * **[[01_Domains/Administration/README|Administration Domain]]:**
-  Administrators search and filter sessions and inspect operational metadata and diagnostics. (Global AI behavior, global evaluation criteria, and Interview Feature Configuration / runtime toggles flagged as awaiting confirmation).
+  Administrators inspect operational session metadata and Configure Interview Behavior Guidelines influencing intended AI interviewer behavior. Guideline UI, fields, schema, persistence, versioning, and prompt composition remain TBD; this is not an implementation-completion claim. Completed historical interview results remain unchanged. Decision 16's separate raw-prompt, global evaluation, runtime-toggle, provider-configuration, and pricing exclusions still apply.
 
 ---
 

@@ -53,7 +53,7 @@ flowchart TD
     GUEST <-->|"View landing page, register"| SYSTEM
     CAND <-->|"JD refinement, practice interviews, CV applications, coin wallet, avatar inventory"| SYSTEM
     REC <-->|"Job Postings, question bank editing, evaluation weights, moderation then slot funding then Open Intake, Close Intake, CV screening, recordings & final decisions"| SYSTEM
-    ADMIN <-->|"Account governance, job posting moderation, session operational oversight, voice profiles, revenue audits"| SYSTEM
+    ADMIN <-->|"Account governance, job posting moderation, session oversight, Configure Interview Behavior Guidelines, voice profiles, revenue audits"| SYSTEM
 
     %% Service Interactions
     SYSTEM <-->|"Structured prompts & responses"| LLM
@@ -79,6 +79,11 @@ flowchart TD
 4. **Embedded Avatar Experience:**
    * Avaturn does not introduce a separate external human actor.
    * RoleCue embeds Avaturn's free iframe experience for personal avatar creation. Avaturn returns a final GLB; RoleCue converts and persists the VRM artifact in the user's inventory. The integration detail is specified in [[02_System/Integrations|External Integrations]].
+5. **Interview Behavior Guideline Scope:**
+   * Admin-authorized `Configure Interview Behavior Guidelines` is mandatory registered scope, ratified on 2026-10-20. Guidelines influence intended AI interviewer behavior without changing completed historical results. UI, fields, schema, persistence, versioning, and prompt composition remain TBD; this diagram does not assert implementation in `main`.
+   * This does not include unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime feature toggles, LLM provider configuration management, or coin package pricing administration (Decision 16). The formal UC diagram/SRS discrepancy is tracked in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the 62 count and existing IDs are preserved.
+6. **Internal Authentication Deployment Boundary:**
+   * Better Auth 1.7.7 currently runs inside Next.js. KAN-238 plans an independently deployable Better Auth service within RoleCue; it is under development, not a shipped external-provider integration. One Better Auth-owned session model and the existing identity/database contract remain authoritative; Go verifies sessions and enforces RoleCue business authorization. See [[01_Domains/Auth/README|Auth Domain]] for current and planned views.
 
 ---
 
@@ -91,7 +96,7 @@ flowchart TD
 | **Guest** | Registration credentials. | Landing page content; account confirmation. |
 | **Candidate** | Target JD (text/PDF); refinement notes; requirement confirmations; session configuration; microphone audio stream; embedded Avaturn photo capture/customization; CV/resume and job application submissions; coin package checkout intents. | Extracted requirement tags; 3D virtual interviewer presentation; audio speech + lip-sync visemes; diagnostic evaluation reports; Candidate-owned VRM personal avatars; application status updates; coin wallet balance; overall recruitment evaluation scores (recordings and transcripts hidden during recruitment). |
 | **Recruiter** | Job Postings from JD-like content; requirement confirmations; own-posting question bank edits; posting evaluation weights; company 3D interviewer model and Voice Profile selections; coin package checkout intents; interview slot funding after moderation approval; Open Intake after successful funding (frozen-schema persistence mapping unresolved, Decisions 13/16); Close Job Posting Intake; CV screening decisions (**Pass / Reject**); hard-gated final application decisions (**Approve / Reject** within View Application Detail); avatar studio generation. | Own Job Postings and approval state; incoming Applications and CVs (immediately upon submission); applicant evaluation results, transcripts, and recruitment audio/video recordings consolidated in View Application Detail; coin wallet balance and slot refund confirmations; personal VRM avatars. |
-| **Administrator** | Account lock/unlock commands; job posting moderation commands (approve/reject); voice profile fetch/delete commands. *(Global AI prompt calibration, evaluation criteria editing, Interview Feature Configuration / runtime toggles, and coin package price updates are excluded from frozen scope).* | Filtered account lists; job posting lists; operational interview session metadata; voice profile catalog; unified payment transactions (`transactions`); revenue reports. *(Admin does NOT possess a wallet, avatar inventory, or recruitment recording access).* |
+| **Administrator** | Account lock/unlock commands; job posting moderation commands (approve/reject); Configure Interview Behavior Guidelines; voice profile fetch/delete commands. *(Unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime toggles, LLM provider configuration management, and coin package pricing administration remain excluded).* | Filtered account lists; job posting lists; operational interview session metadata; voice profile catalog; unified payment transactions (`transactions`); revenue reports. *(Admin does NOT possess a wallet, avatar inventory, or recruitment recording access; guideline UI/fields/persistence and response details remain TBD).* |
 
 ### 4.2. External Service Boundaries
 

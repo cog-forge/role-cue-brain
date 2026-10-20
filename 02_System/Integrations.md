@@ -29,6 +29,7 @@ This document specifies the integration architecture, operational requirements, 
    When an external service experiences transient latency spikes or network timeouts, the platform must degrade gracefully without corrupting persisted session state or dropping conversation history.
 4. **No Speculative Service Integrations:**
    RoleCue connects strictly to approved external service boundaries: LLM, STT, TTS, Payment Gateway, Email, and the embedded Avaturn iframe. There are **no external identity verification / eKYC providers, no AI video fraud/cheating analysis services, and no separate cloud storage providers** modeled as external architecture actors.
+   * **Internal Authentication Boundary:** Better Auth 1.7.7 currently runs inside Next.js. The authorized, under-development KAN-238 target extracts it into an independently deployable internal RoleCue service; it is not a new external identity provider or a shipped service in this catalog. Preserve one Better Auth-owned identity/credential/session authority, the existing database and cookie/security contracts, email verification, password recovery, and OAuth behavior. Go continues session verification and independent business authorization. No secondary session authority, JWT exchange, Go refresh-token model, new identity database, replacement framework, or unnecessary auth abstraction is introduced; public authentication API compatibility is preserved where possible. Current/target details are in [[01_Domains/Auth/README|Auth Domain]].
 
 ---
 
@@ -92,6 +93,8 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 * **Unresolved Decision Provider / Jev Status:**
   * Deciding whether to ask a follow-up and generating follow-up question wording are distinct responsibilities.
   * **Jev/TypeSafe is tentative, NOT selected.** No specific external vendor or standalone decision service has been ratified. The integration layer does not mandate a dedicated decision-provider SDK or lock follow-up decisions to a single vendor.
+* **Admin Interview Behavior Guidelines (Ratified 2026-10-20):**
+  * Admin-authorized guidelines influence the intended behavior of the AI interviewer. This mandatory capability does not imply unrestricted raw LLM system-prompt editing, provider configuration management, global evaluation rubric/weight editing, runtime toggles, or pricing administration. UI, fields, schema, persistence, versioning, and prompt composition remain TBD, including the integration mechanism; implementation in `main` is not asserted. Completed historical results remain unchanged (Decision 16; [[01_Domains/Administration/README|Administration Domain]]).
 * **Fault Handling:**
   * If extraction fails or outputs an invalid schema, the system retries with adjusted parameters; surfaces an extraction failure if unresolvable.
   * If follow-up determination times out during a live turn, the system proceeds to the next core question from the bank to maintain conversational fluency.

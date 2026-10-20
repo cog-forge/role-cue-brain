@@ -16,6 +16,9 @@ This document defines the actors of the RoleCue platform and establishes their c
 
 The formal use-case model contains **62** use cases. Two umbrella/grouping use cases (`View Interview Session Result` and `Manage Voice Profiles`) are not counted, while their child use cases are counted. This Brain records their durable capability boundaries without assigning use-case numbers.
 
+> [!IMPORTANT]
+> **Use Case reconciliation gap (2026-10-20):** `Configure Interview Behavior Guidelines` is mandatory registered Admin scope, ratified by the product owner, but is absent from the canonical diagram's active **Version 2** page (`5k5qk9e5ypGhG33TpJGQ`, linked in [[02_System/Context|System Context]]). Read-only inspection found 65 UC ellipse nodes, including the two stated uncounted grouping nodes and repeated labels (`Search and Filter Interview Sessions`, `View Application Detail`); node counts alone do not establish the declared 62-counting convention. Preserve the frozen **62** count and existing UC IDs. The documentation team must reconcile guideline coverage and formal diagram/SRS counting separately; the capability additions below do not renumber or recount the formal model.
+
 ---
 
 ## 1. Actor Catalog & Hierarchy
@@ -87,6 +90,7 @@ classDiagram
         +approveRejectJobPosting()
         +searchFilterInterviewSessions()
         +viewInterviewSessionDetail()
+        +configureInterviewBehaviorGuidelines()
         +manageVoiceProfiles()
         +viewPaymentTransactions()
         +generateRevenueReport()
@@ -161,15 +165,17 @@ classDiagram
   * **No Memberships or Tax Systems:** Recruiters use coin wallets to fund interview slots and avatar operations. No corporate subscriptions or VAT invoices.
 
 #### 1.5. Administrator (Platform Governance & Operations)
-* **Definition:** A privileged operator responsible for platform security, content oversight, voice profile curation, and financial auditability.
+* **Definition:** A privileged operator responsible for platform security, content oversight, interviewer behavior guidelines, voice profile curation, and financial auditability.
 * **Canonical Capabilities:**
   * **Account Governance:** View and filter user accounts; lock and unlock accounts.
   * **Job Posting Moderation:** View and filter submitted Job Postings; approve and reject Job Postings.
   * **Interview Session Oversight:** Search and filter interview sessions; inspect operational session details.
+  * **Configure Interview Behavior Guidelines:** Mandatory registered capability ratified on **2026-10-20**. Admin configures guidelines influencing the intended behavior of the AI interviewer; Admin authorization is required and completed historical interview results remain unchanged. UI, schema, persistence, guideline fields, versioning, and prompt composition remain TBD; implementation in `main` is not asserted.
   * **Voice Profile Catalog Management:** Manage Voice Profiles (view voice profiles, fetch voice profiles from external TTS providers, delete obsolete profiles). `Manage Voice Profiles` serves as an uncounted grouping capability; its child use cases are counted.
   * **Financial Audit & Reporting:** View unified payment transactions (PayOS orders and internal ledger movements); generate revenue reports.
 * **Boundary Invariant:**
-  * **Admin DOES manage:** Provider-sourced Voice Profiles (viewing, fetching, deleting), account locks, posting moderation, operational session oversight, and financial audits.
+  * **Admin DOES manage:** Interview Behavior Guidelines, provider-sourced Voice Profiles (viewing, fetching, deleting), account locks, posting moderation, operational session oversight, and financial audits.
+  * **Separate Exclusions:** The guideline capability does not authorize unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime feature toggles, provider configuration management, or coin package pricing administration (Decision 16).
   * **Admin does NOT manage:** 3D avatar meshes or 3D background presets (built-in platform presets).
   * **No Wallets or Inventories:** Admin does not hold a personal coin wallet or personal avatar inventory.
   * **No Recording Access by Inference:** Session oversight does not grant Admin access to recruitment audio/video recordings.
@@ -293,6 +299,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * View and filter user accounts; lock and unlock accounts
   * View and filter job postings; approve and reject job postings
   * Search and filter interview sessions; inspect operational session details
+  * Configure Interview Behavior Guidelines (Admin authorization required, intended AI interviewer behavior, historical completed results unchanged; implementation details TBD)
   * Manage Voice Profiles (view voice profiles, fetch from TTS providers, delete obsolete profiles)
 
 ---

@@ -184,7 +184,7 @@ This document records the ratified, long-lived product decisions that govern the
 
 ## 16. Unresolved Product Decisions & Scope Exclusions
 
-The following operational, numerical, and architectural parameters remain unresolved product questions or scope exclusions and must **not** be silently filled with invented defaults:
+The following entries distinguish ratified scope from unresolved implementation details and remaining exclusions. Unresolved parameters must **not** be silently filled with invented defaults:
 
 1. **Commercial Parameters & Precision:**
    * Exact monetary pricing for coin packages.
@@ -209,8 +209,15 @@ The following operational, numerical, and architectural parameters remain unreso
    * Physical cloud storage architecture and candidate recording consent workflows.
    * Post-recruitment transcript access policies (whether transcripts remain permanently restricted or unlock upon recruitment termination).
    * Session recovery timeout window (older conflicting reports cite 10 minutes vs. 15 minutes; unresolved).
-6. **Global Administrative Management (Excluded from Frozen Scope):**
-   * Global AI prompt templates, global evaluation criteria editing, runtime interview feature toggles, and coin package pricing tier editing are excluded from the current frozen scope.
+6. **Admin Interview Behavior Guidelines & Remaining Administrative Exclusions:**
+   * **Ratified on 2026-10-20:** Admin **CAN Configure Interview Behavior Guidelines**. This registered Capstone capability is mandatory functional scope. It requires Admin authorization and influences the intended behavior of the AI interviewer; completed historical interview results must remain unchanged.
+   * This requirement does not establish that the capability is implemented in application `main`. Exact configuration UI, schema, persistence mechanism, guideline fields, versioning behavior, and prompt composition algorithm remain **TBD**, pending specification and review.
+   * Unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime feature toggles, LLM provider configuration management, and coin package pricing administration remain excluded unless separately ratified. These exclusions do **not** exclude the registered Interview Behavior Guidelines capability.
+   * **Frozen Use Case Gap:** The capability is absent from the active Version 2 Use Case diagram checked on 2026-10-20. Preserve the declared **62 counted Use Cases** and existing IDs; the documentation team will reconcile the formal diagram/SRS separately. See [[00_Project/Actors-and-Capabilities|Actors and Capabilities]] for inspection evidence and counting limitations.
 7. **Approval, Funding & Intake Implementation Mapping:**
    * How to represent conceptual moderation approval, successful funding, and the Recruiter's explicit Open Intake action using the frozen Job Posting schema remains an implementation/design gap. Current direct approval-to-`open` behavior does not satisfy the ratified sequence.
    * The mapping must also preserve Decision 13a's evaluation editing boundary and Decision 13b's visibility restrictions. No persistence mechanism or new transition is ratified here; resolution requires evidence or product-owner approval.
+8. **Better Auth Standalone Service (KAN-238):**
+   * **Authorized on 2026-10-20; planned and under development:** Extract Better Auth from Next.js into an independently deployable authentication service. Current `main` still hosts Better Auth 1.7.7 inside Next.js; do not describe the target as shipped.
+   * Preserve one Better Auth-owned identity, credential, and session authority, the existing identity/database contract, cookie semantics and security boundaries, email verification, password recovery, OAuth behavior, and Go-owned business authorization (roles, ownership, account locks). Preserve public authentication API compatibility where possible.
+   * No secondary session model, JWT exchange, custom Go refresh tokens, new identity database, unnecessary authentication abstractions, or replacement framework is authorized. See [[01_Domains/Auth/README|Auth Domain]] for the current/target distinction; update actual technical architecture documentation after KAN-238 merges.

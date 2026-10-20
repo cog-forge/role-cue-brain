@@ -55,7 +55,7 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
 
 * **Candidate:** Views personal practice interview history, evaluation scores, competency breakdowns, turn critiques, and feedback; views overall recruitment evaluation score (transcripts and recordings remain hidden).
 * **Recruiter:** Adjusts posting-level evaluation weights (`metrics_percentage`) for own Job Postings; inspects candidate profile, CV, interview scores, competency breakdowns (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly inside **View Application Detail**.
-* **Administrator:** Inspects session operational records. (Global calibration of AI prompts, evaluation criteria/rubrics, and Interview Feature Configuration / runtime toggles are excluded from the frozen scope).
+* **Administrator:** Inspects session operational records. `Configure Interview Behavior Guidelines` is separately ratified under the Administration Domain and does not grant global evaluation rubric/weight editing. Unrestricted raw LLM system-prompt editing, runtime toggles, provider configuration management, and pricing administration remain excluded. Guideline changes must not alter completed historical evaluation results (Decision 16).
 
 ---
 
