@@ -1,4 +1,8 @@
 # RoleCue Screen Inventory & Navigation Flow Research
+
+> [!WARNING]
+> **Superseded / historical (marked 2026-10-27).** This 2026-09-27 research draft predates later ratified decisions. Its Membership & Billing, Unsubscribe, Admin membership-price, and Archive Job Posting items are obsolete (coin wallets replaced memberships in Decision 15; Archive Job Posting was removed in Decision 13), and its 57-Use-Case count is outdated. Kept for history only; the canonical contract is in [[03_Decisions/Product-Decisions|Product Decisions]] and the domain READMEs.
+
 **Document Version:** 1.0 (Staging & Research Pass)  
 **Date:** 2026-09-27  
 **Status:** DRAFT / PENDING HUMAN REVIEW & FIGJAM DRAWING HANDOFF  

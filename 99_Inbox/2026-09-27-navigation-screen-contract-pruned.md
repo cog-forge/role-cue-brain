@@ -1,4 +1,8 @@
 # RoleCue Screen Inventory Pruning & Report Contract Specification
+
+> [!WARNING]
+> **Superseded / historical (marked 2026-10-27).** This 2026-09-27 staging note predates later ratified decisions. Its Membership & Billing, Unsubscribe, Admin membership-price, and Archive Job Posting items are obsolete (coin wallets replaced memberships in Decision 15; Archive Job Posting was removed in Decision 13), and its 57-Use-Case count is outdated. Kept for history only; the canonical contract is in [[03_Decisions/Product-Decisions|Product Decisions]] and the domain READMEs.
+
 **Document Version:** 2.0 (Pruned & Normalized Report Staging Contract)  
 **Date:** 2026-09-27  
 **Status:** FINAL STAGING CONTRACT / READY FOR REPORT 7 SECTION III & FIGJAM DRAWING  

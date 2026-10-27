@@ -1,5 +1,8 @@
 # Backlog Audit Report — FA26SE292 (RoleCue)
 
+> [!WARNING]
+> **Superseded / historical (marked 2026-10-27).** This 2026-09-27 audit predates later ratified decisions. Its 57-Use-Case count (the brain now declares 62 counted Use Cases), its "Membership & Payment" module (replaced by coin wallets, Decision 15), and its merged Admin "Interview Configuration" screen (only Configure Interview Behavior Guidelines is ratified; global evaluation editing and runtime toggles stay excluded, Decision 16) are outdated. Kept for history only.
+
 **Product:** RoleCue — AI-powered 3D technical interview simulation platform  
 **Capstone Project Code:** FA26SE292  
 **Workbook:** `SEP490_Backlog_FA26SE292_completed.xlsx`  
