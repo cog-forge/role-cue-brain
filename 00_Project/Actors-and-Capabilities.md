@@ -138,7 +138,7 @@ classDiagram
   * **Interview Session Lifecycle & Coin Charging:** Create, test audio and interview readiness, join, pause, and resume interview sessions. Practice interviews are debited 5 coins from the Candidate's personal wallet upon session start; reconnect/resume of the same session incurs no second charge, and starting again while an unfinished practice session exists for the same Role Profile returns that session free.
   * **Spoken Interaction with 3D AI Interviewer:** Conduct real-time voice conversation with speech-synchronized 3D interviewer animation. Receives a random selection of core questions from the bank with bounded follow-ups.
   * **Practice History & Diagnostic Results:** Review practice performance reports, scores across core technical competencies, radar charts, turn critiques, actionable recommendations, and export results.
-  * **Personal 3D Avatar Inventory:** Start with **3 personal avatar storage slots**, separate from generation fees; read actual capacity from the authoritative API. Access the embedded Avaturn generator (RoleCue stores the final VRM asset); delete models or purchase additional capacity with wallet coins. Charge generation only after successful persistence of a usable VRM; failed/cancelled conversion or persistence has no generation fee.
+  * **Personal 3D Avatar Inventory:** Start with **3 personal avatar storage slots**; read actual capacity from the authoritative API. Access the embedded Avaturn generator (RoleCue stores the final VRM asset); creating an avatar is free while a slot is available, with no separate generation fee. When full (`INVENTORY_FULL`), delete models or purchase additional capacity with wallet coins (1 coin per slot).
   * **Job Posting Discovery & Application:** Browse, search, filter, and view moderated, funded recruiter Job Postings with Recruiter-opened intake, subject to account-lock visibility restrictions (Decision 13b). Submit application with CV/resume.
   * **Recruitment Interview Participation:** Upon passing Recruiter CV screening, participate in the required technical interview funded by the Recruiter's prepaid slots (no coin charge to Candidate).
   * **Recruitment Result Visibility:** View overall recruitment evaluation score. Candidates **cannot** view recruitment transcripts or audio/video recordings during recruitment.
@@ -158,7 +158,7 @@ classDiagram
   * **View Application Detail (Consolidated Review):** Search and filter incoming applications; view Candidate application details and uploaded CV/resume immediately upon submission; render CV screening approval or rejection. Recruiter may approve at most `interview_slot` Candidates to proceed to recruitment interview. Approved Candidates receive an interview deadline of `interview_deadline = approval_time + 24 hours` (calculated from the instant of CV approval; `approval_time` is conceptual and only `interview_deadline` is persisted). The Candidate must complete the interview before this deadline.
   * **Approve / Reject Application (Hard-Gated Final Decision):** Render definitive final decision (`Approve` or `Reject` Application). This decision is HARD-GATED until `MAX(interview_deadline)` across all interview-eligible Applications for the Job Posting. After the gate, the Recruiter opens View Application Detail, reviews Candidate profile, CV, and authorized interview score, result, recordings, and transcripts, and renders the final decision. CV review and interview evidence review are consolidated inside View Application Detail; there are no separate top-level capabilities for reviewing CVs or results.
   * **Fund Interview Slots & Open Intake:** After Admin moderation approval, fund `interview_slot` with personal wallet coins, then explicitly open Application Intake after successful funding. Funding happens exactly once per Posting at 1 coin per slot (no top-ups). In the canonical flow approval alone does not open intake; the persistence mapping remains unresolved, and the current interim implementation sets `open` at approval (known implementation gap; Decisions 13/16).
-  * **Personal Avatar Inventory:** Start with **3 personal avatar storage slots**, read actual capacity from the authoritative API, generate avatars via embedded Avaturn, and purchase additional capacity with wallet coins. Capacity purchase and generation fee are separate; charge generation only after RoleCue persists a usable VRM, never for failed/cancelled conversion or persistence.
+  * **Personal Avatar Inventory:** Start with **3 personal avatar storage slots**, read actual capacity from the authoritative API, generate avatars via embedded Avaturn free while a slot is available, and purchase additional capacity with wallet coins (1 coin per slot) when full. There is no separate generation fee.
 * **Boundary Invariant:**
   * **Job Posting IS the Company JD:** No separate "Corporate JD" or company tenant entity exists.
   * **Scope Termination:** Recruitment scope strictly terminates at **Approve / Reject Application**. No multi-stage hiring funnels, panel scheduling, offers, or onboarding.
@@ -250,10 +250,10 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 * **Actors:** Candidate, Recruiter
 * **Capabilities:**
   * Generate personal 3D avatar through embedded free Avaturn iframe; RoleCue converts received final GLB to VRM production asset
-  * Generation fee charged in coins only upon successful VRM persistence in RoleCue
-  * Start with 3 personal avatar storage slots (not three free generations); frontend reads actual capacity from the authoritative API
+  * Avatar creation is free while a storage slot is available; no separate generation fee (Decision 7, settled 2026-10-27)
+  * Start with 3 personal avatar storage slots; creation is refused when full (`INVENTORY_FULL`); frontend reads actual capacity from the authoritative API
   * View and manage personal avatar inventory capacity
-  * Purchase additional avatar inventory capacity slots using coins
+  * Purchase additional avatar inventory capacity slots using coins (1 coin per slot, 1–10 per purchase; permanent capacity)
   * Remove avatars to free storage capacity
 
 ### 2.7. Recruiter Job Posting & Intake Management
@@ -288,8 +288,8 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 * **Capabilities:**
   * Candidate and Recruiter purchase coin packages via PayOS using real money
   * Personal coin wallets track balance and immutable transactions under the unified transaction model (`from`, `to`, `amount`, `currency`, `description`, `status`, `payos_order_code`)
-  * Candidate spends coins on practice interview starts, avatar generation, and avatar capacity slots
-  * Recruiter spends coins on interview slots, avatar generation, and avatar capacity slots
+  * Candidate spends coins on practice interview starts and avatar capacity slots
+  * Recruiter spends coins on interview slots and avatar capacity slots
   * Internal coin refund credited to Recruiter wallet upon terminal Job Posting auto-close for eligible unused interview capacity (`Refund unused JP Candidate Slot`)
   * Admin views payment transactions; generates revenue reports
 

@@ -45,17 +45,16 @@ Provide a transparent, reliable coin-based monetization infrastructure. Candidat
   * **Architectural Invariant:** The team explicitly rejected the proposed payment redesign that separated `payment_orders` and `coin_transactions`. The unified transaction model is the frozen contract, and its semantic and traceability limitations are accepted technical debt for this capstone.
   * **Ledger Semantics:** `currency` is `VND` for real-money PayOS top-ups and `COIN` for internal coin movements. `from` and `to` hold a user identifier or the literal `system` counterparty; `amount` is an integer. The table has no `created_at` timestamp yet.
 * **Platform Revenue:**
-  Revenue is the sum of the `VND` amounts of **successful** PayOS top-ups. Internal coin movements (practice fees, interview slot funding, avatar storage purchases, avatar generation fees, refunds) are not revenue. Date-range revenue reporting needs a timestamp column on `transactions` and remains open (Decision 16).
+  Revenue is the sum of the `VND` amounts of **successful** PayOS top-ups. Internal coin movements (practice fees, interview slot funding, avatar storage slot purchases, refunds) are not revenue. Date-range revenue reporting needs a timestamp column on `transactions` and remains open (Decision 16).
 * **Fixed Prices (Decision 15, settled 2026-10-27):**
-  Interview slot **1 coin** per slot; avatar storage slot **1 coin** per slot; practice session **5 coins**. These are fixed system constants for now. Coin package prices and the avatar generation fee remain unresolved.
+  Interview slot **1 coin** per slot; avatar storage slot **1 coin** per slot; practice session **5 coins**. These are fixed system constants for now. There is no separate avatar generation fee (Decision 7, settled 2026-10-27); coin package prices remain unresolved.
 * **Interview Capacity Funding (`interview_slot`):**
   After Admin moderation approval, Recruiter uses personal wallet coins to fund `interview_slot` capacity, then explicitly opens Application Intake after successful funding. Coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently. Failed operations leave no partial debit/capacity; retries or duplicates cannot double-charge or allocate capacity twice. PayOS is not involved. `interview_slot` limits CV-approved Candidates eligible for interview, not CV submissions; CV approval does not consume a prepaid slot.
   * **Funded Exactly Once:** A Posting is funded exactly once at 1 coin per slot; there are no top-ups. Repeating the funding with the same count charges nothing; a different count is refused.
   * **Known Implementation Gap:** The schema has no `approved` Job Posting status or independent `intake_status` column, and the Approval → Funding → Open Intake persistence mapping remains unresolved. The current interim implementation sets `open` at Admin approval and accepts funding only while `open`, so Candidates may apply before funding; CV approval and recruitment interview start still require funded capacity. The canonical sequence is unchanged (see [[02_System/Domain-Model|Domain Model]] and Decisions 13/16).
 * **Avatar Operations Funding:**
-  Every Candidate and Recruiter starts with **3 personal avatar storage slots** (Decision 7, ratified 2026-10-20); Admin has no inventory. These slots are not three free generations. The frontend reads actual capacity from the authoritative API. Coins fund two distinct operations:
-  1. *Generation Fee:* Charged strictly upon successful VRM persistence in RoleCue; the exact fee remains unresolved.
-  2. *Capacity Purchase:* Buys an additional avatar storage slot when inventory is full, at **1 coin** per slot.
+  Every Candidate and Recruiter starts with **3 personal avatar storage slots** (Decision 7, ratified 2026-10-20); Admin has no inventory. The frontend reads actual capacity from the authoritative API. Creating an avatar is free while a storage slot is available; there is **no** separate generation fee (Decision 7, settled 2026-10-27). Coins fund one avatar operation:
+  1. *Capacity Purchase:* Buys additional avatar storage slots (1–10 per purchase, `POST /inventory/purchase`) at **1 coin** per slot, debited atomically through the shared ledger. When inventory is full, creation is refused (`INVENTORY_FULL`) until the user deletes an avatar or buys a slot; purchased slots are permanent capacity.
 * **Terminal Job Posting Slot Refund (`Refund unused JP Candidate Slot`):**
   When a Job Posting automatically reaches terminal closed state (once intake is closed and every application in scope has a terminal result `APPROVED` or `REJECTED`, or there are no applications), all still-unused interview capacity (`interview_slot` minus consumed recruitment sessions) is refunded as internal coins back into the owning Recruiter's personal coin wallet, exactly once per Posting.
   * Refund does **not** happen on Close Intake itself. When Close Intake leaves no application in progress, it proceeds straight to terminal close, and the refund comes from that step.
@@ -113,11 +112,11 @@ sequenceDiagram
         end
         Note over Pay,DB: Duplicate funding requests do not charge or allocate twice, intake persistence mapping unresolved
     end
-    opt Avatar Generation Fee
-        Note over Pay,DB: RoleCue verifies usable VRM persistence, failed/cancelled conversion or persistence has no fee
-        Pay->>Pay: Verify RoleCue persisted a usable VRM asset
-        Pay->>DB: Debit Generation Fee from User Wallet
-        Pay-->>User: Generation Fee Paid
+    opt Avatar Storage Slot Purchase (Inventory Full)
+        Note over Pay,DB: Avatar creation itself is free while a slot is available, no generation fee
+        User->>Pay: Purchase 1-10 avatar storage slots
+        Pay->>DB: Atomically debit 1 coin per slot, record transactions entry & increase inventories.slot
+        Pay-->>User: Storage Capacity Increased (permanent)
     end
 
     Note over User,DB: 3. Terminal Job Posting Auto-Close Refund (Internal Coin Movement)
@@ -139,7 +138,7 @@ sequenceDiagram
 ## 5. Business Rules & Invariants
 
 1. **Separation of External Payments and Internal Coins:**
-   Real-money transactions occur exclusively through PayOS to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar storage slot purchases) and internal refunds (unused interview capacity upon terminal Job Posting close) execute purely within the internal coin ledger. Internal coin spending and refunds do **not** invoke PayOS.
+   Real-money transactions occur exclusively through PayOS to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar storage slot purchases) and internal refunds (unused interview capacity upon terminal Job Posting close) execute purely within the internal coin ledger. Internal coin spending and refunds do **not** invoke PayOS.
 2. **Unified Transaction Model Invariant:**
    Transactions are persisted in a single `transactions` table containing fields `from`, `to`, `amount`, `currency`, `description`, `status`, and `payos_order_code`. RoleCue does not use separate `payment_orders` and `coin_transactions` tables. PayOS top-ups use `currency = VND`; internal coin movements use `COIN` with the `system` counterparty.
 3. **Wallet Scope & Role Boundaries:**
@@ -148,10 +147,10 @@ sequenceDiagram
    A practice interview costs **5 coins**, debited from the Candidate's coin wallet **at session start**, not when it concludes. If a session experiences a network disconnect or is paused, reconnecting to or resuming the same session incurs **no second charge**. Starting again while an unfinished practice session exists for the same Role Profile returns that session free, and a retried start with the same idempotency key returns the session it created.
 5. **Recruitment Interview Slot Consumption:**
    Funding occurs after moderation approval and before Recruiter opens intake, exactly once per Posting at 1 coin per slot (no top-ups); wallet debit, unified ledger entry, and capacity update are atomic and idempotent. `interview_slot` limits CV-approved interview-eligible Candidates, not CV submissions; CV approval grants eligibility without consuming a slot. A recruitment interview consumes one prepaid interview slot funded by the Recruiter strictly upon the Candidate's **first successful start**, when the Application's single recruitment session is created. The Candidate is **never charged**. Reconnecting to or resuming that active recruitment session does not consume an additional slot.
-6. **Avatar Generation Charging Boundary:**
-   The avatar generation fee is debited in coins **only after a usable VRM asset has been successfully persisted by RoleCue**. Opening the avatar creator, uploading photos, generating an Avaturn GLB, or initiating conversion does **not** incur a generation fee. Failed/cancelled conversion or persistence incurs no generation fee.
-7. **Avatar Inventory Capacity vs. Generation Fee:**
-   Each Candidate and Recruiter starts with **3 storage slots**, not three free generations; Admin has no personal inventory. Purchasing additional storage capacity with wallet coins (1 coin per slot) and paying a generation fee are distinct operations. Exact generation fees, coin-package prices, and exchange rates remain unresolved (Decision 16).
+6. **No Avatar Generation Fee:**
+   There is **no** separate avatar generation fee (Settled 2026-10-27, Decision 7). Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot.
+7. **Avatar Inventory Capacity Purchase:**
+   Each Candidate and Recruiter starts with **3 storage slots**; Admin has no personal inventory. When the inventory is full, creation is refused (`INVENTORY_FULL`); the user deletes an avatar or buys additional slots at 1 coin per slot (1–10 per purchase, debited atomically through the shared ledger). Effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs). Purchased slots are permanent capacity; deleting an avatar frees its slot. Coin-package prices and exchange rates remain unresolved (Decision 16).
 8. **Terminal Job Posting Auto-Close vs. Close Intake Refund Boundary:**
    Only **terminal Job Posting auto-close** (reached once intake is closed and every application has a terminal result `APPROVED` or `REJECTED`, or there are none) triggers **Refund unused JP Candidate Slot**, exactly once per Posting. **Close intake itself does NOT refund interview slots**; when it chains straight into terminal close, the refund comes from the terminal-close step.
 9. **No Cash Refund Dispute Queues:**
@@ -170,7 +169,7 @@ sequenceDiagram
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
   Debits Recruiter wallet coins to fund `interview_slot` capacity. Upon terminal Job Posting auto-close, calculates eligible unused capacity and credits internal coin refunds to the Recruiter's wallet (`Refund unused JP Candidate Slot`).
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
-  Debits the avatar generation fee upon successful VRM persistence. Debits coins when a Candidate or Recruiter purchases additional avatar storage slots.
+  Debits coins (1 coin per slot) when a Candidate or Recruiter purchases additional avatar storage slots. Avatar creation itself is not charged.
 * **[[01_Domains/Auth/README|Auth Domain]]:**
   Associates personal coin wallets and transaction records with authenticated Candidate and Recruiter `user_id`s.
 * **[[01_Domains/Administration/README|Administration Domain]]:**

@@ -35,12 +35,12 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
   An accepted capability delivered through RoleCue's embedded free Avaturn iframe experience. Avaturn handles capture instructions, photo validation, retakes, preview generation, customization, and final GLB generation. RoleCue receives the GLB, converts it to VRM, persists the VRM production asset in `avatars (inventory_id, name, model_path, personality)`, and associates it with the owning user's inventory (`inventories`).
 * **Both-Role Avatar Inventory Ownership:**
   Every **Candidate** and **Recruiter** starts with **3 personal avatar storage slots** (`inventories.slot`), ratified on **2026-10-20** (Decision 7). **Administrators do NOT have a personal avatar inventory.**
-* **Avatar Storage Capacity vs. Generation Fee:**
-  * **Storage Capacity (Avatar Slots):** Avatar slots (`inventories.slot`) represent storage capacity in a user's library, **not** generation credits. When inventory capacity is full, the user must either remove an existing avatar or purchase an additional capacity slot using coins from their wallet, at **1 coin per slot** (Decision 7).
-  * **Initial Capacity & API Authority:** The initial 3 slots do **not** grant three free generations. The frontend reads actual capacity from the authoritative API because purchases can increase it; 3 is the initial allocation, not a permanent frontend limit.
-  * **Generation Fee:** A separate fee debited in coins from the user's personal wallet **strictly upon successful VRM persistence in RoleCue**.
-* **Charging Boundary at Successful VRM Save:**
-  Opening the avatar creator, uploading photos, generating a preview or GLB in Avaturn, and initiating GLB-to-VRM conversion do **not** incur a generation fee. The fee is charged only after RoleCue successfully validates, converts, and persists a usable production VRM asset. Failed/cancelled conversion or persistence incurs no generation fee.
+* **Avatar Storage Capacity (Storage Slots Only):**
+  * **Storage Capacity (Avatar Slots):** Avatar slots (`inventories.slot`) represent storage capacity in a user's library; each saved avatar occupies one slot. When inventory capacity is full, avatar creation is refused (`INVENTORY_FULL`) and the user must either remove an existing avatar or purchase additional capacity slots using coins from their wallet, at **1 coin per slot** (1–10 slots per purchase, debited atomically through the shared ledger; Decision 7).
+  * **Initial Capacity & API Authority:** Every Candidate and Recruiter starts with 3 storage slots. The frontend reads actual capacity from the authoritative API because purchases can increase it; 3 is the initial allocation, not a permanent frontend limit. Purchased slots are permanent capacity; deleting an avatar frees its slot.
+  * **No Generation Fee:** There is **no** separate avatar generation fee (Settled 2026-10-27, Decision 7). Effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs).
+* **Free Creation While a Slot Is Available:**
+  Opening the avatar creator, Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot. The only avatar charge is buying storage slots.
 * **Voice Profile (`voices`):**
   A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider parameters. Curated and managed exclusively by Administrators. Only an active Voice Profile can be selected for a practice session.
 * **3D Environment Presets:**
@@ -55,11 +55,11 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
 * **Candidate:**
   * Accesses the Personal 3D Avatar Studio in RoleCue; completes capture and customization inside the embedded Avaturn experience.
   * Maintains personal avatar inventory; purchases additional capacity slots using coins when full.
-  * Pays avatar generation fee in coins upon successful VRM save.
+  * Creates avatars free while a storage slot is available; no generation fee is charged.
   * Selects an eligible personal VRM avatar for Target JD practice interviews.
 * **Recruiter:**
   * Accesses the Personal 3D Avatar Studio to create, customize, and manage personal avatars in their own avatar inventory.
-  * Pays generation fees and purchases capacity slots using coins from their personal wallet.
+  * Creates avatars free while a storage slot is available; purchases additional capacity slots using coins from their personal wallet when full.
   * Selects company 3D interviewer models for Job Postings.
 * **Administrator:**
   * Curates and manages **Voice Profiles** sourced from external TTS providers (viewing voice profiles, fetching new voice profiles from TTS providers, deleting voice profiles).
@@ -79,11 +79,10 @@ flowchart TD
         P4 --> P5["Avaturn capture instructions and 3 required photos"]
         P5 --> P6["Avaturn validation / retake, preview, and customization"]
         P6 --> P7["Avaturn final GLB generation"]
-        P7 --> P8["RoleCue receives GLB and converts to VRM"]
-        P8 -->|Success| P9["RoleCue persists usable VRM asset in User Avatar Inventory"]
-        P9 -->|Success| P10["Debit Avatar Generation Fee in Coins<br/>(Charged strictly on successful VRM persistence)"]
-        P8 -->|Failed or cancelled| P_FAIL["No generation fee"]
-        P9 -->|Failed or cancelled| P_FAIL
+        P7 --> P8["RoleCue receives final GLB"]
+        P8 --> P9{"Free storage slot available?"}
+        P9 -->|Has free slot| P10["RoleCue converts GLB to VRM and saves usable VRM asset in User Avatar Inventory<br/>(No charge, uses one free slot)"]
+        P9 -->|Inventory full - INVENTORY_FULL| P3
         P10 --> P11["Avatar available in personal library"]
     end
 
@@ -108,9 +107,9 @@ flowchart TD
 1. **Both-Role Avatar Inventory Ownership:**
    Every Candidate and Recruiter starts with **3 personal avatar storage slots**. Administrators do **not** have an avatar inventory.
 2. **Avatar Slots Represent Storage Capacity:**
-   The initial 3 slots represent storage capacity, not three free generations. At capacity, the user must remove an existing model or purchase an additional capacity slot using wallet coins. Capacity purchases and generation fees are separate operations; the frontend reads actual capacity from the authoritative API. A capacity slot costs 1 coin; the exact generation fee remains unresolved (Decision 16).
-3. **Successful VRM Persistence Charging Boundary:**
-   The avatar generation fee is debited in coins from the user's wallet **only after a usable VRM asset has been successfully persisted by RoleCue**. No fee is charged for opening the creator, uploading photos, generating an Avaturn GLB, or starting conversion. Failed/cancelled conversion or persistence incurs no generation fee.
+   The initial 3 slots represent storage capacity; each saved avatar occupies one slot. At capacity, creation is refused (`INVENTORY_FULL`) and the user must remove an existing model or purchase additional capacity slots using wallet coins (1 coin per slot, 1–10 slots per purchase, debited atomically through the shared ledger). Purchased slots are permanent capacity; deleting an avatar frees its slot. The frontend reads actual capacity from the authoritative API.
+3. **No Separate Generation Fee:**
+   Avatar creation (Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence) costs nothing as long as the user has a free storage slot (Settled 2026-10-27, Decision 7). The only avatar charge is buying storage slots; effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs).
 4. **Embedded Avaturn Free Iframe Boundary:**
    RoleCue embeds the free Avaturn iframe directly. Avaturn owns capture instructions, photo collection, validation and retakes, preview generation, customization, and final GLB generation. RoleCue does not orchestrate these steps through Avaturn Pro APIs or backend reconstruction calls.
 5. **VRM is the Production Artifact:**
@@ -132,7 +131,7 @@ flowchart TD
 * **[[01_Domains/Interview/README|Interview Domain]]:**
   Supplies visual interviewer meshes and Voice Profiles for live simulation. Candidates may select an eligible personal avatar for Target JD practice; Job Posting interviews use the Recruiter's locked company configuration.
 * **[[01_Domains/Payment/README|Payment Domain]]:**
-  Debits the avatar generation fee upon successful VRM persistence; debits coins when purchasing additional avatar storage capacity slots.
+  Debits coins (1 coin per slot) through the shared ledger when purchasing additional avatar storage capacity slots; avatar creation itself is not charged.
 * **[[01_Domains/Auth/README|Auth Domain]]:**
   Personal avatars are associated with the authenticated user (`user_id`) for Candidates and Recruiters. Admin accounts do not possess personal avatars.
 * **[[01_Domains/Administration/README|Administration Domain]]:**

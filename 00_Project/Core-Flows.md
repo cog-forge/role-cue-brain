@@ -275,29 +275,28 @@ flowchart TD
     VALIDATE --> PREVIEW["Avaturn preview avatar and customization UI"]
     PREVIEW --> GLB["Avaturn final GLB generation"]
     
-    GLB --> CONVERT["RoleCue receives GLB and converts it to VRM"]
-    CONVERT -->|Success| PERSIST["RoleCue persists usable VRM asset in User Avatar Inventory"]
-    PERSIST -->|Success| CHARGE["Debit Avatar Generation Fee in Coins<br/>(Charged ONLY upon successful VRM persistence)"]
-    CONVERT -->|Failed or cancelled| NO_FEE["No generation fee"]
-    PERSIST -->|Failed or cancelled| NO_FEE
-    CHARGE --> READY["Avatar available in personal library for eligible interview selection"]
+    GLB --> SLOT_CHECK{"Free storage slot available?"}
+    SLOT_CHECK -->|Inventory full - INVENTORY_FULL| MANAGE
+    SLOT_CHECK -->|Has free slot| CONVERT["RoleCue receives GLB and converts it to VRM"]
+    CONVERT --> PERSIST["RoleCue persists usable VRM asset in User Avatar Inventory<br/>(No charge, uses one free slot)"]
+    PERSIST --> READY["Avatar available in personal library for eligible interview selection"]
 ```
 
 ### Step-by-Step Breakdown
 
 1. **Avatar Inventory Capacity Check:**
    * A Candidate or Recruiter accesses the Personal 3D Avatar Studio from RoleCue.
-   * **Capacity Invariant:** Each Candidate and Recruiter starts with **3 storage slots**. These are not three free generations. Capacity purchases (1 coin per slot) and generation fees are separate operations; the frontend reads actual capacity from the authoritative API because purchases can increase it.
-   * If the user's avatar inventory is at capacity, the user must either remove an existing avatar or purchase an additional avatar capacity slot using coins from their personal wallet before generating a new avatar.
+   * **Capacity Invariant:** Each Candidate and Recruiter starts with **3 storage slots**. Creating an avatar costs nothing while a slot is free; there is no separate generation fee (Decision 7, settled 2026-10-27). Additional slots cost 1 coin each (1–10 per purchase, debited atomically through the shared ledger) and are permanent capacity; the frontend reads actual capacity from the authoritative API because purchases can increase it.
+   * If the user's avatar inventory is at capacity, creation is refused (`INVENTORY_FULL`); the user must either remove an existing avatar (freeing its slot) or purchase an additional avatar capacity slot using coins from their personal wallet before creating a new avatar.
 2. **Avaturn Embedded Experience:**
    * RoleCue embeds the free Avaturn iframe.
    * Avaturn independently presents capture instructions, collects the three required photos, performs validation and retake handling, renders the interactive preview, and provides accessories and customization.
 3. **Asset Handoff & Conversion:**
    * Avaturn generates the final GLB asset and returns it across the iframe bridge.
    * RoleCue receives the GLB and executes deterministic conversion to the standardized VRM format.
-4. **Successful VRM Persistence & Generation Fee Charging:**
+4. **Successful VRM Persistence (no charge; uses one free slot):**
    * RoleCue persists the VRM model and associates it with the owning user (`user_id`).
-   * **Charging Boundary:** The avatar generation fee is debited in coins from the user's personal wallet **only after a usable VRM asset has been successfully persisted by RoleCue**. Opening the creator, uploading photos, generating the Avaturn GLB, or initiating conversion does **not** incur a generation charge. Failed/cancelled conversion or persistence incurs no generation fee.
+   * **No Charge:** Persisting the avatar occupies one free storage slot and debits no coins. Opening the creator, Avaturn capture, GLB generation, conversion, and persistence are all free while a slot is available; the only avatar charge is buying storage slots.
 5. **Eligible Interview Usage:**
    * Once persisted, the avatar is stored in the user's personal library.
    * A Candidate can select an eligible personal avatar as the interviewer appearance for personal Target JD practice sessions.

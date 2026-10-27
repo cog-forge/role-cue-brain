@@ -70,15 +70,16 @@ This document records the ratified, long-lived product decisions that govern the
 
 ---
 
-## 7. Personal 3D Avatar Inventory (Both Roles, Capacity vs. Generation Fee)
+## 7. Personal 3D Avatar Inventory (Both Roles, Storage Slots Only)
 * **Decision:** Both Candidates and Recruiters maintain personal avatar inventories created via the embedded free Avaturn iframe experience and persisted as standardized VRM assets. Ratified on **2026-10-20**: every Candidate and Recruiter starts with **3 personal avatar storage slots**.
-* **Rationale:** Avaturn provides a polished web capture experience without requiring proprietary backend reconstruction pipelines. Separating storage capacity from generation fees allows transparent monetization.
+* **Rationale:** Avaturn provides a polished web capture experience without requiring proprietary backend reconstruction pipelines. Charging only for storage capacity (never for creation itself) keeps avatar monetization simple and transparent.
+* **(Settled 2026-10-27: no separate generation fee; supersedes the 2026-10-20 capacity-vs-fee wording.)**
 * **Rule:**
   * Candidates and Recruiters possess personal avatar inventories; Administrators do **not**.
-  * Avatar slots represent **storage capacity**, not generation credits. At capacity, users delete existing models or purchase additional capacity slots using coins.
-  * **Initial Capacity:** The 3 initial slots do **not** grant three free generations. Capacity purchases and generation fees are separate operations. The frontend reads actual capacity from the authoritative API because purchases can increase it.
-  * **Capacity Price (Settled 2026-10-27):** One additional avatar storage slot costs **1 coin**. This is a fixed system constant for now, not configuration.
-  * **Charging Boundary:** The avatar generation fee is debited in coins **only after a usable VRM asset has been successfully persisted in RoleCue**. No fee is charged for opening the studio, uploading photos, generating an Avaturn GLB, or starting conversion. Failed/cancelled conversion or persistence incurs no generation fee.
+  * Avatar slots represent **storage capacity**: each saved avatar occupies one slot. At capacity, users delete existing models or purchase additional capacity slots using coins.
+  * **Initial Capacity:** Every Candidate and Recruiter starts with 3 storage slots. Creating an avatar is free while a slot is available; when the inventory is full, creation is refused (`INVENTORY_FULL`) until the user deletes an avatar or buys more slots. Effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs). The frontend reads actual capacity from the authoritative API because purchases can increase it.
+  * **Capacity Price (Settled 2026-10-27):** One additional avatar storage slot costs **1 coin**, purchased 1–10 slots at a time (`POST /inventory/purchase`) and debited atomically through the shared ledger. This is a fixed system constant for now, not configuration. Purchased slots are permanent capacity; deleting an avatar frees its slot.
+  * **No Generation Fee (Settled 2026-10-27):** There is **no** separate avatar generation fee. Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot; the only avatar charge is a storage slot purchase.
   * RoleCue embeds the free Avaturn iframe; Avaturn generates the final GLB; RoleCue converts it to VRM and persists it. No Avaturn Pro backend API, marketplace, or admin catalog is supported.
 
 ---
@@ -181,12 +182,12 @@ This document records the ratified, long-lived product decisions that govern the
   * **Wallets:** Only Candidates and Recruiters hold personal coin wallets. Admin has no wallet.
   * **Unified Transactions Model:** Platform utilizes a single unified `transactions` table with fields `from`, `to`, `amount`, `currency`, `description`, `status`, `payos_order_code`. The proposed redesign into split `payment_orders` and `coin_transactions` was formally rejected by the team and represents accepted technical debt for this capstone. PayOS is the confirmed provider.
   * **Ledger Semantics:** `currency` is `VND` for real-money PayOS top-ups and `COIN` for internal coin movements. `from` and `to` hold the user identifier or the literal `system` counterparty; `amount` is an integer. The table currently has **no `created_at` timestamp**.
-  * **Revenue Definition:** Platform revenue is the sum of the `VND` amounts of **successful** PayOS top-ups. Internal coin movements (practice fees, interview slot funding, avatar storage purchases, avatar generation fees, refunds) are **not** revenue. Date-range revenue reporting needs a timestamp column on `transactions` and remains open (Decision 16).
+  * **Revenue Definition:** Platform revenue is the sum of the `VND` amounts of **successful** PayOS top-ups. Internal coin movements (practice fees, interview slot funding, avatar storage slot purchases, refunds) are **not** revenue. Date-range revenue reporting needs a timestamp column on `transactions` and remains open (Decision 16).
   * **Fixed Prices (Settled 2026-10-27):** One interview slot costs **1 coin**, one avatar storage slot costs **1 coin**, and one practice session costs **5 coins**. These are fixed system constants for now, not configuration.
-  * **External vs. Internal:** External payment gateway (PayOS) handles real-money checkout to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar generation fees, avatar capacity purchases) and internal refunds (`Refund unused JP Candidate Slot` at terminal auto-close) are internal database ledger operations that do not invoke PayOS.
+  * **External vs. Internal:** External payment gateway (PayOS) handles real-money checkout to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar storage slot purchases) and internal refunds (`Refund unused JP Candidate Slot` at terminal auto-close) are internal database ledger operations that do not invoke PayOS.
   * **Start Charging Boundary:** Practice interviews are debited in coins (5 coins) from the Candidate's wallet upon session start (not completion); reconnecting to or resuming the same active session incurs no second charge. Starting again while the Candidate has an unfinished practice session for the same Role Profile returns that session instead of charging again, and a retried start carrying the same idempotency key returns the session it created.
   * **Slot Consumption Boundary:** Recruitment interviews consume one prepaid Recruiter slot upon Candidate's first successful interview start, when the Application's single recruitment session is created; resuming that session consumes no additional slot; Candidates are never charged. Consumption is counted from recruitment sessions, so the terminal-close refund never double-debits or double-credits.
-  * **Avatar Charging Boundary:** The avatar generation fee is debited in coins only after successful VRM persistence in RoleCue.
+  * **Avatar Charging Boundary:** Avatar creation is free while a storage slot is available; the only avatar charge is buying storage slots at 1 coin per slot, debited atomically through the ledger. There is no separate generation fee (Settled 2026-10-27).
   * **Terminal Auto-Close Refund:** Only terminal Job Posting auto-close refunds eligible unused interview slots as coins back to the Recruiter's wallet (`Refund unused JP Candidate Slot`), once per Posting. Close intake itself does not refund slots; when it chains straight into terminal close, the refund comes from the terminal-close step.
 
 ---
@@ -198,8 +199,7 @@ The following entries distinguish ratified scope from unresolved implementation 
 1. **Commercial Parameters & Precision:**
    * Exact monetary pricing for coin packages.
    * Coin exchange ratios, currency precision (integer vs. decimal), and package sizes.
-   * Exact avatar generation fee.
-   * *(Settled 2026-10-27 and no longer open: interview slot 1 coin, avatar storage slot 1 coin, practice session 5 coins; Decision 15.)*
+   * *(Settled 2026-10-27 and no longer open: interview slot 1 coin, avatar storage slot 1 coin, practice session 5 coins; Decision 15. There is no separate avatar generation fee; Decision 7.)*
    * Date-range revenue reporting: `transactions` has no timestamp column, so reports by period need one to be added (Decision 15).
 2. **Interview Slot Policies:**
    * Slot reservation mechanics and concurrency limits during high application traffic.

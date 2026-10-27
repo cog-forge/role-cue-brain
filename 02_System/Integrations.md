@@ -131,7 +131,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 * **Security & Invariants:**
   * Webhook callbacks must be cryptographically signed by PayOS.
   * Webhook handlers must verify signatures and maintain strictly idempotent processing to prevent duplicate status changes or coin minting.
-  * Real-money transactions acquire coin packages; internal coin spending (practice start fees, interview slot funding, avatar generation fees, avatar capacity purchases) and internal refunds (unused slot coin refunds upon terminal Job Posting auto-close via `Refund unused JP Candidate Slot`) execute purely within the internal database and do **NOT** invoke PayOS.
+  * Real-money transactions acquire coin packages; internal coin spending (practice start fees, interview slot funding, avatar capacity purchases) and internal refunds (unused slot coin refunds upon terminal Job Posting auto-close via `Refund unused JP Candidate Slot`) execute purely within the internal database and do **NOT** invoke PayOS.
 
 ### 3.6. Email Provider
 * **Purpose:**
