@@ -42,10 +42,11 @@ Provide a transparent, reliable coin-based monetization infrastructure. Candidat
   * `description`
   * `status`
   * `payos_order_code`
+  * `created_at`
   * **Architectural Invariant:** The team explicitly rejected the proposed payment redesign that separated `payment_orders` and `coin_transactions`. The unified transaction model is the frozen contract, and its semantic and traceability limitations are accepted technical debt for this capstone.
-  * **Ledger Semantics:** `currency` is `VND` for real-money PayOS top-ups and `COIN` for internal coin movements. `from` and `to` hold a user identifier or the literal `system` counterparty; `amount` is an integer. The table has no `created_at` timestamp yet.
+  * **Ledger Semantics:** `currency` is `VND` for real-money PayOS top-ups and `COIN` for internal coin movements. `from` and `to` hold a user identifier or the literal `system` counterparty; `amount` is an integer. `created_at` (`timestamptz`, NOT NULL, database default, indexed) dates each row; it was added in migration 000014 (KAN-191/192/206), and rows written before it carry the migration time (dev data only). A user's wallet history lists rows by `created_at` newest first and shows times in the viewer's local time.
 * **Platform Revenue:**
-  Revenue is the sum of the `VND` amounts of **successful** PayOS top-ups. Internal coin movements (practice fees, interview slot funding, avatar storage slot purchases, refunds) are not revenue. Date-range revenue reporting needs a timestamp column on `transactions` and remains open (Decision 16).
+  Revenue is the sum of the `VND` amounts of **successful** PayOS top-ups. Internal coin movements (practice fees, interview slot funding, avatar storage slot purchases, refunds) are not revenue. Date-range reporting filters `created_at` over a `[date_from, date_to)` window; Admin billing screens and the CSV export use Vietnam time (UTC+07:00) (Decision 15).
 * **Fixed Prices (Decision 15, settled 2026-10-27):**
   Interview slot **1 coin** per slot; avatar storage slot **1 coin** per slot; practice session **5 coins**. These are fixed system constants for now. There is no separate avatar generation fee (Decision 7, settled 2026-10-27); coin package prices remain unresolved.
 * **Interview Capacity Funding (`interview_slot`):**

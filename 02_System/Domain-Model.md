@@ -109,6 +109,7 @@ classDiagram
         +String description
         +TransactionStatus status
         +String payos_order_code
+        +Timestamp created_at
     }
 
     class Level {
@@ -302,7 +303,7 @@ classDiagram
 * **`Account` (`accounts`) & `Session` (`sessions`):** Better Auth credential tables. `accounts` stores third-party OAuth provider links and hashed local passwords. `sessions` stores active Better Auth session cookie records; a user may hold several concurrent sessions. RoleCue uses session cookies with `/api/auth/get-session` runtime validation; there is no custom JWT/refresh-token rotation layer.
 * **`Wallet` (`wallets`):** Personal coin ledger owned individually by an authenticated **Candidate** or **Recruiter** (`user_id UNIQUE`). Holds an integer `balance`. Administrators do **NOT** have a wallet.
 * **`CoinPackage` (`coin_packages`):** Fixed coin purchasing tiers available for purchase via PayOS (`name`, integer `price`, integer coin `amount`, `currency`, `description`).
-* **`Transaction` (`transactions`):** The unified financial ledger table. Records both real-money PayOS checkout orders (via `payos_order_code`, `currency = VND`) and internal coin balance transfers/refunds (`currency = COIN`) using `from`, `to`, integer `amount`, `currency`, `description`, and `status` (`pending`, `success`, `failed`, `cancelled`). `from` and `to` are text holding a user identifier or the literal `system` counterparty; there are no foreign keys to wallets or coin packages, and no `created_at` column yet (date-range reporting is open; Decision 16).
+* **`Transaction` (`transactions`):** The unified financial ledger table. Records both real-money PayOS checkout orders (via `payos_order_code`, `currency = VND`) and internal coin balance transfers/refunds (`currency = COIN`) using `from`, `to`, integer `amount`, `currency`, `description`, `status` (`pending`, `success`, `failed`, `cancelled`), and `created_at timestamptz` (indexed, database default). `from` and `to` are text holding a user identifier or the literal `system` counterparty; there are no foreign keys to wallets or coin packages. `created_at` was added in migration 000014 (KAN-191/192/206) and drives date-range reporting (Decision 15).
   * *Accepted Technical Debt Note:* The team explicitly rejected the proposed payment architecture redesign (`payment_orders` + `coin_transactions`). The single unified `transactions` table is the authoritative model for this capstone.
 
 ### 2.2. Practice & Simulation Pipeline
