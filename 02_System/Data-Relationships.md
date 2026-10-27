@@ -19,36 +19,41 @@ This document specifies the conceptual entity relationships, cardinalities, casc
 
 ## 1. Master Relationship Cardinality Matrix
 
+Reconciled with the implemented schema (shared migrations `000001` through `000013`) on **2026-10-27**. The Cascade Policy column shows the implemented foreign-key action: `NO ACTION` (the PostgreSQL default) rejects deleting a referenced parent, with the same effect as `RESTRICT` for these tables. Rows marked *no FK* are logical relationships without a database foreign key.
+
 | Parent Entity | Child Entity | Cardinality | Nullable FK? | Cascade Policy | Business Rationale |
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | **`User` (`users`)** | `Account` (`accounts`) | `1 : 0..*` | No | `CASCADE` | Better Auth OAuth provider and hashed credential records per user. |
 | **`User` (`users`)** | `Session` (`sessions`) | `1 : 0..*` | No | `CASCADE` | Better Auth active session cookie records; a user may hold several concurrent sessions under the single Better Auth session authority. |
-| **`User` (`users`)** | `Wallet` (`wallets`) | `1 : 0..1` | No | `CASCADE` | Personal coin wallet for Candidate or Recruiter (`UNIQUE(user_id)`); Admin has no wallet. |
-| **`Wallet` (`wallets`)** | `Transaction` (`transactions`) | `1 : 0..*` | No | `RESTRICT` | Unified financial ledger entries (`from` / `to`) must never be accidentally deleted. |
-| **`CoinPackage` (`coin_packages`)** | `Transaction` (`transactions`) | `1 : 0..*` | Yes | `RESTRICT` | Real-money checkout purchases for coin packages via PayOS (`payos_order_code`). |
-| **`User` (`users`)** | `Inventory` (`inventories`) | `1 : 0..1` | No | `CASCADE` | Candidate or Recruiter personal avatar storage, initially 3 slots; Admin has no inventory (Decision 7). |
-| **`Inventory` (`inventories`)** | `Avatar` (`avatars`) | `1 : 0..*` | No | `CASCADE` | Standardized VRM personal 3D avatars stored in user inventory. |
-| **`Level` (`levels`)** | `JobDescription` (`job_descriptions`) | `1 : 0..*` | No | `RESTRICT` | Seniority level tier classification (`intern`, `junior`, `mid`, `senior`, `lead`). |
-| **`JobDescription` (`job_descriptions`)** | `CoreQuestion` (`core_questions`) | `1 : 0..*` | No | `CASCADE` | Core question bank (conceptual Blueprint) generated from confirmed requirements. |
-| **`JobDescription` (`job_descriptions`)** | `RoleProfile` (`role_profiles`) | `1 : 0..*` | No | `CASCADE` | Candidate practice role profiles referencing target job description. |
-| **`User` (`users`)** | `RoleProfile` (`role_profiles`) | `1 : 0..*` | No | `CASCADE` | Candidate owns zero or more practice role profiles. |
-| **`JobDescription` (`job_descriptions`)** | `JobPosting` (`job_postings`) | `1 : 0..1` | No (Unique) | `RESTRICT` | Job Posting requirements defined 1:1 by underlying job description (`UNIQUE(jd_id)`). |
-| **`User` (`users`)** | `JobPosting` (`job_postings`) | `1 : 0..*` | No | `RESTRICT` | Recruiter authors zero or more company Job Postings. |
-| **`JobPosting` (`job_postings`)** | `MetricPercentage` (`metrics_percentage`) | `1 : 0..*` | No | `CASCADE` | Optional custom weights totaling 100%; absent rows use effective equal-split defaults, not persisted default rows (Decision 13a). |
-| **`Metric` (`metrics`)** | `MetricPercentage` (`metrics_percentage`) | `1 : 0..*` | No | `RESTRICT` | Evaluation metric referenced in posting weights (`UNIQUE(job_posting_id, metric_id)`). |
-| **`JobPosting` (`job_postings`)** | `Application` (`applications`) | `1 : 0..*` | No | `RESTRICT` | Applications received by an open Job Posting. |
-| **`User` (`users`)** | `Application` (`applications`) | `1 : 0..*` | No | `RESTRICT` | Candidate submits zero or more applications. |
-| **`RoleProfile` (`role_profiles`)** | `Interview` (`interviews`) | `1 : 0..*` | No | `RESTRICT` | Interview simulation guided by role profile requirements. |
-| **`Application` (`applications`)** | `Interview` (`interviews`) | `1 : 0..1` | Yes (Unique) | `RESTRICT` | Recruitment interview references candidate application (`UNIQUE(application_id)`). Practice interviews have `application_id IS NULL`. |
-| **`Interview` (`interviews`)** | `InterviewQuestion` (`interview_questions`) | `1 : 0..*` | No | `CASCADE` | Session question assignment mapping turn position to source core question. |
-| **`CoreQuestion` (`core_questions`)** | `InterviewQuestion` (`interview_questions`) | `1 : 0..*` | No | `RESTRICT` | Core question referenced in interview sessions. |
-| **`Interview` (`interviews`)** | `ConversationTurn` (`conversation_turns`) | `1 : 0..*` | No | `CASCADE` | Sequential conversational dialogue turns in an interview session. |
-| **`Interview` (`interviews`)** | `ScoreDetail` (`score_details`) | `1 : 0..*` | No | `CASCADE` | Evaluation score breakdown per metric (`UNIQUE(interview_id, metric_id)`). |
-| **`Metric` (`metrics`)** | `ScoreDetail` (`score_details`) | `1 : 0..*` | No | `RESTRICT` | Platform evaluation metric evaluated in interview score details. |
-| **`Avatar` (`avatars`)** | `Interview` (`interviews`) | `1 : 0..*` | Yes | `SET NULL` | Avatar persona presented during interview session. |
-| **`Voice` (`voices`)** | `Interview` (`interviews`) | `1 : 0..*` | Yes | `SET NULL` | Voice persona speaking during interview session. |
-| **`Avatar` (`avatars`)** | `JobPosting` (`job_postings`) | `1 : 0..*` | No | `RESTRICT` | Required company 3D avatar locked by Recruiter for Job Posting interview. |
-| **`Voice` (`voices`)** | `JobPosting` (`job_postings`) | `1 : 0..*` | No | `RESTRICT` | Required company Voice Profile locked by Recruiter for Job Posting interview. |
+| **`User` (`users`)** | `Verification` (`verifications`) | `1 : 0..*` | Yes | `NO ACTION` | Better Auth email verification and recovery tokens; `user_id` is optional. |
+| **`User` (`users`)** | `TwoFactor` (`two_factors`) | `1 : 0..*` | No | `CASCADE` | TOTP two-factor secret, encrypted backup codes, and lockout state. |
+| **`User` (`users`)** | `Wallet` (`wallets`) | `1 : 0..1` | No | `NO ACTION` | Personal coin wallet for Candidate or Recruiter (`UNIQUE(user_id)`); Admin has no wallet. |
+| **`User` / `Wallet`** | `Transaction` (`transactions`) | `1 : 0..*` | — (*no FK*) | — | Unified ledger entries reference the user (or the literal `system` counterparty) as text in `from` / `to`; entries are append-only and never deleted. |
+| **`CoinPackage` (`coin_packages`)** | `Transaction` (`transactions`) | `1 : 0..*` | — (*no FK*) | — | Real-money checkout purchases for coin packages via PayOS (`payos_order_code`, `currency = VND`); the package is identified in the order, not by a foreign key. |
+| **`User` (`users`)** | `Inventory` (`inventories`) | `1 : 0..1` | No | `NO ACTION` | Candidate or Recruiter personal avatar storage (`UNIQUE(user_id)`, `CHECK slot >= 0`), initially 3 slots; Admin has no inventory (Decision 7). |
+| **`Inventory` (`inventories`)** | `Avatar` (`avatars`) | `1 : 0..*` | No | `NO ACTION` | Standardized VRM personal 3D avatars stored in user inventory. |
+| **`Level` (`levels`)** | `JobDescription` (`job_descriptions`) | `1 : 0..*` | Yes | `NO ACTION` | Seniority level tier classification (`intern`, `junior`, `mid`, `senior`, `lead`); optional until set. |
+| **`JobDescription` (`job_descriptions`)** | `Requirement` (`requirements`) | `1 : 0..*` | No | `NO ACTION` | Extracted requirements classified by `kind`, optional `category`, and optional `type`; confirmed requirements feed question-bank generation. |
+| **`JobDescription` (`job_descriptions`)** | `CoreQuestion` (`core_questions`) | `1 : 0..*` | No | `NO ACTION` | Core question bank (conceptual Blueprint) generated from confirmed requirements. |
+| **`JobDescription` (`job_descriptions`)** | `RoleProfile` (`role_profiles`) | `1 : 0..1` | No (Unique) | `NO ACTION` | Candidate practice role profile referencing its own target job description (`UNIQUE(jd_id)`). |
+| **`User` (`users`)** | `RoleProfile` (`role_profiles`) | `1 : 0..*` | No | `NO ACTION` | Candidate owns zero or more practice role profiles; Recruiters have none. |
+| **`JobDescription` (`job_descriptions`)** | `JobPosting` (`job_postings`) | `1 : 0..1` | No (Unique) | `NO ACTION` | Job Posting requirements defined 1:1 by underlying job description (`UNIQUE(jd_id)`). |
+| **`User` (`users`)** | `JobPosting` (`job_postings`) | `1 : 0..*` | No | `NO ACTION` | Recruiter authors zero or more company Job Postings. |
+| **`JobPosting` (`job_postings`)** | `MetricPercentage` (`metrics_percentage`) | `1 : 0..*` | No | `NO ACTION` | Optional custom weights totaling 100%; absent rows use effective equal-split defaults, not persisted default rows (Decision 13a). |
+| **`Metric` (`metrics`)** | `MetricPercentage` (`metrics_percentage`) | `1 : 0..*` | No | `NO ACTION` | Evaluation metric referenced in posting weights (primary key `(job_posting_id, metric_id)`). |
+| **`JobPosting` (`job_postings`)** | `Application` (`applications`) | `1 : 0..*` | No | `NO ACTION` | Applications received by an open Job Posting. |
+| **`User` (`users`)** | `Application` (`applications`) | `1 : 0..*` | No | `NO ACTION` | Candidate submits zero or more applications. |
+| **`RoleProfile` (`role_profiles`)** | `Interview` (`interviews`) | `1 : 0..*` | Yes | `NO ACTION` | Practice interview guided by role profile requirements. `NULL` for recruitment; CHECK `type <> 'practice' OR role_profile_id IS NOT NULL`. |
+| **`Application` (`applications`)** | `Interview` (`interviews`) | `1 : 0..1` | Yes (Unique) | `NO ACTION` | Recruitment interview references candidate application (`UNIQUE(application_id)`), and through it exactly one Job Posting; its owner is `applications.candidate_id`. Practice interviews have `application_id IS NULL`. |
+| **`Interview` (`interviews`)** | `InterviewQuestion` (`interview_questions`) | `1 : 0..*` | No | `NO ACTION` | Session question assignment mapping turn position to source core question (primary key `(interview_id, position)`). |
+| **`CoreQuestion` (`core_questions`)** | `InterviewQuestion` (`interview_questions`) | `1 : 0..*` | No | `NO ACTION` | Core question referenced in interview sessions. |
+| **`Interview` (`interviews`)** | `ConversationTurn` (`conversation_turns`) | `1 : 0..*` | No | `NO ACTION` | Sequential conversational dialogue turns in an interview session. |
+| **`Interview` (`interviews`)** | `ScoreDetail` (`score_details`) | `1 : 0..*` | No | `NO ACTION` | Evaluation score breakdown per metric (`UNIQUE(interview_id, metric_id)`). |
+| **`Metric` (`metrics`)** | `ScoreDetail` (`score_details`) | `1 : 0..*` | No | `NO ACTION` | Platform evaluation metric evaluated in interview score details. |
+| **`Avatar` (`avatars`)** | `Interview` (`interviews`) | `1 : 0..*` | Yes | `NO ACTION` | Avatar persona presented during interview session. |
+| **`Voice` (`voices`)** | `Interview` (`interviews`) | `1 : 0..*` | Yes | `NO ACTION` | Voice persona speaking during interview session. |
+| **`Avatar` (`avatars`)** | `JobPosting` (`job_postings`) | `1 : 0..*` | Yes | `NO ACTION` | Required company 3D avatar locked by Recruiter for Job Posting interview; nullable while the Posting is prepared, required before submission. |
+| **`Voice` (`voices`)** | `JobPosting` (`job_postings`) | `1 : 0..*` | Yes | `NO ACTION` | Required company Voice Profile locked by Recruiter for Job Posting interview; nullable while the Posting is prepared, required before submission. |
 
 ---
 
@@ -63,10 +68,10 @@ flowchart LR
     INT -->|"Records Scores"| SD["Score Details (score_details)"]
 ```
 * **Invariant:** Every `Interview` maps its session turn positions to persistent `core_questions` via `interview_questions (interview_id, position, core_question_id)`.
-* **Integrity Guarantee:** Even if the source Job Description or Job Posting is updated, foreign key constraints (`ON DELETE RESTRICT`) ensure historical interview questions, dialogue turns, and score evaluations remain permanently reproducible and tamper-proof without requiring an unnormalized `blueprint_snapshot` column.
+* **Integrity Guarantee:** Even if the source Job Description or Job Posting is updated, foreign key constraints (which reject deleting a referenced parent) ensure historical interview questions, dialogue turns, and score evaluations remain permanently reproducible and tamper-proof without requiring an unnormalized `blueprint_snapshot` column.
 
 ### 2.2. Question Bank Preservation via `ON DELETE RESTRICT`
-* **Invariant:** The foreign key constraint between `interview_questions` and `core_questions` enforces `ON DELETE RESTRICT`.
+* **Invariant:** The foreign key constraint between `interview_questions` and `core_questions` rejects deleting a referenced core question (`NO ACTION`, equivalent to `RESTRICT` here).
 * **Integrity Guarantee:** Deleting or replacing question banks must be rejected if completed interview sessions reference them. Historical practice and recruitment records must never be orphaned.
 
 ### 2.3. Consolidated Evaluation Storage & Score Detail Invariant
