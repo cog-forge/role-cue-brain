@@ -35,7 +35,7 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
   Evaluation weights are **separate from the core question bank (`core_questions`)**. Recruiters may select a subset of metrics and save percentages totaling **100%** through `metrics_percentage (job_posting_id, metric_id, percentage)`. Without a saved custom configuration, compute effective equal-split defaults on read across currently available metrics (**20% each** for the current five); do not persist default rows. `configured=false` and `using_defaults=true` indicate valid configuration; Admin approval must not require custom weights.
   * **Editing Boundary:** Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`. Applying this boundary to conceptual moderation approval, funding, and Open Intake is subject to the finalized technical state mapping (Decisions 13/16); no additional editable state is implied.
 * **Evaluation Results Persistence (`interviews`, `score_details`, `conversation_turns`):**
-  Evaluation outcomes are persisted directly in the relational schema upon session conclusion:
+  Evaluation outcomes are persisted directly in the relational schema upon session conclusion. Evaluation runs after completion and is tracked in `interviews.evaluation_status` (`pending`, `completed`, `failed`): a failed evaluation can be retried, and one left `pending` by an interrupted run is taken over by a later run, so each interview is evaluated by exactly one owner.
   * **Overall Assessment:** Stored in `interviews.score` (numerical score) and `interviews.feedback` (narrative evaluation).
   * **Competency Breakdown:** Persisted in `score_details` (`interview_id`, `metric_id`, `score`).
   * **Turn-by-Turn Critiques:** Persisted in `conversation_turns.feedback` for each answered question turn.
@@ -43,7 +43,7 @@ Provide objective, diagnostic technical feedback. Identifies specific conceptual
   * **Practice Interviews:** The Candidate has full access to their evaluation scores, competency breakdowns (`score_details`), turn critiques (`conversation_turns.feedback`), and overall feedback (`interviews.feedback`).
   * **Recruitment Interviews:**
     * The **Candidate** can view their overall recruitment score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. These assets must not be exposed indirectly through history, result APIs, exports, or asset URLs.
-    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation score, competency breakdown (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**.
+    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation score, competency breakdown (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**. A recording is served only once its `record_status` is `ready`; the transcript once the interview is completed.
 * **Historical Context Preservation:**
   Scoring uses the effective evaluation configuration (saved custom posting weights or equal-split defaults when absent). Persisted turn feedback and `score_details` remain immutable; later configuration changes must not recalculate historical results. This does not imply persisted default rows or a new snapshot mechanism.
 * **Human Review Evidence (No Automated Hiring Authority):**
@@ -88,6 +88,7 @@ flowchart TD
    * In recruitment, the Candidate can view only their overall evaluation score; recruitment transcripts and audio/video recordings are hidden from the Candidate during recruitment and must not be exposed via exports, history APIs, or asset URLs.
    * No Candidate recruitment recording replay feature exists.
    * The owning Recruiter has exclusive review access to recruitment transcripts and recordings within `View Application Detail`.
+   * Final Approve/Reject decisions remain hard-gated until `MAX(interview_deadline)` for the posting, evaluated on the database clock; only an `interviewed` application can receive one.
 5. **Formative & Diagnostic Purpose (No Auto-Hiring):**
    RoleCue evaluations provide educational and diagnostic evidence. Evaluation scores carry **no autonomous hiring or disqualification authority**.
 6. **Unique Metric Evaluation per Session:**

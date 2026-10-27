@@ -36,13 +36,13 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
 * **Both-Role Avatar Inventory Ownership:**
   Every **Candidate** and **Recruiter** starts with **3 personal avatar storage slots** (`inventories.slot`), ratified on **2026-10-20** (Decision 7). **Administrators do NOT have a personal avatar inventory.**
 * **Avatar Storage Capacity vs. Generation Fee:**
-  * **Storage Capacity (Avatar Slots):** Avatar slots (`inventories.slot`) represent storage capacity in a user's library, **not** generation credits. When inventory capacity is full, the user must either remove an existing avatar or purchase an additional capacity slot using coins from their wallet.
+  * **Storage Capacity (Avatar Slots):** Avatar slots (`inventories.slot`) represent storage capacity in a user's library, **not** generation credits. When inventory capacity is full, the user must either remove an existing avatar or purchase an additional capacity slot using coins from their wallet, at **1 coin per slot** (Decision 7).
   * **Initial Capacity & API Authority:** The initial 3 slots do **not** grant three free generations. The frontend reads actual capacity from the authoritative API because purchases can increase it; 3 is the initial allocation, not a permanent frontend limit.
   * **Generation Fee:** A separate fee debited in coins from the user's personal wallet **strictly upon successful VRM persistence in RoleCue**.
 * **Charging Boundary at Successful VRM Save:**
   Opening the avatar creator, uploading photos, generating a preview or GLB in Avaturn, and initiating GLB-to-VRM conversion do **not** incur a generation fee. The fee is charged only after RoleCue successfully validates, converts, and persists a usable production VRM asset. Failed/cancelled conversion or persistence incurs no generation fee.
 * **Voice Profile (`voices`):**
-  A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider parameters. Curated and managed exclusively by Administrators.
+  A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider parameters. Curated and managed exclusively by Administrators. Only an active Voice Profile can be selected for a practice session.
 * **3D Environment Presets:**
   Curated virtual 3D room backgrounds rendered behind the virtual interviewer. Built-in platform presets.
 * **2D Waveform Fallback Mode:**
@@ -108,7 +108,7 @@ flowchart TD
 1. **Both-Role Avatar Inventory Ownership:**
    Every Candidate and Recruiter starts with **3 personal avatar storage slots**. Administrators do **not** have an avatar inventory.
 2. **Avatar Slots Represent Storage Capacity:**
-   The initial 3 slots represent storage capacity, not three free generations. At capacity, the user must remove an existing model or purchase an additional capacity slot using wallet coins. Capacity purchases and generation fees are separate operations; the frontend reads actual capacity from the authoritative API. Exact generation and capacity prices remain unresolved (Decision 16).
+   The initial 3 slots represent storage capacity, not three free generations. At capacity, the user must remove an existing model or purchase an additional capacity slot using wallet coins. Capacity purchases and generation fees are separate operations; the frontend reads actual capacity from the authoritative API. A capacity slot costs 1 coin; the exact generation fee remains unresolved (Decision 16).
 3. **Successful VRM Persistence Charging Boundary:**
    The avatar generation fee is debited in coins from the user's wallet **only after a usable VRM asset has been successfully persisted by RoleCue**. No fee is charged for opening the creator, uploading photos, generating an Avaturn GLB, or starting conversion. Failed/cancelled conversion or persistence incurs no generation fee.
 4. **Embedded Avaturn Free Iframe Boundary:**

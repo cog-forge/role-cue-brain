@@ -70,15 +70,16 @@ flowchart TD
 
 #### 5. Configure Interview Session
 * The Candidate configures presentation and execution parameters:
-  * **Interviewer Persona:** Visual appearance choice (system preset or eligible model from personal avatar inventory).
-  * **Voice Profile:** Voice profile choice (tone, accent, gender) sourced from TTS providers.
+  * **Interviewer Persona:** Visual appearance choice (system preset or eligible model from the Candidate's **own** personal avatar inventory; another user's avatar is never usable).
+  * **Voice Profile:** Voice profile choice (tone, accent, gender) sourced from TTS providers; only an active Voice Profile can be selected.
   * **Interview Environment:** 3D virtual room background choice.
   * **Difficulty & Horizon:** Session difficulty and duration horizon.
 
 #### 6. Readiness Verification & Start Charging
 * The Candidate completes **Test Audio and Interview Readiness** (microphone and audio check).
-* **Start Charging Boundary:** When the Candidate initiates the practice session, the practice interview fee is debited from their **personal coin wallet**.
+* **Start Charging Boundary:** When the Candidate initiates the practice session, the practice interview fee (**5 coins**) is debited from their **personal coin wallet**.
 * If a session experiences a network disconnect or is paused, reconnecting or resuming the same session incurs **no second charge**.
+* Starting again while an unfinished practice session exists for the same Role Profile returns that session instead of charging again; a retried start with the same idempotency key returns the session it created.
 
 #### 7. Live Virtual Interview Simulation
 * The session assigns its selected questions via `interview_questions` (linking each turn position to its persistent `core_questions` record) and applies the evaluation configuration actually used (without modeling evaluation criteria as part of the current Blueprint).
@@ -102,7 +103,7 @@ flowchart TD
 RoleCue incorporates a lightweight job board and CV-first recruitment flow connecting Candidates and Recruiters. The scope is strictly bounded to eliminate full ATS overhead.
 
 > [!IMPORTANT]
-> The sequence below is the ratified business contract. Moderation approval and the Recruiter's Open Intake action are conceptual steps whose persistence mapping remains unresolved: the frozen `job_posting_status` enum has only `pending`, `open`, `intake_closed`, `closed`, and `rejected`, with no `approved` value or `intake_status` column. Current direct approval-to-`open` code is incomplete; it does not replace the funding gate. See [[02_System/Domain-Model|Domain Model]] and [[03_Decisions/Product-Decisions|Product Decisions]] (Decisions 13 and 16).
+> The sequence below is the ratified business contract. Moderation approval and the Recruiter's Open Intake action are conceptual steps whose persistence mapping remains unresolved: the frozen `job_posting_status` enum has only `pending`, `open`, `intake_closed`, `closed`, and `rejected`, with no `approved` value or `intake_status` column. **Known implementation gap:** the current interim implementation sets `open` at Admin approval, so Candidates may apply before funding; CV approval and recruitment interview start still require funded capacity. This does not change the canonical sequence or replace the funding gate. See [[02_System/Domain-Model|Domain Model]] and [[03_Decisions/Product-Decisions|Product Decisions]] (Decisions 13 and 16).
 
 ```mermaid
 sequenceDiagram
@@ -117,11 +118,12 @@ sequenceDiagram
     Recruiter->>System: Create Job Posting from JD-like content
     System->>System: AI extracts technical requirements
     Recruiter->>System: Review & confirm requirements
-    System->>DB: Generate single Question-Bank Blueprint
+    System->>DB: Persist Job Posting (status = pending, in preparation)
+    Recruiter->>System: Generate single Question-Bank Blueprint (once)
     Recruiter->>System: Edit own-posting core questions & review evaluation settings (custom or defaults)
     Recruiter->>System: Select company 3D interviewer model and Voice Profile
-    Recruiter->>System: Submit Job Posting for approval
-    System->>DB: Persist Job Posting (status = pending)
+    Recruiter->>System: Submit Job Posting for review (non-empty bank required)
+    System->>DB: Mark Posting submitted (enters Admin queue)
     Admin->>System: Approve Job Posting
     System-->>Recruiter: Moderation approved (Conceptual, funding required before intake)
 
@@ -134,7 +136,7 @@ sequenceDiagram
     System-->>Recruiter: Funding committed (Duplicate requests do not charge or allocate twice)
     Recruiter->>System: Open application intake after successful funding
     System->>System: Require moderation approval, committed funding & Recruiter Open Intake action
-    Note over System,DB: Approval / funding / intake persistence mapping unresolved on frozen schema
+    Note over System,DB: Approval / funding / intake persistence mapping unresolved, interim code sets open at approval
 
     Note over Candidate,Recruiter: 3. Unlimited Application Intake & Immediate Visibility
     Candidate->>System: Browse moderated, funded Postings with Recruiter-opened intake
@@ -158,13 +160,14 @@ sequenceDiagram
     opt Close Intake triggered (Manual or configured limit met)
         System->>DB: Set Job Posting status = intake_closed (Stop new applications)
         System->>DB: Auto-reject remaining unscreened/not-approved Applications
-        Note over System,DB: Approved candidates remain interview-eligible. No refund yet. No reopen flow.
+        Note over System,DB: Approved candidates remain interview-eligible. Close intake itself refunds nothing. No reopen flow.
+        Note over System,DB: No Application still in progress? Terminal close and refund follow in the same operation
     end
 
     Note over Candidate,System: 6. Recruitment Technical Interview & Slot Consumption
     opt Approved Candidate completes interview before deadline
         Candidate->>System: Start recruitment interview
-        System->>DB: Consume 1 funded interview slot on FIRST successful start (Free reconnect)
+        System->>DB: Create the Application's single recruitment session, consuming 1 funded slot (Free reconnect)
         Note over Candidate,System: Uses locked company 3D model & Voice Profile
         System->>DB: Record recruitment session, audio/video recordings & transcript
         System->>DB: Evaluate session and store Interview Result
@@ -186,9 +189,9 @@ sequenceDiagram
         end
     end
 
-    opt Every Application reaches terminal state (APPROVED / REJECTED)
+    opt Intake closed and every Application terminal (APPROVED / REJECTED), or no Applications
         System->>DB: Terminal Job Posting Auto-Close
-        System->>DB: Refund unused interview_slot capacity as internal Coins to Recruiter Wallet
+        System->>DB: Refund interview_slot minus consumed sessions as internal Coins to Recruiter Wallet (once)
         Note over System,DB: Refund unused JP Candidate Slot (Internal coin movement, no PayOS call)
     end
 ```
@@ -198,15 +201,16 @@ sequenceDiagram
 1. **Job Posting Creation & Question Bank Setup:**
    * A Recruiter creates a **Job Posting** (the company's Job Description) from JD-like content.
    * AI extracts structured requirements, and the Recruiter reviews and confirms them.
-   * The system generates a single **Interview Blueprint** (core-question bank, persisted in `core_questions`) for the posting.
-   * The Recruiter can view and edit core questions within their own posting's question bank.
+   * The Recruiter generates a single **Interview Blueprint** (core-question bank, persisted in `core_questions`) for the posting, once; a failed generation may be retried.
+   * The Recruiter can view and edit core questions within their own posting's question bank while the Posting is `pending` or `rejected`; the bank is locked from `open` onward.
    * The Recruiter prepares valid posting-level evaluation settings (separate from the question bank): optional custom metric percentages total 100%; otherwise use effective equal-split defaults (currently five metrics at 20% each). Custom weights are not required for Admin approval.
    * Before submission for Admin approval, the Recruiter locks the company 3D interviewer model and Voice Profile.
-   * Recruiter submits for moderation; Administrator approval is a moderation decision and does not itself open intake or make the Posting discoverable.
+   * Generating the bank does not submit the Posting. The Recruiter explicitly submits for moderation, which requires a non-empty bank; Admin acts only on submitted Postings, and deleting the last question withdraws the submission. A rejected Posting may edit its bank and resubmit.
+   * Administrator approval is a moderation decision and, in the canonical flow, does not itself open intake or make the Posting discoverable (the current interim implementation sets `open` at approval; known implementation gap, Decision 13).
 2. **Interview Slot Funding & Intake Open:**
-   * After moderation approval, the Recruiter funds interview capacity using personal wallet coins. The coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently; failures or duplicate requests must not leave inconsistent capacity or double charges. PayOS is only for real-money coin-package top-ups.
+   * After moderation approval, the Recruiter funds interview capacity using personal wallet coins, exactly once per Posting at 1 coin per slot (no top-ups; repeating the same count charges nothing, a different count is refused). The coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently; failures or duplicate requests must not leave inconsistent capacity or double charges. PayOS is only for real-money coin-package top-ups.
    * **`interview_slot` Definition:** Represents exclusively maximum recruitment interview capacity (the maximum number of Candidates that may be approved to proceed into the recruitment interview stage). It does **not** mean total Applications/CVs submitted, company hiring headcount, or final hires. RoleCue does not persist or enforce company hiring headcount.
-   * Only after successful funding does the Recruiter open application intake. Candidates may discover and apply only when moderation approval, funding, and this intake-opening action are all satisfied; the frozen-schema persistence mapping remains unresolved.
+   * Only after successful funding does the Recruiter open application intake. Candidates may discover and apply only when moderation approval, funding, and this intake-opening action are all satisfied; the persistence mapping remains unresolved, and the interim implementation's approval-to-`open` behavior is a known gap.
 3. **Application Intake & Immediate Recruiter Visibility:**
    * While Job Posting intake is **OPEN**, Candidates may submit an **UNLIMITED** number of Applications with uploaded CV/resumes.
    * Application submissions are **NOT limited by interview capacity** (`interview_slot`).
@@ -218,24 +222,27 @@ sequenceDiagram
    * **Interview Deadline:** When an Application is approved:
      $$\text{interview\_deadline} = \text{approval\_time} + 24\text{ hours}$$
      (The application service uses the approval instant as `approval_time` to calculate and persist `applications.interview_deadline`; `approval_time` is conceptual and not a persisted column).
-   * A Candidate must COMPLETE the recruitment interview before `interview_deadline`. Merely starting the interview before the deadline is insufficient. If an approved Candidate does not complete the recruitment interview by `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
+   * A Candidate must COMPLETE the recruitment interview before `interview_deadline`. Merely starting the interview before the deadline is insufficient; once the deadline passes, further answers and completion are refused. If an approved Candidate does not complete the recruitment interview by `interview_deadline`, the Application automatically transitions to terminal `REJECTED`.
 5. **Close Intake (Manual or Limitation-Driven):**
    * Intake can be closed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
    * **Close Intake Semantics:**
      * Stops accepting new Applications/CVs.
      * Automatically **REJECTS** all remaining Applications that are still unscreened or not approved to proceed to interview.
      * Candidates already approved for interview remain interview-eligible and may still complete their interviews within their 24-hour windows.
-     * Close Intake is **NOT terminal Job Posting close** and does **NOT refund unused interview capacity**.
+     * Close Intake itself is **NOT terminal Job Posting close** and does **NOT refund unused interview capacity**.
+     * The terminal close rule is evaluated in the same operation: when no Application is still in progress (including a Posting with zero Applications), the Posting goes straight to terminal close, and the refund comes from that step.
+     * Closing intake on an `intake_closed` or `closed` Posting again succeeds without change.
      * There is **NO Reopen Intake flow** and **NO manual End Recruitment command**.
 6. **Recruitment Interview Simulation & Slot Consumption:**
    * An applicant with approved interview eligibility launches the technical interview.
-   * **Slot Consumption Boundary:** The funded interview slot is consumed strictly on the Candidate's **FIRST successful recruitment interview start**. Reconnecting to or resuming that active session consumes no additional slot.
+   * **Slot Consumption Boundary:** The funded interview slot is consumed strictly on the Candidate's **FIRST successful recruitment interview start**, when the Application's single recruitment session is created. Reconnecting to or resuming that active session consumes no additional slot.
+   * The recruitment session has no Role Profile; it belongs to exactly one Job Posting through its Application and is presented under the Posting's title.
    * The Candidate is **never charged** for a Recruiter-funded recruitment interview.
    * The interview strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile, capturing audio/video recordings and turn transcripts.
 7. **Result Attachment & Role-Specific Visibility:**
    * The evaluation engine generates the Interview Result (Performance Report) and attaches it, along with the audio/video recordings, to the candidate's Application.
    * **Candidate Visibility:** The Candidate can view their overall recruitment evaluation score, but **cannot** access recruitment transcripts or audio/video recordings during recruitment.
-   * **Recruiter Visibility:** The owning Recruiter has full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and full audio/video recordings and transcripts inside **View Application Detail**.
+   * **Recruiter Visibility:** The owning Recruiter has full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and full audio/video recordings and transcripts inside **View Application Detail**. A recording is available once it is processed (`record_status = ready`).
 8. **Hard-Gated Final Recruiter Review & Terminal Decision:**
    * Recruiter final Approve/Reject decisions are **HARD-GATED** until:
      $$\text{MAX}(\text{interview\_deadline})$$
@@ -244,9 +251,9 @@ sequenceDiagram
    * After the gate expires, the Recruiter opens **View Application Detail**, inspects candidate profile, CV, evaluation score, and authorized recordings/transcripts, and renders the definitive final decision: **Approve** or **Reject** Application.
    * All Recruiter CV, report, and recording review capabilities are consolidated inside **View Application Detail** (no separate top-level review use cases).
 9. **Terminal Job Posting Auto-Close & Unused Slot Coin Refund:**
-   * A Job Posting automatically reaches terminal closed state when **EVERY Application in scope has a terminal result** (`APPROVED` or `REJECTED`).
+   * Once intake is closed, a Job Posting automatically reaches terminal closed state when **EVERY Application in scope has a terminal result** (`APPROVED` or `REJECTED`), or immediately when it has no Applications.
    * Terminal rejections include applications rejected during Close Intake cleanup, interview deadline expiry, Recruiter CV rejection, and final Recruiter rejection.
-   * Upon terminal auto-close, the system executes **Refund unused JP Candidate Slot**, refunding all still-unused recruitment interview capacity to the Recruiter's personal coin wallet as internal coins.
+   * Upon terminal auto-close, the system executes **Refund unused JP Candidate Slot**, refunding all still-unused recruitment interview capacity (`interview_slot` minus consumed sessions) to the Recruiter's personal coin wallet as internal coins, exactly once per Posting.
    * This refund is an internal database ledger credit; it does **not** call PayOS or external payment gateways.
    * Terminal Job Posting close is strictly automated; there is **no manual End Recruitment command**.
 
@@ -280,7 +287,7 @@ flowchart TD
 
 1. **Avatar Inventory Capacity Check:**
    * A Candidate or Recruiter accesses the Personal 3D Avatar Studio from RoleCue.
-   * **Capacity Invariant:** Each Candidate and Recruiter starts with **3 storage slots**. These are not three free generations. Capacity purchases and generation fees are separate operations; the frontend reads actual capacity from the authoritative API because purchases can increase it.
+   * **Capacity Invariant:** Each Candidate and Recruiter starts with **3 storage slots**. These are not three free generations. Capacity purchases (1 coin per slot) and generation fees are separate operations; the frontend reads actual capacity from the authoritative API because purchases can increase it.
    * If the user's avatar inventory is at capacity, the user must either remove an existing avatar or purchase an additional avatar capacity slot using coins from their personal wallet before generating a new avatar.
 2. **Avaturn Embedded Experience:**
    * RoleCue embeds the free Avaturn iframe.
