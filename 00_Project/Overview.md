@@ -121,7 +121,7 @@ flowchart TD
 
 **Admin Interview Behavior Guidelines (ratified 2026-10-20):** `Configure Interview Behavior Guidelines` is mandatory registered Admin scope, requires Admin authorization, and influences the intended behavior of the AI interviewer while preserving completed historical results. UI, guideline fields, schema, persistence, versioning, and prompt composition remain TBD. This capability does not authorize unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime toggles, LLM provider configuration, or coin package pricing administration (Decision 16). Its absence from the active formal UC diagram is recorded in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the frozen 62 count and IDs remain unchanged.
 
-**Authentication deployment:** Better Auth 1.7.7 currently runs inside Next.js. KAN-238 authorizes a planned standalone Better Auth service under development, preserving one Better Auth session authority and Go-owned business authorization. The target is not yet shipped; see [[01_Domains/Auth/README|Auth Domain]] for the current/target comparison.
+**Authentication deployment:** Better Auth 1.7.7 runs in RoleCue's standalone authentication service, deployed independently of the Next.js frontend and the Go API. It remains the single Better Auth session authority, and Go keeps business authorization (Decision 17); see [[01_Domains/Auth/README|Auth Domain]].
 
 ---
 

@@ -217,7 +217,14 @@ The following entries distinguish ratified scope from unresolved implementation 
 7. **Approval, Funding & Intake Implementation Mapping:**
    * How to represent conceptual moderation approval, successful funding, and the Recruiter's explicit Open Intake action using the frozen Job Posting schema remains an implementation/design gap. Current direct approval-to-`open` behavior does not satisfy the ratified sequence.
    * The mapping must also preserve Decision 13a's evaluation editing boundary and Decision 13b's visibility restrictions. No persistence mechanism or new transition is ratified here; resolution requires evidence or product-owner approval.
-8. **Better Auth Standalone Service (KAN-238):**
-   * **Authorized on 2026-10-20; planned and under development:** Extract Better Auth from Next.js into an independently deployable authentication service. Current `main` still hosts Better Auth 1.7.7 inside Next.js; do not describe the target as shipped.
-   * Preserve one Better Auth-owned identity, credential, and session authority, the existing identity/database contract, cookie semantics and security boundaries, email verification, password recovery, OAuth behavior, and Go-owned business authorization (roles, ownership, account locks). Preserve public authentication API compatibility where possible.
-   * No secondary session model, JWT exchange, custom Go refresh tokens, new identity database, unnecessary authentication abstractions, or replacement framework is authorized. See [[01_Domains/Auth/README|Auth Domain]] for the current/target distinction; update actual technical architecture documentation after KAN-238 merges.
+
+---
+
+## 17. Standalone Better Auth Service (Single Session Authority)
+* **Decision:** Authorized on **2026-10-20** and shipped: Better Auth runs in RoleCue's own independently deployable authentication service, separate from the Next.js frontend and the Go API.
+* **Rationale:** Separating the authentication runtime from the web frontend gives it an independent deployment boundary without changing who owns identity, sessions, or business authorization.
+* **Rule:**
+  * Better Auth remains the **single session authority**: one Better Auth-owned identity, credential, and session model in the existing RoleCue database. "Single session" does not mean one session per user; a user may hold several concurrent sessions.
+  * The web origin routes `/api/auth/*` directly to the auth service. Go verifies each session against the auth service and independently enforces business authorization (roles, verified email, ownership, account locks).
+  * Cookie semantics and security boundaries, email verification, password recovery, OAuth, and two-factor behavior are preserved.
+  * No secondary session model, JWT exchange, custom Go refresh tokens, new identity database, or replacement framework is authorized. See [[01_Domains/Auth/README|Auth Domain]].

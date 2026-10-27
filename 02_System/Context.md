@@ -83,7 +83,7 @@ flowchart TD
    * Admin-authorized `Configure Interview Behavior Guidelines` is mandatory registered scope, ratified on 2026-10-20. Guidelines influence intended AI interviewer behavior without changing completed historical results. UI, fields, schema, persistence, versioning, and prompt composition remain TBD; this diagram does not assert implementation in `main`.
    * This does not include unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime feature toggles, LLM provider configuration management, or coin package pricing administration (Decision 16). The formal UC diagram/SRS discrepancy is tracked in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the 62 count and existing IDs are preserved.
 6. **Internal Authentication Deployment Boundary:**
-   * Better Auth 1.7.7 currently runs inside Next.js. KAN-238 plans an independently deployable Better Auth service within RoleCue; it is under development, not a shipped external-provider integration. One Better Auth-owned session model and the existing identity/database contract remain authoritative; Go verifies sessions and enforces RoleCue business authorization. See [[01_Domains/Auth/README|Auth Domain]] for current and planned views.
+   * Better Auth 1.7.7 runs in RoleCue's standalone, independently deployable authentication service; it is an internal component, not an external-provider integration. The web origin routes `/api/auth/*` to it directly. One Better Auth-owned session model and the existing identity/database contract remain authoritative; Go verifies sessions against the auth service and enforces RoleCue business authorization (Decision 17). See [[01_Domains/Auth/README|Auth Domain]].
 
 ---
 

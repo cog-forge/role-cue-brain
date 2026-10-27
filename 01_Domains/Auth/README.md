@@ -26,10 +26,11 @@ Provide secure, reliable identity verification and authorization for all users. 
 
 * **User (`users`):** The foundational identity record containing `id`, `name`, `email`, `email_verified`, `role` (`candidate`, `recruiter`, `admin`), `is_locked`, `lock_reason`, `lock_expires_at`, `two_factor_enabled`, `company_name`, `company_website`, and `onboarding_status`.
 * **Better Auth Accounts (`accounts`):** Stores provider credentials, OAuth tokens, and salted password hashes linked to `users.id`.
-* **Better Auth Single-Session Model (`sessions`):**
+* **Better Auth Single Session Authority (`sessions`):**
   * Manages active authenticated sessions via secure HTTP cookies (`.session_token`).
   * Stores `token`, `expires_at`, `ip_address`, `user_agent`, and `user_id`.
-  * **Canonical Architecture:** RoleCue uses a Better Auth single-session cookie architecture. There is **no legacy JWT access/refresh token pair** or custom Go refresh-token rotation layer.
+  * **Canonical Architecture:** "Single session" means **one session authority**: Better Auth sessions are the only session model in RoleCue. There is **no legacy JWT access/refresh token pair**, JWT exchange, or custom Go session/refresh-token layer. It does **not** mean one session per user: a user may hold several concurrent sessions (for example on different devices or browsers), each a separate `sessions` row.
+  * **Session Lifetime:** Sessions last 14 days and are renewed by activity (one-day update age); the session cookie cache is disabled, so every verification reads current session state.
   * **Authority Boundary:** Better Auth owns identity, credentials, and sessions. Go verifies the Better Auth session and independently enforces RoleCue business authorization, current roles, ownership, and account-lock rules; Go does not own a second session model.
 * **Verifications & 2FA (`verifications`, `two_factors`):**
   * `verifications`: Stores verification identifiers, values, and expiration for email verification.
@@ -42,22 +43,20 @@ Provide secure, reliable identity verification and authorization for all users. 
   * Normal accounts operate with `is_locked = false` and `email_verified = true`.
   * When `is_locked = true`, all protected actions and session authentications are immediately rejected.
 
-### 2.1. Current Hosting vs. Planned Standalone Service (KAN-238)
+### 2.1. Standalone Authentication Service
 
-**Current state (reviewed 2026-10-20):** Better Auth **1.7.7 runs inside Next.js**. The Browser authenticates with Better Auth cookies, and Go verifies those sessions through the Next.js-hosted Better Auth runtime. Source evidence at RoleCue commit `fd80b0eaa2771f1c2df1ae8b030e730c6382c328`: [pinned dependency](https://github.com/cog-forge/rolecue/blob/fd80b0eaa2771f1c2df1ae8b030e730c6382c328/frontend/package.json), [Next.js auth route](https://github.com/cog-forge/rolecue/blob/fd80b0eaa2771f1c2df1ae8b030e730c6382c328/frontend/src/app/api/auth/%5B...all%5D/route.ts), and [Go session verifier](https://github.com/cog-forge/rolecue/blob/fd80b0eaa2771f1c2df1ae8b030e730c6382c328/api/internal/features/auth/service/session_verifier.go).
+Better Auth **1.7.7** runs as RoleCue's own **standalone authentication service** (`auth/`, a Bun service), deployed independently of the Next.js frontend and the Go API. It is an internal RoleCue component, not an external identity provider, and it does not introduce a second session authority. Source evidence at RoleCue commit `972dd7075d1f8b5314a67b166e4d69a3075ef774`: [auth service](https://github.com/cog-forge/rolecue/tree/972dd7075d1f8b5314a67b166e4d69a3075ef774/auth), [Better Auth options](https://github.com/cog-forge/rolecue/blob/972dd7075d1f8b5314a67b166e4d69a3075ef774/auth/src/options.ts), and [Go session verifier](https://github.com/cog-forge/rolecue/blob/972dd7075d1f8b5314a67b166e4d69a3075ef774/api/internal/features/auth/service/session_verifier.go).
 
-**Planned target (authorized 2026-10-20, KAN-238 under development):** Extract Better Auth into an **independently deployable authentication service** within RoleCue. This is a planned deployment-boundary change, not a shipped service or a new authentication authority.
+| Contract | Implementation |
+| :--- | :--- |
+| Better Auth host | Standalone auth service; Next.js no longer serves `/api/auth/*` |
+| Browser authentication | The web origin routes `/api/auth/*` directly to the auth service; Better Auth sets the `rolecue` session cookies |
+| Go session verification | Go calls the auth service (`/api/auth/get-session`, cookie cache disabled) and relays renewed or cleared cookies to the browser |
+| Identity & session storage | Better Auth-owned identity/credential/session tables in the existing RoleCue PostgreSQL database; schema owned by the shared migrations; no Go-owned session store |
+| Business authorization | Go enforces roles, verified email, ownership, and account-lock rules against current `users` state |
+| Authentication behavior | Email verification, password recovery, OAuth (Google, GitHub, Facebook), TOTP two-factor with backup codes, and Admin lock/unlock through the Better Auth Admin plugin |
 
-| Contract | Current implementation | Planned KAN-238 target |
-| :--- | :--- | :--- |
-| Better Auth host | Inside Next.js | Standalone Better Auth service |
-| Browser authentication | Better Auth cookie authentication via Next.js-hosted auth | Better Auth cookie authentication via standalone service; preserve existing cookie semantics and security boundaries |
-| Go session verification | Calls Next.js-hosted Better Auth (`/api/auth/get-session`) | Calls Better Auth service for session verification |
-| Identity & session storage | Better Auth-owned identity/credential/session contract in RoleCue PostgreSQL | Same identity/database contract; no new identity database or Go-owned session store |
-| Business authorization | Go enforces roles, ownership, and account-lock rules | Remains Go-owned |
-| Authentication behavior & compatibility | Existing email verification, password recovery, OAuth, and public authentication APIs | Preserve those behaviors and public API compatibility where possible |
-
-The target retains **one Better Auth-owned session model**. JWT exchange, custom Go refresh tokens, a second session authority, unnecessary authentication abstractions, and a replacement framework are outside the authorized change. Deployment/routing and compatibility details remain subject to KAN-238 implementation review. Update actual technical architecture documentation once KAN-238 merges; the current-state flow below remains the implementation reference until then.
+There remains **one Better Auth-owned session model**. JWT exchange, custom Go refresh tokens, a second session authority, and a replacement framework are excluded. Missing, expired, or revoked sessions return `401`; a valid session rejected by current application policy (for example a locked account) returns `403`; an unavailable auth service or database returns `503` (fail closed).
 
 ---
 
@@ -78,21 +77,19 @@ The target retains **one Better Auth-owned session model**. JWT exchange, custom
 
 ## 4. Main Domain Flow
 
-### Current State — Better Auth Hosted in Next.js
-
-Better Auth and Next.js are separate logical participants below but share the current Next.js deployment; this does not depict a shipped standalone auth service.
+### Authentication Flow — Standalone Auth Service
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Browser / User
     participant Frontend as RoleCue Web (Next.js)
-    participant BetterAuth as Better Auth 1.7.7 (Hosted in Next.js)
+    participant BetterAuth as Better Auth 1.7.7 (Standalone Auth Service)
     participant GoAPI as RoleCue Go Backend
     participant DB as PostgreSQL (RoleCue)
     participant Mail as Email Provider
 
-    Note over Frontend,BetterAuth: Current implementation, Better Auth runs inside Next.js
+    Note over Frontend,BetterAuth: The web origin routes /api/auth/* to the auth service, not to Next.js
     Note over User,BetterAuth: 1. Registration Flow
     User->>Frontend: Register (Email, Password, Name, Role)
     Frontend->>BetterAuth: Submit Registration
@@ -121,16 +118,14 @@ sequenceDiagram
     end
 ```
 
-### Planned Target — KAN-238 (Under Development)
-
-This diagram represents the authorized target only; it does not replace current implementation diagrams or introduce another session authority.
+### Deployment Boundary
 
 ```mermaid
 flowchart TD
-    BROWSER["Browser"] --> FRONTEND["Next.js Frontend"]
-    BROWSER -->|"Existing Better Auth cookie semantics"| AUTH["Better Auth Service<br/>(Planned standalone deployment, KAN-238)"]
+    BROWSER["Browser"] -->|"Web pages"| FRONTEND["Next.js Frontend"]
+    BROWSER -->|"/api/auth/* with Better Auth session cookie"| AUTH["Better Auth Service<br/>(Standalone auth service)"]
     BROWSER -->|"Business requests with Better Auth session cookie"| GO["Go API<br/>(Roles, ownership, account-lock authorization)"]
-    GO -->|"Session verification"| AUTH
+    GO -->|"Session verification (get-session)"| AUTH
     AUTH --> DB[("PostgreSQL<br/>(Existing RoleCue identity/database contract)")]
     GO --> DB
 ```
@@ -143,12 +138,12 @@ flowchart TD
 2. **Session Verification via Go Middleware:**
    * Go API route handlers validate session authenticity against Better Auth and verify current `users` record state (`is_locked`, `email_verified`, `role`) on every authenticated request.
    * There are no stateless JWT claims or custom refresh-token exchange endpoints.
-   * KAN-238 changes Better Auth's deployment boundary, not its session authority or Go's independent business-authorization responsibility. Existing cookie security, identity/database contract, email verification, password recovery, and OAuth behavior must be preserved; public authentication APIs remain compatible where possible.
+   * The standalone auth service changed Better Auth's deployment boundary, not its session authority or Go's independent business-authorization responsibility. Cookie security, the identity/database contract, email verification, password recovery, and OAuth behavior are preserved.
 3. **Immediate Lock Enforcement:**
    * When an Administrator marks an account as locked (`is_locked = true`), Go API middleware immediately denies all subsequent requests, returning `403 Forbidden`.
    * **Lock/Unlock Email Notification:** Locking or unlocking an account produces a transactional email notification through the configured Email Provider.
    * **Delivery Decoupling:** Successful database status transitions must **never** depend on successful email delivery; email failures do not roll back the lock/unlock state transition.
-   * *(Implementation Note: Application code dispatch of lock/unlock emails is pending verification; Brain specifies the business requirement).*
+   * **Session Revocation:** Locking an account revokes all of its sessions; unlocking never revives them. A successful password reset also revokes all of the user's sessions.
 4. **Email Uniqueness:** Email addresses are normalized to lowercase and must be strictly unique across all accounts in `users`.
 5. **No Anonymous Privilege Escalation:** Guests have zero access to authenticated candidate, recruiter, or admin operations.
 6. **Role Isolation & Ownership Boundaries:** A Candidate cannot access Recruiter management endpoints; a Recruiter cannot access Candidate practice resources without an authorized Candidate account. Candidates and Recruiters hold personal coin wallets and avatar inventories; Administrators have neither. Recruitment recordings and transcripts are private to the owning Recruiter; Candidates cannot access recruitment transcripts during recruitment, and Administrators do not have access by inference.
@@ -169,6 +164,6 @@ flowchart TD
 
 ## 7. External Integrations
 
-* **Better Auth:** Authentication framework managing identity, credentials, accounts, password hashing, and cookie-based sessions. It is currently hosted by Next.js; KAN-238 plans a standalone internal RoleCue service, not an additional external identity provider or session model.
+* **Better Auth:** Authentication framework managing identity, credentials, accounts, password hashing, and cookie-based sessions. It runs in RoleCue's standalone internal auth service, not as an additional external identity provider or session model.
 * **Email Provider:** Dispatches account verification emails, password recovery links, and security/account notices.
 

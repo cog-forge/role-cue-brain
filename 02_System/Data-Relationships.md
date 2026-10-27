@@ -22,7 +22,7 @@ This document specifies the conceptual entity relationships, cardinalities, casc
 | Parent Entity | Child Entity | Cardinality | Nullable FK? | Cascade Policy | Business Rationale |
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | **`User` (`users`)** | `Account` (`accounts`) | `1 : 0..*` | No | `CASCADE` | Better Auth OAuth provider and hashed credential records per user. |
-| **`User` (`users`)** | `Session` (`sessions`) | `1 : 0..*` | No | `CASCADE` | Better Auth active single-session cookie records per user. |
+| **`User` (`users`)** | `Session` (`sessions`) | `1 : 0..*` | No | `CASCADE` | Better Auth active session cookie records; a user may hold several concurrent sessions under the single Better Auth session authority. |
 | **`User` (`users`)** | `Wallet` (`wallets`) | `1 : 0..1` | No | `CASCADE` | Personal coin wallet for Candidate or Recruiter (`UNIQUE(user_id)`); Admin has no wallet. |
 | **`Wallet` (`wallets`)** | `Transaction` (`transactions`) | `1 : 0..*` | No | `RESTRICT` | Unified financial ledger entries (`from` / `to`) must never be accidentally deleted. |
 | **`CoinPackage` (`coin_packages`)** | `Transaction` (`transactions`) | `1 : 0..*` | Yes | `RESTRICT` | Real-money checkout purchases for coin packages via PayOS (`payos_order_code`). |
