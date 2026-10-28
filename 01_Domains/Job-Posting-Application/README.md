@@ -34,12 +34,12 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * **Persisted Lifecycle Status (`job_postings.status`):**
     The frozen PostgreSQL enum `job_posting_status` contains only:
     * `pending`: Being prepared by the Recruiter, or submitted and awaiting Admin moderation. `job_postings.review_submitted` separates the two: only a submitted `pending` posting is in the Admin queue.
-    * `open`: The existing status for active intake. The product contract additionally requires moderation approval, successful funding, and the Recruiter's explicit Open Intake action (see *Known Implementation Gap* below).
+    * `open`: Set by Admin approval. With `interview_slot` unset the Posting is **approved but not yet open**; once funded (`interview_slot IS NOT NULL`) intake is open (see *Persistence Mapping* below).
     * `intake_closed`: Application intake closed (manually or automatically); remaining unscreened applications rejected; eligible candidates may interview.
     * `closed`: Terminal closed state reached when all applications are terminal `approved` or `rejected`; unused capacity refunded.
     * `rejected`: Moderated and rejected by Administrator.
-    * **Unresolved Mapping:** Moderation approval is a conceptual decision, not a persisted `approved` status; no independent `intake_status` column exists. How Approval → Funding → Open Intake maps to this schema remains unresolved. No additional state, column, transition, or storage mechanism is implied (see [[02_System/Domain-Model|Domain Model]] and Decisions 13/16 in [[03_Decisions/Product-Decisions|Product Decisions]]).
-    * **Known Implementation Gap (Interim Behavior):** The canonical sequence is unchanged. The current implementation is interim: Admin approval sets `open` directly, so Candidates may discover the Posting and apply before it is funded. CV approval and recruitment interview start still require funded capacity (they are refused while `interview_slot` is unset), and funding is accepted only while the Posting is `open`. This gap is tracked against the canonical flow, not a decision change.
+    * **Persistence Mapping (Settled 2026-10-29):** No `approved` status or independent `intake_status` column is added. Admin approval sets `status = 'open'`. A Posting with `status = 'open' AND interview_slot IS NULL` is approved but not yet open: not listed on the job board, public detail not reachable, applications refused (`INTAKE_NOT_OPEN`); the owning Recruiter and Admin still see it as approved, awaiting funding. Successful funding is the Recruiter's Open Intake action: setting `interview_slot` opens intake in the same step, with no separate Open Intake endpoint or button. Intake open = `status = 'open' AND interview_slot IS NOT NULL` (see [[02_System/Domain-Model|Domain Model]] and Decisions 13/16 in [[03_Decisions/Product-Decisions|Product Decisions]]).
+    * **Implementation alignment in progress (2026-10-29):** Code is being aligned so the job board and apply require funded capacity. Until that lands, the interim behavior still applies: Admin approval opens intake immediately, so Candidates may discover the Posting and apply before it is funded. CV approval and recruitment interview start already require funded capacity (they are refused while `interview_slot` is unset), and funding is accepted only while the Posting is `open`. This interim gap is being closed, not a decision change.
   * **Question Bank Preparation & Submit for Review:**
     * After confirming requirements (and an optional `refinement_note`), the Recruiter generates the core-question bank **once**; a second generation on an existing bank is refused, while a failed generation may be retried.
     * The Recruiter reviews and edits the bank (add, edit, delete) only while the Posting is `pending` or `rejected`. Questions can be added by hand only after the bank has been generated. Bank edits and Admin approval are serialized on the Posting, so an approval never opens a Posting with an empty bank.
@@ -49,14 +49,14 @@ Bridge the gap between technical interview preparation and career discovery. Rec
 * **Interview Slot (`job_postings.interview_slot`):**
   The frozen ERD field defining maximum recruitment interview capacity:
   * Specifies the maximum number of Candidates that may be approved to proceed into the recruitment interview stage.
-  * Funded by the Recruiter using wallet coins **after moderation approval and before opening intake**, at **1 coin per slot**. Coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must be atomic and idempotent; failures and duplicate requests cannot cause partial capacity or double charges. Funding never invokes PayOS.
+  * Funded by the Recruiter using wallet coins **after moderation approval**, at **1 coin per slot**; successful funding opens intake. Coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must be atomic and idempotent; failures and duplicate requests cannot cause partial capacity or double charges. Funding never invokes PayOS.
   * **Funded Exactly Once:** A Posting is funded exactly once; there are no top-ups. Repeating the funding with the same slot count returns the current capacity without a second charge; a different count is refused.
   * **Non-Headcount Invariant:** It does **NOT** mean total Applications/CVs submitted, company hiring headcount, or final hires. RoleCue does **NOT** persist or enforce company hiring headcount.
   * Passing CV screening does **not** consume a slot yet.
   * Starting the interview consumes one funded slot strictly on the Candidate's **first successful start**, when the Application's single recruitment session is created. Reconnecting to or resuming that active session does **not** consume another.
   * Unused interview capacity (`interview_slot` minus consumed sessions) is refunded as coins back into the Recruiter's personal wallet upon **terminal Job Posting auto-close** (`Refund unused JP Candidate Slot`), exactly once per Posting. An unfunded Posting has nothing to refund.
 * **Application Intake (Open vs. Close):**
-  * **Open intake:** Recruiter opens intake only after moderation approval and successful funding. Candidates can discover and submit only after all three gates hold; `status = 'open'` alone is insufficient evidence, because the interim implementation sets `open` at approval (known implementation gap). Candidates may submit an **UNLIMITED** number of Applications/CVs; submissions are **NOT limited by interview capacity**.
+  * **Open intake:** Recruiter opens intake by successfully funding `interview_slot` after moderation approval; there is no separate Open Intake step. Candidates can discover and submit only when `status = 'open' AND interview_slot IS NOT NULL`; `status = 'open'` alone means approved, not open (interim implementation still accepts applications before funding until alignment lands). Candidates may submit an **UNLIMITED** number of Applications/CVs; submissions are **NOT limited by interview capacity**.
   * **Close intake (`status = 'intake_closed'`):** Halts receiving new applications. Executed manually by the Recruiter (*Close Job Posting Intake*) or automatically by the System Handler (*Close Job Posting When Meet Configured Limitation* upon reaching `interview_slot` approved candidates).
   * **Close Intake Invariant:** Closing intake automatically **REJECTS** all remaining Applications that are still unscreened or not approved to proceed to interview. Candidates already approved for interview (`interview_eligible`) remain eligible and may complete their interviews. Close intake itself does **not** refund interview capacity and is **not** terminal Job Posting close. There is **NO Reopen Intake flow** and **NO manual End Recruitment command**.
   * **Close Intake Chaining & Repeat:** After closing intake, the terminal close rule is evaluated in the same operation. When no Application is still in progress (including a Posting that never received an Application), the Posting goes straight to terminal `closed`, and the unused-slot refund comes from that terminal-close step. Calling Close Intake again on an `intake_closed` or `closed` Posting succeeds without changing anything.
@@ -89,7 +89,7 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * Generates the question bank once, then views and edits core questions (`core_questions`) for own Job Postings while `pending` or `rejected`; explicitly submits (or resubmits) the Posting for review.
   * Reviews posting-level evaluation settings; may customize metric weights or use valid equal-split defaults.
   * Selects the company 3D interviewer model and Voice Profile before submitting for Admin approval.
-  * After moderation approval, funds interview capacity (`interview_slot`) using personal wallet coins, then explicitly opens Application Intake after successful funding.
+  * After moderation approval, funds interview capacity (`interview_slot`) using personal wallet coins; successful funding opens Application Intake in the same step.
   * Manually triggers Close Job Posting Intake when desired (halts new applications; rejects unscreened/unapproved applications).
   * Inspects incoming Applications and CVs immediately upon submission inside View Application Detail.
   * Performs CV screening approval (max `interview_slot` approvals).
@@ -113,7 +113,7 @@ Bridge the gap between technical interview preparation and career discovery. Rec
 
 ## 4. Main Domain Flow
 
-This is the ratified business sequence. Conceptual moderation approval and Open Intake are not database writes to invented statuses or fields; their persistence mapping is unresolved. The current implementation's interim behavior (approval sets `open` before funding) is a known implementation gap (Section 2).
+This is the ratified business sequence. Approval sets `open`; successful funding of `interview_slot` is the Open Intake action, with no invented statuses or fields (persistence mapping settled 2026-10-29, Section 2). Implementation alignment is in progress; until it lands, the interim implementation accepts applications before funding.
 
 ```mermaid
 sequenceDiagram
@@ -137,21 +137,21 @@ sequenceDiagram
     Recruiter->>System: Submit Job Posting for review (non-empty bank required)
     System->>DB: Mark submitted (review_submitted = true, enters Admin queue)
     Admin->>System: Approve Job Posting
-    System-->>Recruiter: Moderation approved (Conceptual, funding required before intake)
+    System->>DB: Set status = open (interview_slot unset, approved but not yet open)
+    System-->>Recruiter: Moderation approved, awaiting funding (off job board, applications refused)
 
-    Note over Recruiter,Pay: 2. Slot Funding & Intake Open
+    Note over Recruiter,Pay: 2. Slot Funding Opens Intake
     Recruiter->>Pay: Fund interview capacity using Coins from Wallet (interview_slot)
     Pay->>DB: Atomically debit wallet, record transactions entry & update job_postings.interview_slot (Idempotent)
     break Funding fails
         Pay-->>Recruiter: No partial debit or capacity, intake remains unavailable
     end
-    Pay-->>Recruiter: Funding committed (Duplicate requests do not charge or allocate twice)
-    Recruiter->>System: Open Application Intake after successful funding
-    System->>System: Require moderation approval, committed funding & Recruiter Open Intake action
-    Note over System,DB: Approval / funding / intake persistence mapping unresolved, interim code sets open at approval
+    Pay-->>Recruiter: Funding committed, intake now open (Duplicate requests do not charge or allocate twice)
+    Note over System,DB: Intake open means status open with interview_slot set, no separate Open Intake step
+    Note over System,DB: Alignment in progress, interim code still accepts applications before funding
 
     Note over Candidate,Recruiter: 3. Unlimited Application Intake & Immediate Visibility
-    Candidate->>System: Browse moderated, funded Postings with Recruiter-opened intake
+    Candidate->>System: Browse approved, funded Postings (intake open)
     Candidate->>System: Submit Application & upload CV (Unlimited submissions)
     System->>DB: Create Application with CV (Status: PENDING)
     System-->>Recruiter: Application & CV immediately visible in View Application Detail
@@ -236,7 +236,7 @@ sequenceDiagram
    * Posting-level evaluation weights are separate from the question bank; Recruiters may customize them or use the valid equal-split defaults defined in Decision 13a.
 4. **Approval and Interview Presentation Lock:**
    * A Recruiter must select the company 3D interviewer model and Voice Profile before submitting a Job Posting for Admin approval.
-   * Discovery and applications require moderation approval, successful wallet-coin funding, and the Recruiter's subsequent Open Intake action. The persistence mapping is unresolved; no `approved` Job Posting status or `intake_status` field exists in the schema. The current interim implementation sets `open` at approval (known implementation gap, Section 2); CV approval and interview start still require funded capacity.
+   * Discovery and applications require moderation approval and successful wallet-coin funding; funding is the Recruiter's Open Intake action. Mapping settled 2026-10-29 without schema change (no `approved` status or `intake_status` field): intake open = `status = 'open' AND interview_slot IS NOT NULL`; approved but unfunded Postings refuse applications (`INTAKE_NOT_OPEN`). Implementation alignment in progress (2026-10-29): until it lands, the interim implementation accepts applications before funding (Section 2); CV approval and interview start already require funded capacity.
    * A Job Posting interview always uses its locked company 3D model and Voice Profile. The Candidate cannot override them.
 5. **Immediate Application & CV Visibility:**
    * The Application and uploaded CV/resume exist and are immediately visible to the owning Recruiter upon submission.

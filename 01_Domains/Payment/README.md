@@ -50,9 +50,9 @@ Provide a transparent, reliable coin-based monetization infrastructure. Candidat
 * **Fixed Prices (Decision 15, settled 2026-10-27):**
   Interview slot **1 coin** per slot; avatar storage slot **1 coin** per slot; practice session **5 coins**. These are fixed system constants for now. There is no separate avatar generation fee (Decision 7, settled 2026-10-27); coin package prices remain unresolved.
 * **Interview Capacity Funding (`interview_slot`):**
-  After Admin moderation approval, Recruiter uses personal wallet coins to fund `interview_slot` capacity, then explicitly opens Application Intake after successful funding. Coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently. Failed operations leave no partial debit/capacity; retries or duplicates cannot double-charge or allocate capacity twice. PayOS is not involved. `interview_slot` limits CV-approved Candidates eligible for interview, not CV submissions; CV approval does not consume a prepaid slot.
+  After Admin moderation approval, Recruiter uses personal wallet coins to fund `interview_slot` capacity; successful funding is the Recruiter's Open Intake action and opens Application Intake in the same step. Coin debit, unified `transactions` ledger entry, and `job_postings.interview_slot` update must commit atomically and idempotently. Failed operations leave no partial debit/capacity; retries or duplicates cannot double-charge or allocate capacity twice. PayOS is not involved. `interview_slot` limits CV-approved Candidates eligible for interview, not CV submissions; CV approval does not consume a prepaid slot.
   * **Funded Exactly Once:** A Posting is funded exactly once at 1 coin per slot; there are no top-ups. Repeating the funding with the same count charges nothing; a different count is refused.
-  * **Known Implementation Gap:** The schema has no `approved` Job Posting status or independent `intake_status` column, and the Approval → Funding → Open Intake persistence mapping remains unresolved. The current interim implementation sets `open` at Admin approval and accepts funding only while `open`, so Candidates may apply before funding; CV approval and recruitment interview start still require funded capacity. The canonical sequence is unchanged (see [[02_System/Domain-Model|Domain Model]] and Decisions 13/16).
+  * **Persistence Mapping (Settled 2026-10-29):** No schema change: no `approved` Job Posting status or independent `intake_status` column. Admin approval sets `open`, and funding is accepted only while `open`; an `open` Posting with `interview_slot` unset is approved but not yet open (applications refused with `INTAKE_NOT_OPEN`), and setting `interview_slot` opens intake. Implementation alignment in progress (2026-10-29): until it lands, the interim implementation lets Candidates apply before funding; CV approval and recruitment interview start already require funded capacity. The canonical sequence is unchanged (see [[02_System/Domain-Model|Domain Model]] and Decisions 13/16).
 * **Avatar Operations Funding:**
   Every Candidate and Recruiter starts with **3 personal avatar storage slots** (Decision 7, ratified 2026-10-20); Admin has no inventory. The frontend reads actual capacity from the authoritative API. Creating an avatar is free while a storage slot is available; there is **no** separate generation fee (Decision 7, settled 2026-10-27). Coins fund one avatar operation:
   1. *Capacity Purchase:* Buys additional avatar storage slots (1–10 per purchase, `POST /inventory/purchase`) at **1 coin** per slot, debited atomically through the shared ledger. When inventory is full, creation is refused (`INVENTORY_FULL`) until the user deletes an avatar or buys a slot; purchased slots are permanent capacity.
@@ -103,15 +103,15 @@ sequenceDiagram
         Pay-->>User: Interview Authorized
     end
     opt Recruiter Funds Interview Slots
-        Note over User,Pay: After moderation approval, Open Intake requires successful funding
+        Note over User,Pay: After moderation approval, successful funding opens intake
         User->>Pay: Fund interview_slot for Job Posting
         Pay->>DB: Atomically debit wallet, record transactions entry & update job_postings.interview_slot (Idempotent)
         alt Funding committed
-            Pay-->>User: Capacity Funded, Recruiter may now request Open Intake
+            Pay-->>User: Capacity Funded, intake now open
         else Funding failed
             Pay-->>User: No partial debit or capacity, intake remains unavailable
         end
-        Note over Pay,DB: Duplicate funding requests do not charge or allocate twice, intake persistence mapping unresolved
+        Note over Pay,DB: Duplicate funding requests do not charge or allocate twice, no separate Open Intake step
     end
     opt Avatar Storage Slot Purchase (Inventory Full)
         Note over Pay,DB: Avatar creation itself is free while a slot is available, no generation fee
@@ -147,7 +147,7 @@ sequenceDiagram
 4. **Practice Interview Start Charging Boundary:**
    A practice interview costs **5 coins**, debited from the Candidate's coin wallet **at session start**, not when it concludes. If a session experiences a network disconnect or is paused, reconnecting to or resuming the same session incurs **no second charge**. Starting again while an unfinished practice session exists for the same Role Profile returns that session free, and a retried start with the same idempotency key returns the session it created.
 5. **Recruitment Interview Slot Consumption:**
-   Funding occurs after moderation approval and before Recruiter opens intake, exactly once per Posting at 1 coin per slot (no top-ups); wallet debit, unified ledger entry, and capacity update are atomic and idempotent. `interview_slot` limits CV-approved interview-eligible Candidates, not CV submissions; CV approval grants eligibility without consuming a slot. A recruitment interview consumes one prepaid interview slot funded by the Recruiter strictly upon the Candidate's **first successful start**, when the Application's single recruitment session is created. The Candidate is **never charged**. Reconnecting to or resuming that active recruitment session does not consume an additional slot.
+   Funding occurs after moderation approval and is itself the Recruiter's Open Intake action, exactly once per Posting at 1 coin per slot (no top-ups); wallet debit, unified ledger entry, and capacity update are atomic and idempotent. `interview_slot` limits CV-approved interview-eligible Candidates, not CV submissions; CV approval grants eligibility without consuming a slot. A recruitment interview consumes one prepaid interview slot funded by the Recruiter strictly upon the Candidate's **first successful start**, when the Application's single recruitment session is created. The Candidate is **never charged**. Reconnecting to or resuming that active recruitment session does not consume an additional slot.
 6. **No Avatar Generation Fee:**
    There is **no** separate avatar generation fee (Settled 2026-10-27, Decision 7). Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot.
 7. **Avatar Inventory Capacity Purchase:**
