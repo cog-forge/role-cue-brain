@@ -113,6 +113,8 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * Must support multiple voice styles (cataloged and managed as Admin-governed Voice Profiles).
 * **Fault Handling:**
   If the TTS stream fails, the session can display the question as text while attempting audio reconnection, avoiding an abrupt session abort.
+* **Selected Provider (2026-10-29): Azure AI Speech.** The team chose Azure because it offers both neural voices and viseme data. The API holds the key and region (`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`); the free tier allows 500K characters per month. The same provider backs the Admin voice sync (KAN-201).
+  * **Viseme Delivery (open, 2026-10-30):** The first adapter (KAN-57) calls the real-time REST endpoint, which returns audio only, so it ships without visemes and lip-sync falls back to audio amplitude (KAN-59). Azure documents viseme IDs, audio offsets and 55-value blend-shape frames (`FacialExpression`, 60 FPS) only through the Speech SDK's `VisemeReceived` event. The Go SDK (Linux, cgo with the native library) exposes that event, and the JavaScript SDK does so in the browser with a short-lived token. Batch synthesis returns word boundaries only and runs asynchronously, so it does not fit live turns. Which path to adopt is still undecided.
 
 ### 3.4. Avaturn Embedded Avatar Experience
 * **Purpose:**

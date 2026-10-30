@@ -42,7 +42,8 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
 * **Free Creation While a Slot Is Available:**
   Opening the avatar creator, Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot. The only avatar charge is buying storage slots.
 * **Voice Profile (`voices`):**
-  A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider parameters. Curated and managed exclusively by Administrators. Only an active Voice Profile can be selected for a practice session.
+  A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider identity (`provider`, `provider_voice_id`, `locale`, `gender`). Curated and managed exclusively by Administrators. Only an active Voice Profile can be selected for a practice session.
+  * **Provider Sync (KAN-201, 2026-10-30):** The Admin "Sync from provider" action upserts voices by `(provider, provider_voice_id)`. Voices the provider no longer offers become `is_active = false` and are never deleted, so historical sessions and postings keep their reference. A provider failure or invalid response leaves the catalog unchanged. Because the interview speaks English only, the sync keeps English locales (`en-*`) by default (`TTS_SYNC_LOCALES`).
 * **3D Environment Presets:**
   Curated virtual 3D room backgrounds rendered behind the virtual interviewer. Built-in platform presets.
 * **2D Waveform Fallback Mode:**
@@ -141,5 +142,5 @@ flowchart TD
 
 ## 7. External Integrations
 
-* **TTS Provider:** Synthesizes spoken voice audio and produces phoneme/viseme timing metadata for facial blend-shape animation.
+* **TTS Provider:** Synthesizes spoken voice audio and produces phoneme/viseme timing metadata for facial blend-shape animation. **Azure AI Speech** is the selected provider (2026-10-29); see [[02_System/Integrations|Integrations]] §3.3 for the current viseme delivery status.
 * **Avaturn:** Provides the embedded free iframe experience for capture, validation, preview, customization, and final GLB generation. RoleCue receives the final GLB and performs GLB-to-VRM conversion and VRM persistence.
