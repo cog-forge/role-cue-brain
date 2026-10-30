@@ -43,7 +43,7 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
   Opening the avatar creator, Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot. The only avatar charge is buying storage slots.
 * **Voice Profile (`voices`):**
   A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider identity (`provider`, `provider_voice_id`, `locale`, `gender`). Curated and managed exclusively by Administrators. Only an active Voice Profile can be selected for a practice session.
-  * **Provider Sync (KAN-201, 2026-10-30):** The Admin "Sync from provider" action upserts voices by `(provider, provider_voice_id)`. Voices the provider no longer offers become `is_active = false` and are never deleted, so historical sessions and postings keep their reference. A provider failure or invalid response leaves the catalog unchanged. Because the interview speaks English only, the sync keeps English locales (`en-*`) by default (`TTS_SYNC_LOCALES`).
+  * **Provider Sync (KAN-201, 2026-10-30):** The Admin "Sync from provider" action upserts voices by `(provider, provider_voice_id)`. Voices the provider no longer offers become `is_active = false` and are never deleted, so historical sessions and postings keep their reference. A provider failure or invalid response leaves the catalog unchanged. Because the interview speaks English only and 3D blend shapes are documented for en-US, the sync keeps standard neural `en-US` voices and excludes HD voices (`TTS_SYNC_LOCALES`, decided 2026-10-30).
 * **3D Environment Presets:**
   Curated virtual 3D room backgrounds rendered behind the virtual interviewer. Built-in platform presets.
 * **2D Waveform Fallback Mode:**
@@ -142,5 +142,6 @@ flowchart TD
 
 ## 7. External Integrations
 
+* **Interviewer Performance (decided 2026-10-30):** The server decides what the interviewer says and how it is performed. Each turn carries the audio, a viseme and blend-shape timeline, word timings, and bounded emotion and gesture cues (KAN-248, KAN-250). The browser performs the turn with layered animation on the VRM, in this order: idle base pose, gestures (VRMA or retargeted motions, KAN-251), procedural blink, gaze and listening behavior, facial emotion, and the mouth. The mouth layer wins while speaking, using VRM `overrideMouth`. The mouth falls back in this order: Azure blend shapes, then viseme IDs, then in-browser vowel analysis, then amplitude.
 * **TTS Provider:** Synthesizes spoken voice audio and produces phoneme/viseme timing metadata for facial blend-shape animation. **Azure AI Speech** is the selected provider (2026-10-29); see [[02_System/Integrations|Integrations]] §3.3 for the current viseme delivery status.
 * **Avaturn:** Provides the embedded free iframe experience for capture, validation, preview, customization, and final GLB generation. RoleCue receives the final GLB and performs GLB-to-VRM conversion and VRM persistence.
