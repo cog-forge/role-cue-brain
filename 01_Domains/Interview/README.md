@@ -102,6 +102,7 @@ stateDiagram-v2
 ```
 
 ### Turn Orchestration Loop:
+The live runtime (KAN-52) implements this loop over a WebSocket; the authoritative message contract is `docs/interview-ws-protocol.md` in the code repository. The server drives the states, the socket never charges or creates a session, each answer is one recording of at most 3 minutes (or a typed fallback), and speech-to-text sits behind a `Transcriber` boundary implemented by KAN-55.
 1. **Core Question Sampling:** At session start, the runtime samples a random set of $x$ core questions from the Blueprint's question bank.
 2. **Question Delivery:** TTS synthesizes the interviewer's speech with synchronized facial blend-shape visemes.
 3. **Candidate Answer:** The Candidate answers by voice. Voice Activity Detection (VAD) monitors speech boundaries and audio streams to STT.
