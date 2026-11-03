@@ -234,7 +234,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * Real-time conversational spoken interaction with 3D avatar (STT / TTS with blend-shape lip-sync visemes)
   * Adaptive questioning loop: Random selection of $x$ core questions from bank with bounded follow-ups
   * Pause, resume, or end interview session
-  * Capture audio/video recordings and transcripts for recruitment interviews (owning Recruiter access only)
+  * Capture audio/video recordings and transcripts for recruitment interviews (owning Recruiter access only). The camera is required and a recording disclosure is always shown. The Candidate sees only their own recording status, with no replay or export (Decision 18).
   * Terminate abandoned interview session (System Handler)
 
 ### 2.5. Post-Interview Evaluation & History

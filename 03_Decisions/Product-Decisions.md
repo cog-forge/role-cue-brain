@@ -172,6 +172,12 @@ This document records the ratified, long-lived product decisions that govern the
   * The simulation samples a random set of $x$ core questions from the bank and conducts adaptive dialogue with bounded follow-ups.
   * **Jev/TypeSafe Status:** Jev was discussed orally and is **tentative and NOT selected**. Do not add a mandatory Jev decision-provider integration or assert that a specific vendor owns follow-up decisions.
   * The runtime question loop architecture must remain vendor-agnostic and decoupled from premature single-model or external decision engine selections.
+  * **Loop Policy (Settled 2026-11-03, KAN-56, PR #92):**
+    * $x$ is `interview.question_limit` (default **8**, maximum 20), drawn as a random sample of the bank once at session start and frozen in `interview_questions`. A bank smaller than $x$ yields the whole bank; this is the implemented behavior pending product confirmation.
+    * Follow-ups per core question are bounded by `INTERVIEW_FOLLOW_UP_LIMIT` (default **1**, allowed 0–3). `0` turns follow-ups off, and the interview then runs exactly as before.
+    * Each follow-up decision is bounded by `INTERVIEW_FOLLOW_UP_TIMEOUT` (default **5 s**, allowed 1–15 s). A timeout, a provider error or an invalid model output skips the follow-up and moves to the next core question.
+    * The decision seam is `FollowUpDecider`. The default adapter is one LLM call with a strict, validated JSON output and an injection-resistant prompt that treats the Candidate's answer as untrusted data. Jev remains unselected and could become another adapter.
+    * If the connection drops during a follow-up, an unanswered follow-up is neither stored nor replayed; on reconnect the interviewer asks the next core question.
 
 ---
 
@@ -209,17 +215,18 @@ The following entries distinguish ratified scope from unresolved implementation 
    * Exception/refund policies for technical interview disruptions.
    * Maximum permitted interview attempts per application.
 3. **Question Bank Sampling & Runtime Policy:**
-   * Exact core-question sample size $x$ per interview session.
-   * Core-question selection/coverage algorithms and difficulty balancing.
-   * Specific bounds and numerical limits on follow-up questions per core question.
-   * Dedicated follow-up decision mechanism, vendor selection, and fallback behaviors.
+   * Core-question coverage algorithms and difficulty balancing beyond the random sample.
+   * Whether a bank smaller than $x$ is acceptable (today the whole bank is used).
+   * A dedicated external follow-up decision vendor (Jev remains unselected).
+   * *(Settled 2026-11-03 and no longer open: $x$ = `interview.question_limit` 8, follow-up limit 1 (0–3), decision timeout 5 s, skip-on-failure fallback and the `FollowUpDecider` seam; Decision 14.)*
    * *(Settled: Recruiters edit the question bank only while the Posting is `pending` or `rejected`; it is locked during active recruitment; Decision 13.)*
 4. **Evaluation Dimensions & Formulas:**
    * Detailed definitions and criteria for each metric; the current Metrics Catalog baseline is recorded in Decision 13a.
    * Scoring formulas, passing/failing thresholds, evaluation AI policy, and validation rules or constraints not settled in Decision 13a.
 5. **Recruitment Recording Retention & Post-Recruitment Policies:**
-   * Audio/video recording retention periods and automated lifecycle purge schedules.
-   * Physical cloud storage architecture and candidate recording consent workflows.
+   * *(Settled 2026-11-03 and no longer open: a recruitment recording is kept for **90 days after the Application's final decision** and then deleted, on the normal storage provider (`storage.Store`) like every other file. The deletion job is not built yet; it waits for the System Handler job runner (KAN-174).)*
+   * Consent workflow: today the Candidate sees a mandatory disclosure in preflight and in the room's waiting screen, without a consent checkbox. Whether a required checkbox is needed is open.
+   * Admin access to recordings.
    * Post-recruitment transcript access policies (whether transcripts remain permanently restricted or unlock upon recruitment termination).
    * Session recovery timeout window (older conflicting reports cite 10 minutes vs. 15 minutes; unresolved).
 6. **Admin Interview Behavior Guidelines & Remaining Administrative Exclusions:**
@@ -241,3 +248,25 @@ The following entries distinguish ratified scope from unresolved implementation 
   * The web origin routes `/api/auth/*` directly to the auth service. Go verifies each session against the auth service and independently enforces business authorization (roles, verified email, ownership, account locks).
   * Cookie semantics and security boundaries, email verification, password recovery, OAuth, and two-factor behavior are preserved.
   * No secondary session model, JWT exchange, custom Go refresh tokens, new identity database, or replacement framework is authorized. See [[01_Domains/Auth/README|Auth Domain]].
+
+---
+
+## 18. Recruitment Interviews Are Recorded; Practice Is Not (Settled 2026-11-03, KAN-87, PR #91)
+* **Decision:** A recruitment interview is recorded as one continuous camera and microphone recording for the owning Recruiter. A practice interview never records and never asks for the camera to record.
+* **Rationale:** The recording is evidence for the Recruiter's final decision. A required recording must never silently disappear or be faked.
+* **Rule:**
+  * **Camera required:** the Candidate cannot start a recruitment interview until camera permission is granted and the recording is running. Preflight and the room show clear readiness and recovery copy.
+  * **Upload failure does not cancel the interview:** the browser retries automatically up to 3 times, and the Candidate can retry from the room or the completion screen. Giving up or leaving marks the recording `failed`, so the Recruiter sees "recording failed". The system never silently drops to "no recording" and never fakes `ready`.
+  * **Disclosure, not eKYC:** the copy says what is recorded, who can see it (only the Recruiter of this Job Posting), why (interview evidence), and that it is deleted 90 days after the hiring decision. It never mentions identity verification, cheating detection or AI video analysis.
+  * The Candidate can see their own recording status (`GET /interviews/:id/recording`, recruitment only, status only) but cannot replay or export the recording.
+  * Retention: Decision 16 item 5.
+
+---
+
+## 19. Bilingual UI, English Interview (Implemented 2026-11-02, KAN-220)
+* **Decision:** The web UI ships in English (default) and Vietnamese, chosen by a flag switcher and remembered in the `NEXT_LOCALE` cookie. The interview conversation is always English.
+* **Rule:**
+  * Translated: all screen chrome for Guest, Candidate, Recruiter and Admin, including the interview room's status, controls, progress and errors.
+  * Never translated: what the interviewer says and its captions, follow-ups, STT transcripts, question banks, JD and CV content, AI evaluation feedback, and backend error text. The UI maps error codes to its own messages instead.
+  * No locale is sent to interview, AI or other backend calls. CI guards catalog parity, unused keys and new hard-coded strings.
+  * The epic's original wording kept the whole room in English. The implemented room chrome is translated, and this still needs the product owner's confirmation.

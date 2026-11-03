@@ -90,6 +90,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * **Question-Bank Generation:** Autonomously builds the internal core-question bank (`core_questions`, conceptual Blueprint) from confirmed requirements and refinement notes.
   * **Adaptive Questioning Dialogue:** Analyzes candidate answers against the interview context to evaluate turns and generate bounded follow-up questions.
   * **Multi-Dimensional Evaluation:** Evaluates full session transcripts against the session snapshot's evaluation configuration across technical competencies.
+* **Follow-Up Decision Seam (KAN-56, 2026-11-03):** follow-up decisions go through `FollowUpDecider`. The default adapter is one LLM call with a strict JSON schema that is validated, in English, with an injection-resistant prompt that treats the answer as untrusted data. Logs carry only the outcome, a classified failure reason and the duration, never the answer or the prompt. Measured at 1.0–4.4 s per decision; the Gemini free tier often returns 503/504, and the turn then simply skips the follow-up.
 * **Unresolved Decision Provider / Jev Status:**
   * Deciding whether to ask a follow-up and generating follow-up question wording are distinct responsibilities.
   * **Jev/TypeSafe is tentative, NOT selected.** No specific external vendor or standalone decision service has been ratified. The integration layer does not mandate a dedicated decision-provider SDK or lock follow-up decisions to a single vendor.
@@ -97,13 +98,27 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * Admin-authorized guidelines influence the intended behavior of the AI interviewer. This mandatory capability does not imply unrestricted raw LLM system-prompt editing, provider configuration management, global evaluation rubric/weight editing, runtime toggles, or pricing administration. UI, fields, schema, persistence, versioning, and prompt composition remain TBD, including the integration mechanism; implementation in `main` is not asserted. Completed historical results remain unchanged (Decision 16; [[01_Domains/Administration/README|Administration Domain]]).
 * **Fault Handling:**
   * If extraction fails or outputs an invalid schema, the system retries with adjusted parameters; surfaces an extraction failure if unresolvable.
-  * If follow-up determination times out during a live turn, the system proceeds to the next core question from the bank to maintain conversational fluency.
+  * Implemented (KAN-56): if a follow-up decision times out (`INTERVIEW_FOLLOW_UP_TIMEOUT`, default 5 s), fails or returns invalid output during a live turn, the system proceeds to the next core question to maintain conversational fluency.
 
 ### 3.2. Speech-to-Text (STT) Provider
 * **Purpose:**
-  Transcribes incoming candidate audio stream chunks into clean text transcripts during live interview simulations.
+  Transcribes each complete recorded answer (one recording per turn, up to 3 minutes) into a clean text transcript during live interview simulations. Partial or streaming transcripts are not implemented.
+* **Providers (2026-11-03):**
+  * `main` ships only the deterministic development fake (`INTERVIEW_STT_PROVIDER=fake`, the default). Local Whisper is KAN-55 (Khang).
+  * **Azure AI Speech fast transcription** is an additional provider on the `dev/azure-stt` branch, used for full end-to-end voice runs and not merged into `main`.
+    * API version 2024-11-15, `en-US`, accepts the browser's WebM/Opus directly: no ffmpeg and no Speech SDK.
+    * It reuses the TTS key and region. It is synchronous with a 30 s timeout (`INTERVIEW_STT_TIMEOUT`) and no automatic retry; silence returns "no speech" and the Candidate answers again.
+    * Logs never contain audio, transcript, key or provider response bodies.
+    * Verified with a 3-question voice Practice run: the transcript in the room, in the DB and in the report matched, and the evaluation completed.
 * **Fault Handling:**
   In the event of partial packet loss or STT dropouts, the system prompts the candidate or allows speech retry to maintain conversational continuity.
+
+### 3.2a. Recruitment Recording Storage (KAN-87, 2026-11-03)
+* The Candidate's browser calls `POST /interviews/:id/recording` with content type and size to get a presigned PUT (valid 15 minutes, `video/webm`, `audio/webm` or `video/mp4`, at most 500 MB).
+* It uploads the file straight to the storage provider, then calls `POST /interviews/:id/recording/complete`, which verifies the object and sets `ready`.
+* `GET /interviews/:id/recording` returns only the Candidate's own recruitment `record_status`. The owning Recruiter reads a short-lived signed URL from the Application evidence endpoint.
+* The bucket's CORS must allow PUT from the app origin.
+* Recordings use the normal `storage.Store`. Deletion 90 days after the final decision waits for the KAN-174 job runner (Decision 18).
 
 ### 3.3. Text-to-Speech (TTS) Provider
 * **Purpose:**
@@ -116,7 +131,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 * **Selected Provider (2026-10-29): Azure AI Speech.** The team chose Azure because it offers both neural voices and viseme data. The API holds the key and region (`AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`); the free tier allows 500K characters per month. The same provider backs the Admin voice sync (KAN-201).
   * **Viseme Delivery (decided 2026-10-30, revised the same day):** The real-time REST endpoint returns audio only. Azure documents viseme IDs, audio offsets and 55-value blend-shape frames (`FacialExpression`, 60 FPS) only through the Speech SDK's `VisemeReceived` event. The API uses the official **Go Speech SDK** in-process (KAN-248). It needs cgo and a native Linux library, so the SDK adapter builds only with the `azure_sdk` tag; the production image and Linux developers use it. Windows developers run the API in Docker Compose (KAN-252). The default build stays cgo-free with the REST adapter (audio only), and lip-sync then falls back to audio analysis in the browser. Two alternatives were rejected: a separate speech sidecar service, which the team judged unnecessary once development runs in Docker, and browser-side SDK use with short-lived tokens, which would expose synthesis to clients.
   * **Speech SDK Implementation (merged 2026-11-02, KAN-248):** Go module `github.com/Microsoft/cognitive-services-speech-sdk-go` (capital M) v1.53.0 with the matching native Linux package (`SpeechSDK-Linux-1.53.0.tar.gz`, sha256 `9f88b77c003c7dabe08623e7c4b41ce3f3bad109c79bcfea62f5d4a32861bc6f`). The runtime needs only `libssl3` and CA certificates, plus the whole `lib/x64` directory on the loader path; without the core library a tagged binary does not start. If the SDK cannot initialize, the API uses REST; once running, a single call that cannot reach Azure through the SDK is retried through REST for that line only. Blend-shape weights arrive in Azure's ARKit order (`jawOpen` is index 17); VRM avatars lack Azure's three roll channels (`headRoll`, `leftEyeRoll`, `rightEyeRoll`), which are ignored. The production image does not build the SDK yet (KAN-252).
-  * **Voice Scope and Audio:** Interview voices are standard neural **en-US** voices only, because the interview uses a single language and accent. Two kinds are excluded: HD (Dragon) voices, which do not support visemes and are not offered in `koreacentral`, and Multilingual voices, which have no documented viseme support. Azure lists blend shapes for about 47 locales, so en-US is a product choice rather than a viseme limit. Interviewer audio is `audio-48khz-192kbitrate-mono-mp3` (about 24 KB per second of speech). Per-voice viseme and blend-shape output is verified with the Speech SDK in KAN-248. Speaking styles (`express-as`) are deferred. Development stays on the free F0 tier (20 requests per minute), which is sufficient for single-user use and the defense.
+  * **Voice Scope and Audio:** Interview voices are standard neural **en-US** voices only, because the interview uses a single language and accent. Two kinds are excluded: HD (Dragon) voices, which do not support visemes and are not offered in `koreacentral`, and Multilingual voices, which have no documented viseme support. Azure lists blend shapes for about 47 locales, so en-US is a product choice rather than a viseme limit. Interviewer audio is `audio-48khz-192kbitrate-mono-mp3` (about 24 KB per second of speech). Per-voice viseme and blend-shape output is verified with the Speech SDK in KAN-248. Speaking styles (`express-as`) are deferred. Development was assumed to run on the free F0 tier (20 requests per minute). The shared resource also served fast transcription successfully on 2026-11-03, so the actual SKU, subscription and credit (the user reports credit until 08/2027) should be confirmed in the Azure Portal before recording them here.
 
 ### 3.4. Avaturn Embedded Avatar Experience
 * **Purpose:**

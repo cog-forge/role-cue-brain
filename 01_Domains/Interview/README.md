@@ -50,15 +50,24 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
   * A recording moves through `record_status` (`none`, `uploading`, `processing`, `ready`, `failed`) and is served to the owning Recruiter only when `ready`. The transcript is available to the owning Recruiter once the recruitment interview is completed.
   * Candidates view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment.
   * Practice interviews do not record video; they use microphone/STT for spoken dialogue.
+  * **Recording Rules (Settled 2026-11-03, KAN-87; Decision 18):**
+    * The camera is required to start a recruitment interview.
+    * The recording is one continuous camera and microphone take (VP8/Opus, about 4 MB per minute; Safari uses MP4). It is buffered in the browser across a reload and joined into one file, so until the upload completes it exists only in the browser that recorded it.
+    * The Candidate sees upload states (recording, uploading, retrying, ready, failed) and their own `record_status`, but never a replay.
+    * Upload failures retry and finally end `failed`; the interview is never cancelled for it.
+    * The recording is kept 90 days after the Application's final decision, then deleted (job pending KAN-174).
 * **Persistent Session Question Mapping (`interview_questions`):**
   The questions assigned to an interview are explicitly persisted in `interview_questions`, linking each session turn position (`(interview_id, position)`) to its source `core_question_id REFERENCES core_questions(id)`. This relational link guarantees that historical sessions remain permanently traceable and reproducible without requiring an unnormalized `blueprint_snapshot` column.
 * **Conversational Turns (`conversation_turns`):**
   Sequentially indexed dialogue units capturing interviewer question text, candidate answer transcript, and per-turn feedback (`(interview_id, position, question, answer, feedback)`).
+  * `position` is the conversation order. `kind` is `core` or `follow_up`. `question_number` is the core question a turn belongs to; it is derived from turn order and not stored, assuming a follow-up always directly follows its core question.
+  * A follow-up turn is stored only once it has an answer. Progress is counted in core questions ("Question N of x · Follow-up").
 * **Adaptive Question Loop:**
   During simulation, the runtime samples a random set of $x$ core questions from the bank and may ask bounded follow-ups based on the candidate's answers and interview context.
   * Deciding whether to follow up and generating follow-up question wording are distinct responsibilities.
-  * Exact sampling size $x$, selection/coverage policy, follow-up limits, and termination mechanisms remain open product decisions.
-  * No specific external decision vendor (such as Jev/TypeSafe) has been selected; Jev is tentative and not approved.
+  * **Implemented (KAN-56, 2026-11-03; Decision 14):** $x$ = `interview.question_limit` (8); at most `INTERVIEW_FOLLOW_UP_LIMIT` (default 1) follow-ups per core question. Each decision has a 5 s timeout, and any failure moves to the next core question. While transitioning, the engine runs the follow-up decision before the next turn; it adds about 1–4 s.
+  * Coverage policy and handling of a bank smaller than $x$ remain open product decisions.
+  * No specific external decision vendor (such as Jev/TypeSafe) has been selected; Jev is tentative and not approved. Decisions go through the `FollowUpDecider` seam.
 
 ---
 
@@ -91,7 +100,7 @@ stateDiagram-v2
     READY --> CORE_QUESTION_SELECTION: Session starts / Random x core questions selected
     CORE_QUESTION_SELECTION --> INTERVIEWER_SPEAKING: Deliver question (Core or Bounded Follow-up)
     INTERVIEWER_SPEAKING --> LISTENING: TTS audio & viseme articulation finish / Mic active
-    LISTENING --> PROCESSING_ANSWER: VAD detects speech end / STT streams transcript
+    LISTENING --> PROCESSING_ANSWER: VAD detects speech end / whole answer sent to STT
 
     state QuestionLoopDecision <<choice>>
     PROCESSING_ANSWER --> QuestionLoopDecision: Evaluate Answer + Context
@@ -102,7 +111,7 @@ stateDiagram-v2
 ```
 
 ### Turn Orchestration Loop:
-The live runtime (KAN-52) implements this loop over a WebSocket; the authoritative message contract is `docs/interview-ws-protocol.md` in the code repository. The server drives the states, the socket never charges or creates a session, each answer is one recording of at most 3 minutes (or a typed fallback), and speech-to-text sits behind a `Transcriber` boundary implemented by KAN-55.
+The live runtime (KAN-52) implements this loop over a WebSocket; the authoritative message contract is `docs/interview-ws-protocol.md` in the code repository. The server drives the states, the socket never charges or creates a session, each answer is one recording of at most 3 minutes (or a typed fallback), and speech-to-text sits behind a `Transcriber` boundary that transcribes one complete answer per turn, with no partial or streaming transcript. `main` ships only the development fake; an Azure Speech provider exists on the `dev/azure-stt` branch for end-to-end runs; local Whisper is KAN-55 (Khang).
 1. **Core Question Sampling:** At session start, the runtime samples a random set of $x$ core questions from the Blueprint's question bank.
 2. **Question Delivery:** TTS synthesizes the interviewer's speech with synchronized facial blend-shape visemes.
 3. **Candidate Answer:** The Candidate answers by voice. Voice Activity Detection (VAD) monitors speech boundaries and audio streams to STT.
@@ -129,11 +138,11 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
    * The session strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
    * A recruitment session has no Role Profile; it belongs to exactly one Job Posting through its Application, and its owner is `applications.candidate_id`.
 6. **Recruitment Recording & Visibility Boundary:**
-   Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. A recording is served only once its `record_status` is `ready`. Candidates can view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. Practice interviews do not record video.
+   Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. A recording is served only once its `record_status` is `ready`. The camera is required, upload failures end `failed` rather than cancelling the interview, and recordings are deleted 90 days after the final decision (Decision 18). Candidates can view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. Practice interviews do not record video.
 7. **Session Question Mapping Preservation:**
    Every session persists its assigned questions in `interview_questions`, linking each turn position to its `core_question_id`. Historical sessions remain permanently reproducible and auditable even if the JD question bank is modified later.
 8. **Question Selection & Bounded Follow-Up Policy:**
-   Simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups. The exact sample size $x$, selection/coverage policy, follow-up limits, and termination details remain unconfirmed product decisions. No specific decision vendor (such as Jev/TypeSafe) is selected; Jev is tentative and unapproved.
+   Simulation selects a random sample of $x$ = 8 core questions (`interview.question_limit`), frozen at start, and asks at most `INTERVIEW_FOLLOW_UP_LIMIT` (default 1) follow-ups per core question. Each decision is bounded by a 5 s timeout and skips to the next core question on failure (Decision 14). Coverage policy and small-bank handling remain open. No specific decision vendor (such as Jev/TypeSafe) is selected; Jev is tentative and unapproved.
 9. **Graceful 2D Degradation:**
    If a client device lacks WebGL acceleration, the system provides seamless fallback to an animated 2D audio waveform display without interrupting voice dialogue.
 10. **Abandoned Session Cleanup:**
