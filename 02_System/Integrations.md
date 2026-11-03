@@ -100,6 +100,17 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * If extraction fails or outputs an invalid schema, the system retries with adjusted parameters; surfaces an extraction failure if unresolvable.
   * Implemented (KAN-56): if a follow-up decision times out (`INTERVIEW_FOLLOW_UP_TIMEOUT`, default 5 s), fails or returns invalid output during a live turn, the system proceeds to the next core question to maintain conversational fluency.
 
+* **Per-Task Routing (KAN-273, merged 2026-11-03; Decision 21):**
+  * Each AI task can use its own provider with an ordered fallback: JD extraction, question bank, live follow-up, evaluation (`AI_<TASK>_PROVIDER/_MODEL/_TIMEOUT/_MAX_RETRIES/_FALLBACK`).
+  * Routing is **opt-in**: unset tasks keep the single `LLM_*` Gemini model.
+  * The recipe used for end-to-end runs:
+    * Groq `openai/gpt-oss-120b` for extraction, bank and evaluation;
+    * Groq `openai/gpt-oss-20b` for the 5 s follow-up;
+    * Gemini as the fallback.
+  * Groq uses the OpenAI-compatible API in JSON mode. A 429 falls through immediately to the next entry, and the existing validators decide acceptance.
+  * The bank is generated in batches of at most 10 to fit the Groq Free limits (30 requests/min, 8K tokens/min, 200K tokens/day per model).
+  * Bedrock and Jev (KAN-274, TypeSafe) are deferred. Details: `api/docs/ai-routing.md` in the code repository.
+
 ### 3.2. Speech-to-Text (STT) Provider
 * **Purpose:**
   Transcribes each complete recorded answer (one recording per turn, up to 3 minutes) into a clean text transcript during live interview simulations. Partial or streaming transcripts are not implemented.
@@ -118,7 +129,9 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 * It uploads the file straight to the storage provider, then calls `POST /interviews/:id/recording/complete`, which verifies the object and sets `ready`.
 * `GET /interviews/:id/recording` returns only the Candidate's own recruitment `record_status`. The owning Recruiter reads a short-lived signed URL from the Application evidence endpoint.
 * The bucket's CORS must allow PUT from the app origin.
-* Recordings use the normal `storage.Store`. Deletion 90 days after the final decision waits for the KAN-174 job runner (Decision 18).
+* Recordings use the normal `storage.Store`. Since KAN-272 (2026-11-03), System Handler jobs:
+  * mark a completed recruitment recording `failed` when it is still `none` after 5 minutes or `uploading` past the 15-minute grant;
+  * purge it 90 days after the Application's final decision (decision time = `applications.updated_at` once terminal), setting `record_status = deleted` (Decision 18).
 
 ### 3.3. Text-to-Speech (TTS) Provider
 * **Purpose:**

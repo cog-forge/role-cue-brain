@@ -135,7 +135,7 @@ classDiagram
   * **Target JD for Practice Management:** Upload or paste target job descriptions (text or PDF) for personal practice.
   * **AI-Extracted JD Review & Confirmation:** Inspect and modify structured technical competencies extracted by AI; enter natural-language refinement notes (e.g., *"Exclude C# from the interview"*); confirm requirements before Blueprint generation.
   * **Interview Configuration:** For a Target JD interview, choose an available system 3D interviewer or eligible personal 3D model from avatar inventory, an available Voice Profile, 3D environment, difficulty, and duration. For a Job Posting interview, the Job Posting's company-defined 3D interviewer model and Voice Profile apply and cannot be overridden.
-  * **Interview Session Lifecycle & Coin Charging:** Create, test audio and interview readiness, join, pause, and resume interview sessions. Practice interviews are debited 5 coins from the Candidate's personal wallet upon session start; reconnect/resume of the same session incurs no second charge, and starting again while an unfinished practice session exists for the same Role Profile returns that session free.
+  * **Interview Session Lifecycle & Coin Charging:** Create, test audio and interview readiness, join, reconnect to, and leave interview sessions. There is no pause: Leave ends and submits the session (Decision 20). Practice interviews are debited 5 coins from the Candidate's personal wallet upon session start; reconnect/resume of the same session incurs no second charge, and starting again while an unfinished practice session exists for the same Role Profile returns that session free.
   * **Spoken Interaction with 3D AI Interviewer:** Conduct real-time voice conversation with speech-synchronized 3D interviewer animation. Receives a random selection of core questions from the bank with bounded follow-ups.
   * **Practice History & Diagnostic Results:** Review practice performance reports, scores across core technical competencies, radar charts, turn critiques, actionable recommendations, and export results.
   * **Personal 3D Avatar Inventory:** Start with **3 personal avatar storage slots**; read actual capacity from the authoritative API. Access the embedded Avaturn generator (RoleCue stores the final VRM asset); creating an avatar is free while a slot is available, with no separate generation fee. When full (`INVENTORY_FULL`), delete models or purchase additional capacity with wallet coins (1 coin per slot).
@@ -184,7 +184,7 @@ classDiagram
 #### 1.6. System Handler (Internal Automated Handler)
 * **Definition:** An internal automated system handler executing scheduled background operations and lifecycle enforcement.
 * **Canonical Capabilities:**
-  * **Terminate Candidate's Abandoned Session:** Detects and terminates abandoned or orphaned interview sessions after extended inactivity.
+  * **Terminate Candidate's Abandoned Session:** Detects and terminates abandoned interview sessions after 15 minutes of inactivity, evaluating what was answered. Also runs the recruitment recording upkeep jobs (Decisions 18 and 20).
   * **Close Job Posting When Meet Configured Limitation:** Automatically triggers Close Intake when the configured interview capacity (`interview_slot` approved candidates) is reached. Halts new applications, automatically rejects remaining unscreened/not-approved applications, and preserves interview eligibility for already-approved candidates without issuing refunds yet.
   * **Interview Deadline Expiry Enforcement:** If an approved Candidate does not complete the recruitment interview by `interview_deadline` (calculated as `approval_time + 24 hours`; merely starting the interview before the deadline is insufficient), automatically transitions the Application to terminal `REJECTED`.
   * **Terminal Job Posting Close & Refund (Refund unused JP Candidate Slot):** Once intake is closed and EVERY Application in scope reaches a terminal result (`APPROVED` or `REJECTED`), or there are no Applications, automatically transitions the Job Posting to terminal closed state and refunds all still-unused recruitment interview capacity (`interview_slot` minus consumed sessions) to the owning Recruiter's personal wallet as internal coins, exactly once per Posting.
@@ -233,9 +233,9 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * Coin charging boundary: Practice interview debited 5 coins from Candidate wallet upon session start; reconnect/resume is free, and an unfinished practice session for the same Role Profile is returned instead of charging again. Recruitment interview consumes prepaid Recruiter interview slot; no charge to Candidate
   * Real-time conversational spoken interaction with 3D avatar (STT / TTS with blend-shape lip-sync visemes)
   * Adaptive questioning loop: Random selection of $x$ core questions from bank with bounded follow-ups
-  * Pause, resume, or end interview session
+  * Leave (end and submit) an interview session, or reconnect to the same session after a disconnect. There is no pause (Decision 20).
   * Capture audio/video recordings and transcripts for recruitment interviews (owning Recruiter access only). The camera is required and a recording disclosure is always shown. The Candidate sees only their own recording status, with no replay or export (Decision 18).
-  * Terminate abandoned interview session (System Handler)
+  * Terminate abandoned interview session (System Handler, after 15 minutes without a delivered question or a stored answer; Decision 20)
 
 ### 2.5. Post-Interview Evaluation & History
 * **Actors:** Candidate, Recruiter

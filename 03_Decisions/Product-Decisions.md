@@ -217,7 +217,8 @@ The following entries distinguish ratified scope from unresolved implementation 
 3. **Question Bank Sampling & Runtime Policy:**
    * Core-question coverage algorithms and difficulty balancing beyond the random sample.
    * Whether a bank smaller than $x$ is acceptable (today the whole bank is used).
-   * A dedicated external follow-up decision vendor (Jev remains unselected).
+   * A dedicated external follow-up decision vendor (Jev remains unselected; backlog KAN-274).
+   * Question difficulty (easy / medium / hard) and duration-based question counts: moved back to the backlog on 2026-11-03 (KAN-216) for the team to revisit.
    * *(Settled 2026-11-03 and no longer open: $x$ = `interview.question_limit` 8, follow-up limit 1 (0–3), decision timeout 5 s, skip-on-failure fallback and the `FollowUpDecider` seam; Decision 14.)*
    * *(Settled: Recruiters edit the question bank only while the Posting is `pending` or `rejected`; it is locked during active recruitment; Decision 13.)*
 4. **Evaluation Dimensions & Formulas:**
@@ -228,7 +229,7 @@ The following entries distinguish ratified scope from unresolved implementation 
    * Consent workflow: today the Candidate sees a mandatory disclosure in preflight and in the room's waiting screen, without a consent checkbox. Whether a required checkbox is needed is open.
    * Admin access to recordings.
    * Post-recruitment transcript access policies (whether transcripts remain permanently restricted or unlock upon recruitment termination).
-   * Session recovery timeout window (older conflicting reports cite 10 minutes vs. 15 minutes; unresolved).
+   * *(Settled 2026-11-03 and no longer open: a session with no delivered question or stored answer for 15 minutes is abandoned; Decision 20.)*
 6. **Admin Interview Behavior Guidelines & Remaining Administrative Exclusions:**
    * **Ratified on 2026-10-20:** Admin **CAN Configure Interview Behavior Guidelines**. This registered Capstone capability is mandatory functional scope. It requires Admin authorization and influences the intended behavior of the AI interviewer; completed historical interview results must remain unchanged.
    * This requirement does not establish that the capability is implemented in application `main`. Exact configuration UI, schema, persistence mechanism, guideline fields, versioning behavior, and prompt composition algorithm remain **TBD**, pending specification and review.
@@ -270,3 +271,43 @@ The following entries distinguish ratified scope from unresolved implementation 
   * Never translated: what the interviewer says and its captions, follow-ups, STT transcripts, question banks, JD and CV content, AI evaluation feedback, and backend error text. The UI maps error codes to its own messages instead.
   * No locale is sent to interview, AI or other backend calls. CI guards catalog parity, unused keys and new hard-coded strings.
   * The epic's original wording kept the whole room in English. The implemented room chrome is translated, and this still needs the product owner's confirmation.
+
+---
+
+## 20. Leave Ends the Interview; No Pause (Settled 2026-11-03, KAN-215/174/180/272, PR #95)
+* **Decision:** There is no pause. The room's Leave confirms, then ends and submits the session. A session idle for 15 minutes is ended by the System Handler.
+* **Rationale:** A pause adds states, recruitment deadline edge cases and abuse paths for little value in a practice or screening interview.
+* **Rule:**
+  * One idempotent end path serves a normal completion, a Leave (`POST /interviews/{id}/complete`) and an abandonment. It sets `completed_at` and `end_reason` (`completed` / `left` / `abandoned`) once. Evaluation runs on what was answered; unanswered core questions stay unanswered.
+  * Practice: no refund and no second charge. Recruitment: the Application moves on as after a normal completion, and the slot was consumed at start.
+  * An accidental disconnect is not a leave; reconnecting resumes the same session.
+  * Abandoned means no delivered question and no stored answer for 15 minutes, derived from existing timestamps.
+  * Recording upkeep jobs: see Decision 18. All jobs run in-process with a PostgreSQL advisory lock per job.
+
+---
+
+## 21. AI Task Routing (Implemented 2026-11-03, KAN-273, PR #93)
+* **Decision:** Each AI task can be routed to its own provider with an ordered fallback, to take load off the single Gemini key.
+* **Rule:**
+  * Opt-in per task through configuration; unset tasks keep the existing Gemini behavior.
+  * Product-owner target: Groq GPT-OSS-120B for extraction, bank and evaluation; GPT-OSS-20B for the live follow-up; Gemini as fallback; Groq vision (`qwen/qwen3.8-27b`) for scanned JDs later.
+  * Bedrock (verification and fallback) and Jev (evaluation and follow-up decision, KAN-274) are future adapters behind the same seams, not dependencies.
+  * Provider responses must pass the existing validators; prompts, answers and keys are never logged.
+
+---
+
+## 22. Interviewer Performance: Cues and Motion (Implemented 2026-11-03, KAN-250/251, PR #96)
+* **Decision:** The server decides how each line is performed with a bounded vocabulary; the client plays it back with a small motion set.
+* **Rule:**
+  * Emotions `neutral`, `friendly`, `curious`, `encouraging`, `thinking`; gestures `nod`, `explain_hand`, `lean_in`, `greet`, `listen`. Nothing else is ever sent.
+  * Core questions use rules (no model call). Follow-ups use up to 4 cues proposed by the existing follow-up decider, validated, else `curious` + `lean_in`. Cues are anchored to words and frozen with the turn, so a reconnect replays them.
+  * The motion set is Mixamo-sourced, converted to VRMA. Its use is accepted for this non-commercial capstone, with sources recorded in `frontend/public/motions/CREDITS.md`. Lip-sync owns the mouth; the interviewer also reacts while the Candidate speaks.
+
+---
+
+## 23. Photographic 3D Interview Rooms (Implemented 2026-11-03, KAN-275, PR #94)
+* **Decision:** The room shows realistic scenes (café, office, meeting room) instead of flat images.
+* **Rule:**
+  * Each scene is a Poly Haven CC0 photographic HDRI on a grounded skybox with image-based lighting, plus one 3D table in front of the upper-body interviewer.
+  * Scenes are lazy-loaded and size-budgeted. A failure or weak WebGL falls back to the scene's still image.
+  * Full-GLB rooms (for example Sketchfab) were not used because their download API needs a token; the meeting room reads as a backdrop rather than a full conference room.

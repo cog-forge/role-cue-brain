@@ -73,9 +73,9 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
 
 ## 3. Actors Involved
 
-* **Candidate:** Configures Target JD interview parameters, completes Test Audio and Interview Readiness, joins, pauses, resumes, and concludes practice and recruitment interviews. For a Job Posting interview, uses the locked company presentation configured by the Recruiter.
+* **Candidate:** Configures Target JD interview parameters, completes Test Audio and Interview Readiness, joins, reconnects to, leaves (ends early) and concludes practice and recruitment interviews. For a Job Posting interview, uses the locked company presentation configured by the Recruiter.
 * **Recruiter:** Views and edits core questions in the question bank for own Job Postings while they are `pending` or `rejected`; may customize posting-level evaluation weights or use valid equal-split defaults (Decision 13a); funds interview slots; reviews applicant results, transcripts, and audio/video recordings.
-* **System Handler (Internal Handler):** Detects and terminates abandoned or orphaned interview sessions after extended inactivity.
+* **System Handler (Internal Handler):** In-process job runner (KAN-174; one PostgreSQL advisory lock per job, configurable `JOBS_*`). It ends sessions abandoned for 15 minutes, marks stale recruitment recordings `failed` and purges recordings 90 days after the final decision (Decisions 18 and 20).
 * **Administrator:** Searches and filters interview sessions, views operational session metadata and diagnostics, and Configures Interview Behavior Guidelines (mandatory registered scope, ratified 2026-10-20). Guidelines influence intended AI interviewer behavior, require Admin authorization, and preserve completed historical results. Guideline implementation details remain TBD; unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime toggles, provider configuration management, and pricing administration remain excluded (Decision 16).
 
 ---
@@ -131,7 +131,7 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
 4. **Start Charging Boundary vs. Resume:**
    * A practice interview is debited in coins (5 coins) from the Candidate's personal wallet **upon session start**, not when it finishes. Starting again while an unfinished practice session exists for the same Role Profile returns that session without charging; a retried start with the same idempotency key returns the session it created.
    * A recruitment interview consumes one prepaid interview slot funded by the Recruiter strictly upon the Candidate's **first successful start**, when the Application's single recruitment session is created. The Candidate is **never** charged.
-   * If a session disconnects or is paused, reconnecting to or resuming the same active session incurs **no second charge** and consumes no additional slot.
+   * If a session disconnects, reconnecting to the same active session incurs **no second charge** and consumes no additional slot. There is no pause, and leaving early never refunds (Decision 20).
 5. **Recruitment Interview Eligibility & 24-Hour Deadline:**
    * To launch a recruitment interview, a Candidate must have submitted an application with a CV, and the Recruiter must have approved the CV via View Application Detail. Approval grants interview eligibility, but does not consume a slot yet.
    * A Candidate must complete the recruitment interview before `interview_deadline = approval_time + 24 hours` (calculated upon CV approval; `approval_time` is conceptual and only `interview_deadline` is persisted). Merely starting before the deadline is insufficient; after the deadline, answers and completion are refused, and failing to complete the interview before the deadline automatically transitions the Application to terminal `REJECTED`.
@@ -144,9 +144,13 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
 8. **Question Selection & Bounded Follow-Up Policy:**
    Simulation selects a random sample of $x$ = 8 core questions (`interview.question_limit`), frozen at start, and asks at most `INTERVIEW_FOLLOW_UP_LIMIT` (default 1) follow-ups per core question. Each decision is bounded by a 5 s timeout and skips to the next core question on failure (Decision 14). Coverage policy and small-bank handling remain open. No specific decision vendor (such as Jev/TypeSafe) is selected; Jev is tentative and unapproved.
 9. **Graceful 2D Degradation:**
-   If a client device lacks WebGL acceleration, the system provides seamless fallback to an animated 2D audio waveform display without interrupting voice dialogue.
+   If a client device lacks WebGL acceleration, the system provides seamless fallback to an animated 2D audio waveform display without interrupting voice dialogue (KAN-217). If a 3D room fails or times out, the room falls back to its photographic still (Decision 23).
 10. **Abandoned Session Cleanup:**
-    If a session is disconnected and remains abandoned, the **System Handler** automatically marks the session terminated and releases system resources.
+    If no question is delivered and no answer is stored for **15 minutes** (`JOBS_ABANDONED_SESSIONS_TIMEOUT`), the **System Handler** ends the session through the same idempotent end path as a normal completion or a Leave. It sets `end_reason = abandoned` and evaluates what was answered; a session with no answers ends with a failed evaluation. Activity is derived from existing timestamps (`started_at`, `asked_at`, `answered_at`); no heartbeat column exists (Decision 20).
+11. **Leave Ends the Interview (no pause):**
+    Leave asks for confirmation, then submits immediately (`POST /interviews/{id}/complete`). The session is evaluated as usual; unanswered core questions stay unanswered, and the report says how it ended (`end_reason` = `completed`, `left` or `abandoned`). A recruitment Application moves on exactly as after a normal completion. An accidental disconnect is not a leave (Decision 20).
+12. **Interviewer Performance:**
+    Every interviewer line carries bounded cues: emotions `neutral`, `friendly`, `curious`, `encouraging`, `thinking` and gestures `nod`, `explain_hand`, `lean_in`, `greet`, `listen`. They are rule-based for core questions and proposed by the follow-up decider for follow-ups, with no extra model call. The client plays them with a Mixamo-sourced VRMA motion set alongside lip-sync, and reacts while the Candidate speaks (Decision 22).
 
 ---
 

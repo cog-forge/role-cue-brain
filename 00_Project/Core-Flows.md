@@ -78,7 +78,7 @@ flowchart TD
 #### 6. Readiness Verification & Start Charging
 * The Candidate completes **Test Audio and Interview Readiness** (microphone and audio check).
 * **Start Charging Boundary:** When the Candidate initiates the practice session, the practice interview fee (**5 coins**) is debited from their **personal coin wallet**.
-* If a session experiences a network disconnect or is paused, reconnecting or resuming the same session incurs **no second charge**.
+* If a session experiences a network disconnect, reconnecting to the same session incurs **no second charge**. There is no pause; Leave ends and submits the session, which is evaluated on what was answered (Decision 20).
 * Starting again while an unfinished practice session exists for the same Role Profile returns that session instead of charging again; a retried start with the same idempotency key returns the session it created.
 
 #### 7. Live Virtual Interview Simulation
