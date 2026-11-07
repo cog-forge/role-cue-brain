@@ -42,11 +42,16 @@ Empower platform administrators with centralized governance tools to enforce acc
 * **Capabilities Excluded from Frozen Scope:**
   * *Unrestricted Raw LLM System-Prompt Editing:* A general-purpose raw-prompt editor is not authorized by the ratified Interview Behavior Guidelines capability.
   * *LLM Provider Configuration Management:* Provider configuration controls are not included by the guideline decision.
-  * *Global Evaluation Criteria Calibration:* Admin editing of global evaluation rubrics, criteria, and weights is excluded from current scope.
+  * *Evaluation Limits:* System rubric-template curation is newly ratified by Decision 24; unrestricted editing of posting weights, private recruiter rubrics and historical candidate scores remains excluded.
   * *Interview Feature Configuration / Runtime Toggles:* System-wide configuration of interview features and runtime toggles is excluded from current scope.
   * *Coin Package Pricing Administration:* Administrative editing of coin package pricing tiers is excluded from current scope.
 
 ---
+
+### System Scoring Rubric Catalog — new agreed scope
+
+Decision 24 explicitly adds Admin curation of structured system rubrics/criteria and metric mappings, subject to reference/immutability rules. Recruiters manage their own private rubrics. This narrowly supersedes the old exclusion on system rubric templates; Admin still cannot edit posting weights, private recruiter templates or historical AI scores by inference. UI implementation is pending; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+
 
 ## 3. Actors Involved
 
@@ -67,6 +72,7 @@ flowchart TD
     CONSOLE --> SESS["Session Operational Oversight<br/>(Search/Filter Sessions, Inspect Metadata)"]
     CONSOLE --> GUIDE["Configure Interview Behavior Guidelines<br/>(Admin authorization required, implementation TBD)"]
     GUIDE -.->|"Influences intended behavior"| INTERVIEW["AI Interviewer<br/>(Guideline integration details TBD)"]
+    CONSOLE --> RUBRIC["System Scoring Rubric Catalog<br/>(Decision 24, implementation pending)"]
     CONSOLE --> VOICE["Voice Profile Management<br/>(View Profiles, Fetch from TTS Provider, Delete)"]
     CONSOLE --> FIN["Financial Audit<br/>(Inspect Transactions, Generate Revenue Report)"]
 ```
@@ -88,13 +94,13 @@ flowchart TD
 3. **Candidate Session Privacy:**
    Administrative session oversight is focused on operational diagnostics and session status. Unrestricted administrative browsing of candidate practice content is bounded by privacy invariants.
 4. **Historical Evaluation Integrity:**
-   Configuring Interview Behavior Guidelines must **never** retroactively alter or recalculate completed interview results or historical Performance Reports. This requirement does not authorize global evaluation editing or settle guideline versioning/application timing.
+   Configuring Interview Behavior Guidelines must **never** retroactively alter or recalculate completed interview results or historical Performance Reports. Guidelines do not authorize historical score editing or settle guideline versioning/application timing; structured system rubric curation is separately ratified by Decision 24.
 5. **Two-Party Auditability:**
    All administrative actions (locking accounts, approving/rejecting job postings, modifying voice profiles) are recorded in an immutable audit log.
 6. **Job Posting Publication Gate:**
    Recruiter Job Postings remain unavailable to Candidates until Admin moderation approval and successful Recruiter wallet-coin funding (the Recruiter's Open Intake action) are both satisfied, subject also to Decision 13b's account-lock visibility restrictions. Admin approval sets `open` but does not by itself open intake, and it must not require custom evaluation weights because Decision 13a's equal-split fallback is valid. Admin acts only on submitted Postings. Admin rejection prevents public availability; Admin does not configure the company's 3D interviewer model or Voice Profile. No `approved` Job Posting state or independent `intake_status` column is added: per the mapping settled 2026-10-29, `status = 'open' AND interview_slot IS NULL` is approved but not yet open (off the job board, applications refused with `INTAKE_NOT_OPEN`), and intake is open once `interview_slot` is set. Implementation alignment in progress (2026-10-29): until it lands, the interim implementation lets Candidates apply before funding, while CV approval and interview start already need funded capacity (Decisions 13/16; [[02_System/Domain-Model|Domain Model]]).
 7. **Guideline Authorization & Implementation Boundary:**
-   Only Admin may Configure Interview Behavior Guidelines. This does not grant raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime feature toggles, provider configuration, or pricing administration. Implementation details remain TBD until specified and reviewed. The registered capability is missing from the active Version 2 Use Case diagram; the formal 62-counted-UC model and IDs remain unchanged pending documentation-team reconciliation ([[00_Project/Actors-and-Capabilities|Actors and Capabilities]]).
+   Only Admin may Configure Interview Behavior Guidelines. This does not grant raw LLM system-prompt editing, administrative overrides of posting weights or historical evaluation results, runtime feature toggles, provider configuration, or pricing administration. Implementation details remain TBD until specified and reviewed. The registered capability is missing from the active Version 2 Use Case diagram; the formal 62-counted-UC model and IDs remain unchanged pending documentation-team reconciliation ([[00_Project/Actors-and-Capabilities|Actors and Capabilities]]).
 
 ---
 

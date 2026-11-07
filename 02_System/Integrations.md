@@ -82,6 +82,10 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 
 ---
 
+> [!note] Planned evaluation payload — Decision 24
+> Rubric-aware evaluation sends a core question, its own answers/follow-ups, structured criteria/scoring guides and question-specific expected_answer to the grading provider. AI proposes criterion points/evidence; Go validates and calculates metrics/overall. Preserve task routing, per-core isolation, budgets, redaction and candidate privacy. Rubric text is untrusted data, not a raw-prompt administration channel. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+
+
 ## 3. Provider Specifications
 
 ### 3.1. Large Language Model (LLM) Provider
@@ -95,7 +99,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * Deciding whether to ask a follow-up and generating follow-up question wording are distinct responsibilities.
   * **Jev/TypeSafe is tentative, NOT selected.** No specific external vendor or standalone decision service has been ratified. The integration layer does not mandate a dedicated decision-provider SDK or lock follow-up decisions to a single vendor.
 * **Admin Interview Behavior Guidelines (Ratified 2026-10-20):**
-  * Admin-authorized guidelines influence the intended behavior of the AI interviewer. This mandatory capability does not imply unrestricted raw LLM system-prompt editing, provider configuration management, global evaluation rubric/weight editing, runtime toggles, or pricing administration. UI, fields, schema, persistence, versioning, and prompt composition remain TBD, including the integration mechanism; implementation in `main` is not asserted. Completed historical results remain unchanged (Decision 16; [[01_Domains/Administration/README|Administration Domain]]).
+  * Admin-authorized guidelines influence the intended behavior of the AI interviewer. This mandatory capability does not imply unrestricted raw LLM system-prompt editing, provider configuration management, administrative overrides of posting weights or historical evaluation results, runtime toggles, or pricing administration. UI, fields, schema, persistence, versioning, and prompt composition remain TBD, including the integration mechanism; implementation in `main` is not asserted. Completed historical results remain unchanged (Decision 16; [[01_Domains/Administration/README|Administration Domain]]).
 * **Fault Handling:**
   * If extraction fails or outputs an invalid schema, the system retries with adjusted parameters; surfaces an extraction failure if unresolvable.
   * Implemented (KAN-56): if a follow-up decision times out (`INTERVIEW_FOLLOW_UP_TIMEOUT`, default 5 s), fails or returns invalid output during a live turn, the system proceeds to the next core question to maintain conversational fluency.

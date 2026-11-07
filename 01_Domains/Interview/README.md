@@ -34,7 +34,7 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
   A conceptual and product term for the persistent **core-question bank** generated after human confirmation of extracted skills, requirements, and seniority context:
   * Persistent storage utilizes `core_questions`; there is **no separate Blueprint table** in the database.
   * Exactly **one current question bank** exists per JD (absent until generated).
-  * Contains ONLY the persistent pool/list of core questions. Does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
+  * Contains ONLY the persistent pool/list of core questions. Rubrics and posting weights remain separate entities; the 2026-11-07 target adds a rubric reference and private expected_answer to each core question (Decision 24).
   * **Role Access Invariant:** Strictly **hidden from Candidates** (Candidates never view, edit, or confirm question banks). Recruiters **can** view and edit core questions within the question bank generated for their own Job Postings while the Posting is `pending` or `rejected` (locked from `open` onward).
   * *Separation:* Evaluation weights and scoring settings are configured separately and are not embedded into the question bank.
 * **Interview Session (`interviews`):**
@@ -48,7 +48,7 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
   Recruitment interviews capture audio/video recordings (`record_path`) and conversational transcripts.
   * Retained exclusively for review by the Recruiter owning the Job Posting inside View Application Detail.
   * A recording moves through `record_status` (`none`, `uploading`, `processing`, `ready`, `failed`) and is served to the owning Recruiter only when `ready`. The transcript is available to the owning Recruiter once the recruitment interview is completed.
-  * Candidates view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment.
+  * Candidates view recruitment status only; scores, grading evidence, transcripts and recordings remain hidden.
   * Practice interviews do not record video; they use microphone/STT for spoken dialogue.
   * **Recording Rules (Settled 2026-11-03, KAN-87; Decision 18):**
     * The camera is required to start a recruitment interview.
@@ -71,12 +71,17 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
 
 ---
 
+### Planned rubric grading metadata
+
+The bank remains the pool of core questions, not an embedded grading matrix. Decision 24 adds core_questions.rubric_id and expected_answer as private grading metadata and keeps rubric definitions relationally separate. Generation proposes both for recruiter review. Core-plus-follow-up isolation remains; used definitions are locked without snapshots. Metric coverage-aware sampling and practice activation are engineering decisions to confirm in [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+
+
 ## 3. Actors Involved
 
 * **Candidate:** Configures Target JD interview parameters, completes Test Audio and Interview Readiness, joins, reconnects to, leaves (ends early) and concludes practice and recruitment interviews. For a Job Posting interview, uses the locked company presentation configured by the Recruiter.
 * **Recruiter:** Views and edits core questions in the question bank for own Job Postings while they are `pending` or `rejected`; may customize posting-level evaluation weights or use valid equal-split defaults (Decision 13a); funds interview slots; reviews applicant results, transcripts, and audio/video recordings.
 * **System Handler (Internal Handler):** In-process job runner (KAN-174; one PostgreSQL advisory lock per job, configurable `JOBS_*`). It ends sessions abandoned for 15 minutes, marks stale recruitment recordings `failed` and purges recordings 90 days after the final decision (Decisions 18 and 20).
-* **Administrator:** Searches and filters interview sessions, views operational session metadata and diagnostics, and Configures Interview Behavior Guidelines (mandatory registered scope, ratified 2026-10-20). Guidelines influence intended AI interviewer behavior, require Admin authorization, and preserve completed historical results. Guideline implementation details remain TBD; unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime toggles, provider configuration management, and pricing administration remain excluded (Decision 16).
+* **Administrator:** Searches and filters interview sessions, views operational session metadata and diagnostics, and Configures Interview Behavior Guidelines (mandatory registered scope, ratified 2026-10-20). Guidelines influence intended AI interviewer behavior, require Admin authorization, and preserve completed historical results. Guideline implementation details remain TBD; unrestricted raw LLM system-prompt editing, administrative overrides of posting weights or historical evaluation results, runtime toggles, provider configuration management, and pricing administration remain excluded (Decision 16).
 
 ---
 
@@ -138,7 +143,7 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
    * The session strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile.
    * A recruitment session has no Role Profile; it belongs to exactly one Job Posting through its Application, and its owner is `applications.candidate_id`.
 6. **Recruitment Recording & Visibility Boundary:**
-   Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. A recording is served only once its `record_status` is `ready`. The camera is required, upload failures end `failed` rather than cancelling the interview, and recordings are deleted 90 days after the final decision (Decision 18). Candidates can view their overall recruitment evaluation score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. Practice interviews do not record video.
+   Recruitment interviews capture audio/video recordings and conversational transcripts for review by the owning Recruiter. A recording is served only once its `record_status` is `ready`. The camera is required, upload failures end `failed` rather than cancelling the interview, and recordings are deleted 90 days after the final decision (Decision 18). Candidates view recruitment status only; scores, grading evidence, transcripts and recordings remain hidden. Practice interviews do not record video.
 7. **Session Question Mapping Preservation:**
    Every session persists its assigned questions in `interview_questions`, linking each turn position to its `core_question_id`. Historical sessions remain permanently reproducible and auditable even if the JD question bank is modified later.
 8. **Question Selection & Bounded Follow-Up Policy:**
@@ -167,7 +172,7 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
 * **[[01_Domains/Payment/README|Payment Domain]]:**
   Debits Candidate wallet coins at practice session start. Consumes prepaid Recruiter interview slots at recruitment session start.
 * **[[01_Domains/Administration/README|Administration Domain]]:**
-  Administrators inspect operational session metadata and Configure Interview Behavior Guidelines influencing intended AI interviewer behavior. Guideline UI, fields, schema, persistence, versioning, and prompt composition remain TBD; this is not an implementation-completion claim. Completed historical interview results remain unchanged. Decision 16's separate raw-prompt, global evaluation, runtime-toggle, provider-configuration, and pricing exclusions still apply.
+  Administrators inspect operational session metadata and Configure Interview Behavior Guidelines influencing intended AI interviewer behavior. Guideline UI, fields, schema, persistence, versioning, and prompt composition remain TBD; this is not an implementation-completion claim. Completed historical interview results remain unchanged. Decision 16's separate raw-prompt, posting-weight/historical-result editing, runtime-toggle, provider-configuration, and pricing exclusions still apply.
 
 ---
 

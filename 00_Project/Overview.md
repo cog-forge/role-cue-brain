@@ -16,6 +16,10 @@ aliases:
 
 ---
 
+> [!note] Agreed scoring extension, 2026-11-07
+> The new barem design is specified in [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]]. Rubrics are reusable by question type; expected_answer is question-specific; metric weights remain the final overall calculation. System rubric curation and recruiter-private authoring are new scope, not implementation claims.
+
+
 ## 1. The Problem
 
 Technical interview preparation is critical for career progression in software engineering, yet traditional preparation mechanisms suffer from severe structural shortcomings:
@@ -109,7 +113,7 @@ flowchart TD
 1. **Job Description Extraction & Refinement:**
    Ingests raw text or multi-page PDF documents. Extracts normalized technical competencies (languages, frameworks, databases, tools, domain knowledge, seniority). Empowers the candidate to review extracted tags and provide natural-language refinement notes (e.g., *"Exclude C# from the interview"*). Human review and confirmation of extracted requirements must occur *before* question-bank Blueprint generation.
 2. **Internal Question-Bank Blueprint Generation:**
-   Generates a single comprehensive core-question bank Blueprint per JD following confirmed requirements. Specifies ONLY the persistent pool/list of core questions (persisted via `core_questions`). Does not contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices. **Strictly hidden from the candidate.** For Job Postings, the owning Recruiter can view and edit core questions for their own posting. Evaluation configuration settings are maintained separately from the question bank.
+   Generates a single comprehensive core-question bank Blueprint per JD following confirmed requirements. Specifies ONLY the persistent pool/list of core questions (persisted via `core_questions`). Rubric definitions and posting weights are separate entities; the planned per-question rubric_id and expected_answer are private grading metadata (Decision 24). **Strictly hidden from the candidate.** For Job Postings, the owning Recruiter can view and edit core questions for their own posting. Evaluation configuration settings are maintained separately from the question bank.
 3. **Real-Time 3D Virtual Interview Simulation:**
    Renders a 3D animated avatar in the browser via WebGL. The simulation selects a random set of $x$ core questions from the bank and may ask bounded follow-ups. Spoken interaction is delivered via TTS with synchronized blend-shape visemes, while STT transcribes responses. Practice interviews are debited from the Candidate's coin wallet upon start (reconnect/resume of the same session is not recharged). Recruitment interviews consume a prepaid Recruiter slot upon first start (reconnect/resume is free; Candidate is never charged). Follow-up decision logic and question wording generation remain decoupled without premature vendor lock-in.
 4. **Automated Multi-Dimensional Evaluation:**
@@ -119,7 +123,7 @@ flowchart TD
 6. **Personal 3D Avatar Inventory & Coin Wallets:**
    Every Candidate and Recruiter starts with **3 personal avatar storage slots** (Decision 7, ratified 2026-10-20); Admin has no inventory. Creating an avatar is free while a slot is available; when full, users delete an avatar or purchase additional capacity with wallet coins (1 coin per slot), and the frontend reads actual capacity from the authoritative API. RoleCue embeds the free Avaturn iframe experience (capture, validation, preview, customization, final GLB), then converts and persists a usable VRM. There is no separate generation fee; the only avatar charge is buying storage slots. Coin wallets for Candidates and Recruiters manage internal coin movements and real-money package orders via PayOS under a unified transaction model.
 
-**Admin Interview Behavior Guidelines (ratified 2026-10-20):** `Configure Interview Behavior Guidelines` is mandatory registered Admin scope, requires Admin authorization, and influences the intended behavior of the AI interviewer while preserving completed historical results. UI, guideline fields, schema, persistence, versioning, and prompt composition remain TBD. This capability does not authorize unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime toggles, LLM provider configuration, or coin package pricing administration (Decision 16). Its absence from the active formal UC diagram is recorded in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the frozen 62 count and IDs remain unchanged.
+**Admin Interview Behavior Guidelines (ratified 2026-10-20):** `Configure Interview Behavior Guidelines` is mandatory registered Admin scope, requires Admin authorization, and influences the intended behavior of the AI interviewer while preserving completed historical results. UI, guideline fields, schema, persistence, versioning, and prompt composition remain TBD. This capability does not authorize unrestricted raw LLM system-prompt editing, editing posting weights or historical evaluation results, runtime toggles, LLM provider configuration, or coin package pricing administration (Decision 16). Its absence from the active formal UC diagram is recorded in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the frozen 62 count and IDs remain unchanged.
 
 **Authentication deployment:** Better Auth 1.7.7 runs in RoleCue's standalone authentication service, deployed independently of the Next.js frontend and the Go API. It remains the single Better Auth session authority, and Go keeps business authorization (Decision 17); see [[01_Domains/Auth/README|Auth Domain]].
 

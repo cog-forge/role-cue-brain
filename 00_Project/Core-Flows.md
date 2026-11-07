@@ -63,7 +63,7 @@ flowchart TD
 #### 4. Autonomous Question-Bank Blueprint Generation (INTERNAL & HIDDEN)
 * Following requirements confirmation, the system generates a single **Interview Blueprint** serving as the core-question bank:
   $$\text{Interview Blueprint} = \text{Confirmed Requirements} + \text{Candidate Refinement Notes}$$
-* The blueprint is ONLY the persistent/current core-question bank/list generated from confirmed skills, requirements, and seniority/refinement context. It contains exclusively the bank of core questions. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices; evaluation configuration is a separate concern.
+* The blueprint is ONLY the persistent/current core-question bank/list generated from confirmed skills, requirements, and seniority/refinement context. It contains exclusively the bank of core questions. It does not embed a rubric catalog or posting weights; the 2026-11-07 target links each core question to a reusable rubric and stores its private expected_answer separately from the question wording (Decision 24).
 * Exactly **one current Blueprint** exists per JD (it is absent until generated; changing configuration or difficulty does not spawn multiple current banks).
 * > [!IMPORTANT]
   > **The Blueprint is strictly INTERNAL and HIDDEN from Candidates.** Candidates **never view, edit, or confirm the Blueprint**. They interact exclusively through the live simulation.
@@ -172,7 +172,7 @@ sequenceDiagram
         System->>DB: Record recruitment session, audio/video recordings & transcript
         System->>DB: Evaluate session and store Interview Result
         System->>DB: Attach Interview Result & recordings to Application
-        System-->>Candidate: Display overall recruitment score (Transcripts/recordings hidden)
+        System-->>Candidate: Display recruitment status only (Scores/evidence/transcripts/recordings hidden)
     end
     opt Candidate fails to complete interview before interview_deadline
         System->>DB: Deadline expired -> Auto-reject Application (Status: REJECTED - Terminal)
@@ -241,7 +241,7 @@ sequenceDiagram
    * The interview strictly runs using the Job Posting's locked company 3D interviewer model and Voice Profile, capturing audio/video recordings and turn transcripts.
 7. **Result Attachment & Role-Specific Visibility:**
    * The evaluation engine generates the Interview Result (Performance Report) and attaches it, along with the audio/video recordings, to the candidate's Application.
-   * **Candidate Visibility:** The Candidate can view their overall recruitment evaluation score, but **cannot** access recruitment transcripts or audio/video recordings during recruitment.
+   * **Candidate Visibility:** The Candidate sees recruitment status only; no recruitment score, criterion/metric breakdown, expected answer, transcript or recording is exposed.
    * **Recruiter Visibility:** The owning Recruiter has full access to the applicant's profile, CV, evaluation breakdown, turn critiques, and full audio/video recordings and transcripts inside **View Application Detail**. A recording is available once it is processed (`record_status = ready`).
 8. **Hard-Gated Final Recruiter Review & Terminal Decision:**
    * Recruiter final Approve/Reject decisions are **HARD-GATED** until:
@@ -256,6 +256,12 @@ sequenceDiagram
    * Upon terminal auto-close, the system executes **Refund unused JP Candidate Slot**, refunding all still-unused recruitment interview capacity (`interview_slot` minus consumed sessions) to the Recruiter's personal coin wallet as internal coins, exactly once per Posting.
    * This refund is an internal database ledger credit; it does **not** call PayOS or external payment gateways.
    * Terminal Job Posting close is strictly automated; there is **no manual End Recruitment command**.
+
+---
+
+## Planned rubric extension to recruitment preparation and evaluation
+
+Agreed 2026-11-07; not yet implemented. Generate proposes question + allowed rubric_id + expected_answer. Recruiter reviews by shared rubric, adjusts exceptions or creates a private rubric, keeps posting metric weights/defaults, and submits valid grading configuration with the posting. Runtime grades each core and its follow-ups against that rubric; backend aggregates crits → question metrics → session metrics → weighted overall. Question totals are diagnostic, not averaged into overall. Candidate recruitment response stays status-only. Used definitions are locked instead of snapshotted; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
 
 ---
 

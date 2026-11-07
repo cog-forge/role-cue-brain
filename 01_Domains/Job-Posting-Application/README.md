@@ -82,6 +82,11 @@ Bridge the gap between technical interview preparation and career discovery. Rec
 
 ---
 
+### Planned grading preparation — Decision 24
+
+Recruiter can author/copy private rubrics or select system templates. Each question references one allowed rubric and stores expected_answer; each criterion references one metric. Review expected answers and assignments in groups before submission; keep existing metric weights/equal defaults. Submitted content changes must require review again, with transaction details in [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]]. Rubrics and question grading metadata lock when approved/used; no snapshot/version feature is added.
+
+
 ## 3. Actors Involved
 
 * **Recruiter:**
@@ -100,7 +105,7 @@ Bridge the gap between technical interview preparation and career discovery. Rec
   * Submits an unlimited number of applications with uploaded CV/resumes while intake is open.
   * Tracks application status.
   * Upon receiving CV approval, participates in the required technical interview within the 24-hour deadline using the Job Posting's locked presentation and funded slot (Candidate is never charged).
-  * Views overall recruitment evaluation score (transcripts and recordings remain hidden).
+  * Views recruitment status only; scores, grading evidence, transcripts and recordings remain hidden.
 * **System Handler (Internal Automated Handler):**
   * Closes intake automatically when the configured interview capacity limit (`interview_slot`) is met (*Close Job Posting When Meet Configured Limitation*).
   * Automatically marks an Application terminal `REJECTED` if the candidate does not complete the interview before `interview_deadline`.
@@ -280,7 +285,7 @@ sequenceDiagram
     * Refunds do **not** occur on Close Intake and do **not** call PayOS.
 12. **Recruitment Recording & Visibility Boundaries:**
     * Audio/video recordings and transcripts captured during recruitment interviews are accessible exclusively to the owning Recruiter.
-    * Candidates can view their overall recruitment evaluation score, but **cannot** access recruitment transcripts or audio/video recordings during recruitment.
+    * Candidates see recruitment status only; scores, criterion/metric breakdowns, expected answers, transcripts and recordings remain hidden.
     * Administrators do **not** have recruitment recording access by inference.
 13. **Scores are Evidence for Human Review:**
     * Automated evaluation scores provide structured evidence to assist human hiring representatives. RoleCue does **not** make autonomous hiring decisions or automated disqualifications based on score thresholds.
@@ -289,7 +294,7 @@ sequenceDiagram
     * There are no Company tenants, company workspaces, tenant isolation middleware, or Row-Level Security tenant policies.
     * Job Postings are owned relationally by `recruiter_id`.
 15. **Ownership & Access Isolation:**
-    * Candidates can browse moderated, funded public Job Postings with Recruiter-opened intake and view only their own submitted applications and recruitment scores. Decision 13b's Recruiter account-lock visibility restrictions also apply.
+    * Candidates can browse moderated, funded public Job Postings with Recruiter-opened intake and view only their own submitted applications and recruitment status. Decision 13b's Recruiter account-lock visibility restrictions also apply.
     * Recruiters can only view and manage Job Postings and applications belonging to their own account.
 16. **Final Decision Immutability:**
     * Once an application moves to `APPROVED` or `REJECTED`, the final decision cannot be reverted back to `PENDING`.

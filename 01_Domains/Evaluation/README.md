@@ -4,112 +4,79 @@ tags:
   - domain
   - evaluation
   - scoring
-  - reporting
-  - competencies
-  - roadmap
+  - rubrics
 aliases:
   - Evaluation Domain
   - Reporting Domain
 ---
 
-# Post-Interview Evaluation & Reporting Domain
+# Post-Interview Evaluation & Reporting
 
-The **Post-Interview Evaluation & Reporting Domain** transforms raw interview transcripts into structured technical assessments, actionable diagnostic feedback, and role-appropriate performance reports.
+RoleCue turns interview answers into criterion evidence, metric assessments and an overall score for human review. Scores have no automated hiring authority.
 
----
+> [!important] Product direction vs implementation
+> Decision 24, agreed 2026-11-07, retains metrics/weights and introduces reusable rubrics plus question-specific expected answers. **The rubric feature is not implemented yet.** Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]] for the worked example and proposed technical details. The five seeded metrics remain the baseline catalog, not an immutable list.
 
-## 1. Purpose
+## 1. Core distinctions
 
-Provide objective, diagnostic technical feedback. Identifies specific conceptual blind spots, assesses depth of understanding against target job requirements, and provides clear study recommendations for practice sessions while delivering structured performance evidence for recruiter evaluation.
+| Concept | Meaning | Storage in target design |
+|---|---|---|
+| Metric | Assessment dimension, e.g. Technical Accuracy | metrics |
+| Rubric | Reusable scoring guide by question type | rubrics |
+| Criterion / crit | Observable item, max points and scoring guide; belongs to one metric | rubric_criteria.metric_id |
+| Expected answer | Question-specific reference concepts/acceptable alternatives; not exact-match keywords | core_questions.expected_answer TEXT |
+| Question score | Sum of criterion points normalized to 100, for question detail | proposed interview_questions.score |
+| Session metric score | Mean of that metric across questions that measure it | score_details.score |
+| Overall | Weighted aggregate of session metric scores | interviews.score |
 
----
+A question references exactly one rubric; many questions can share it. A rubric contains multiple crits; every crit references exactly one metric. Rubric/criterion points are real calculation inputs. Feedback/evidence explains why those points were awarded. The sum for a whole question is not the overall formula.
 
-## 2. Core Concepts
+## 2. Calculation — read this before changing the scorer
 
-* **Technical Competency Dimensions (`metrics`):**
-  The platform metrics used to evaluate technical interview performance:
-  * Each dimension is defined in the `metrics` table (`id`, `name`).
-  * The five currently active baseline metrics are *Technical Accuracy*, *Depth of Understanding*, *Problem-Solving & Approach*, *Answer Relevance*, and *Communication Clarity*. This is not an immutable platform list.
-  * **Specification Status Invariant:** Decision 13a (ratified 2026-10-18) settles posting-level custom weights and equal-split defaults. Detailed metric criteria, scoring formulas, and validation constraints beyond that decision remain unresolved.
-* **Posting-Level Metric Weights (`metrics_percentage`):**
-  Evaluation weights are **separate from the core question bank (`core_questions`)**. Recruiters may select a subset of metrics and save percentages totaling **100%** through `metrics_percentage (job_posting_id, metric_id, percentage)`. Without a saved custom configuration, compute effective equal-split defaults on read across currently available metrics (**20% each** for the current five); do not persist default rows. `configured=false` and `using_defaults=true` indicate valid configuration; Admin approval must not require custom weights.
-  * **Editing Boundary:** Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`. Because Admin approval sets `open` (persistence mapping settled 2026-10-29, Decision 13), settings are locked from approval onward, including while an approved Posting awaits funding; no additional editable state is implied.
-* **Evaluation Results Persistence (`interviews`, `score_details`, `conversation_turns`):**
-  Evaluation outcomes are persisted directly in the relational schema upon session conclusion. Evaluation runs after completion and is tracked in `interviews.evaluation_status` (`pending`, `completed`, `failed`): a failed evaluation can be retried, and one left `pending` by an interrupted run is taken over by a later run, so each interview is evaluated by exactly one owner.
-  * **Overall Assessment:** Stored in `interviews.score` (numerical score) and `interviews.feedback` (narrative evaluation).
-  * **Competency Breakdown:** Persisted in `score_details` (`interview_id`, `metric_id`, `score`).
-  * **Turn-by-Turn Critiques:** Persisted in `conversation_turns.feedback` for each answered question turn.
-* **Role-Specific Result Disclosure:**
-  * **Practice Interviews:** The Candidate has full access to their evaluation scores, competency breakdowns (`score_details`), turn critiques (`conversation_turns.feedback`), and overall feedback (`interviews.feedback`).
-  * **Recruitment Interviews:**
-    * The **Candidate** can view their overall recruitment score, but **cannot** view recruitment transcripts or audio/video recordings during recruitment. These assets must not be exposed indirectly through history, result APIs, exports, or asset URLs.
-    * The **Recruiter** owning the Job Posting receives full access to the applicant's profile, CV, evaluation score, competency breakdown (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly within **View Application Detail**. A recording is served only once its `record_status` is `ready`; the transcript once the interview is completed.
-* **Historical Context Preservation:**
-  Scoring uses the effective evaluation configuration (saved custom posting weights or equal-split defaults when absent). Persisted turn feedback and `score_details` remain immutable; later configuration changes must not recalculate historical results. This does not imply persisted default rows or a new snapshot mechanism.
-* **Human Review Evidence (No Automated Hiring Authority):**
-  Evaluation scores and reports serve as structured evidence to assist human judgment. Evaluation thresholds and scores carry **no automated hiring or rejection authority**.
-
----
-
-## 3. Actors Involved
-
-* **Candidate:** Views personal practice interview history, evaluation scores, competency breakdowns, turn critiques, and feedback; views overall recruitment evaluation score (transcripts and recordings remain hidden).
-* **Recruiter:** Adjusts posting-level evaluation weights (`metrics_percentage`) for own Job Postings; inspects candidate profile, CV, interview scores, competency breakdowns (`score_details`), turn critiques, and recruitment audio/video recordings and transcripts consolidated directly inside **View Application Detail**.
-* **Administrator:** Inspects session operational records. `Configure Interview Behavior Guidelines` is separately ratified under the Administration Domain and does not grant global evaluation rubric/weight editing. Unrestricted raw LLM system-prompt editing, runtime toggles, provider configuration management, and pricing administration remain excluded. Guideline changes must not alter completed historical evaluation results (Decision 16).
-
----
-
-## 4. Main Domain Flow
-
-```mermaid
-flowchart TD
-    A["Interview Session Concluded<br/>(Turns in conversation_turns + Assigned Questions)"] --> B["Evaluation Engine Compiles Turns"]
-    B --> C["Multi-Turn Grading Engine<br/>(Scored against Effective Session Metrics)"]
-    C --> D["Deterministic Metric Aggregator<br/>(Posting: Custom Weights or Equal-Split Defaults)"]
-    D --> E["Persist Evaluation Outcomes<br/>(interviews.score, interviews.feedback, score_details)"]
-    
-    E --> G1["Practice Session: Candidate Dashboard<br/>(Overall score, feedback, score_details, turn critiques)"]
-    E --> G2["Recruitment Session: Role-Specific Delivery"]
-    G2 --> H1["Candidate View: Overall Score Only<br/>(Transcripts & recordings strictly hidden)"]
-    G2 --> H2["Recruiter View: Consolidated Dossier<br/>(Scores, score_details, critiques, full recordings in View Application Detail)"]
+```text
+criterion points per question
+  → normalize grouped criteria to each question's metric score
+  → average each metric across relevant core questions
+  → apply effective posting metric weights
+  → overall
 ```
 
----
+Example from the spec: Q01 crits 2/2 + 2/3 in Technical Accuracy produce 80; 3/5 in Problem-Solving produces 60. Q02 produces 60 and 40. Session metrics are therefore 70 and 50. With weights 60% and 40%, overall is 62. Question totals are 70 and 50; their average is 60 and **must not replace overall 62**.
 
-## 5. Business Rules & Invariants
+Within a question/metric, divide summed earned points by summed maximum points; do not average individual criterion percentages without their point scales. Follow-ups belong to their core question and do not create extra score weight. Do not assign zero merely because a question does not measure a metric. Coverage/sampling, missing-answer and precision policies requiring engineering review are listed in the spec.
 
-1. **Strict Configuration Adherence:**
-   Recruitment evaluations must use the posting's effective metrics and weights: custom percentages totaling 100%, or equal-split defaults when no custom configuration exists (currently five metrics at 20% each). KAN-61 scoring must apply the same fallback as the configuration API. The grading engine cannot introduce arbitrary criteria outside the effective configuration.
-2. **Posting Settings Separated from Question Bank:**
-   Evaluation weights are managed separately from the core question bank (`core_questions`). Customization is optional; `configured=false` and `using_defaults=true` are valid and must not block Admin approval. Custom weights are persisted in `metrics_percentage`; defaults are computed on read. Editing is allowed in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping.
-3. **Historical Evaluation Immutability:**
-   Once generated and persisted, evaluation scores (`interviews.score`, `score_details`) and feedback are **immutable**. Historical scores and critiques can never be altered or recalculated if source configurations change.
-4. **Role-Specific Disclosure Boundaries:**
-   * In recruitment, the Candidate can view only their overall evaluation score; recruitment transcripts and audio/video recordings are hidden from the Candidate during recruitment and must not be exposed via exports, history APIs, or asset URLs.
-   * No Candidate recruitment recording replay feature exists.
-   * The owning Recruiter has exclusive review access to recruitment transcripts and recordings within `View Application Detail`.
-   * Final Approve/Reject decisions remain hard-gated until `MAX(interview_deadline)` for the posting, evaluated on the database clock; only an `interviewed` application can receive one.
-5. **Formative & Diagnostic Purpose (No Auto-Hiring):**
-   RoleCue evaluations provide educational and diagnostic evidence. Evaluation scores carry **no autonomous hiring or disqualification authority**.
-6. **Unique Metric Evaluation per Session:**
-   Every evaluated Interview Session produces at most one score entry per evaluated metric, enforced by:
-   $$\text{UNIQUE}(interview\_id, metric\_id)\text{ on score_details}$$
+## 3. Posting weights stay in place
 
----
+Decision 13a remains effective: custom subsets total 100%; absent custom rows use equal-split defaults on read (currently five metrics at 20% each), never persisted default rows. Using defaults is valid and does not itself block approval. Rubric readiness/metric coverage is an additional check, not a demand for custom weights. Editing weights is allowed in pending/rejected and locked from approval/open onward.
 
-## 6. Relationships to Other Domains
+## 4. Rubric authoring and lifecycle
 
-* **[[01_Domains/Interview/README|Interview Domain]]:**
-  Consumes completed interview turns (`conversation_turns`) and records evaluation results on `interviews` (`score`, `feedback`) and `score_details`.
-* **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
-  For recruitment interviews, links evaluations to the Application via `interviews.application_id`. Enforces role-specific visibility rules between Candidates and Recruiters (consolidated in `View Application Detail`).
-* **[[01_Domains/Job-Description/README|Job-Description Domain]]:**
-  Uses the technical competencies confirmed in the JD to ground technical accuracy and relevance scoring.
-* **[[01_Domains/Administration/README|Administration Domain]]:**
-  Administrators oversee operational session records. (Global evaluation criteria editing is excluded from the frozen scope).
+- Admin curates system templates. Recruiter may create private templates from scratch or copy permitted templates, then assign to own questions.
+- Generation proposes allowed rubric_id and expected_answer alongside question text. Recruiter reviews in groups, changes exceptions and confirms preparation before submission.
+- Two new configuration tables are agreed: rubrics and rubric_criteria. A separate criterion-result table is an engineering proposal needed for durable score/evidence detail, not another configuration/snapshot table.
+- No snapshot/version system is in MVP. Definitions, question content, expected answers and bindings become immutable when referenced by an approved posting or started interview. Changing a used template means authoring another template for eligible drafts.
+- Hard-delete only unreferenced data; archive prevents new assignments and preserves existing ones. Private templates are scoped by owner, never shared by guessing UUIDs.
 
----
+## 5. Results and visibility
 
-## 7. External Integrations
+- interviews.score: one overall per interview; interviews.feedback: summary.
+- score_details: one session metric score per (interview_id, metric_id), never a per-criterion row.
+- conversation_turns.feedback: feedback by turn.
+- Planned criterion results preserve points/evidence; proposed interview_questions.score holds explanatory question totals.
+- Candidate owns full practice report access. For recruitment the Candidate gets **status only**, not even overall, and no crit/metric scores, expected answers, transcripts, recordings or derived roadmap scores. This corrects the older Brain wording to the later product decision and application behavior.
+- Owning Recruiter sees recruitment evidence in Application Detail. Admin system-template curation does not grant access to private recruitment evidence or authority to alter historical scores.
 
-* **LLM Provider:** Analyzes dialogue turns, performs criterion-based grading against the session's evaluation configuration, identifies technical misconceptions, and generates learning roadmaps.
+## 6. Implemented baseline and planned delta
+
+The current application already calls a model per core question plus follow-ups, averages metric outputs, verifies evidence and persists aggregate metric/overall scores. It does not persist per-core numeric outputs. The new feature changes the source of those scores to rubric criteria; it must preserve existing per-core isolation, bounded concurrency/retries, claims, budgets, redaction and final application-decision gates.
+
+No completed results are recalculated because configurations change. Disposable development data may be reset when implementing this change; no legacy-data backfill/compatibility mode is required. That permission does not itself reset a database or authorize changing unrelated user work.
+
+## 7. Related domains
+
+- [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Detailed spec and complete example]]
+- [[01_Domains/Interview/README|Interview]]: core assignments, turns, follow-ups and evaluation execution.
+- [[01_Domains/Job-Posting-Application/README|Recruitment]]: authoring, weights and consolidated application review.
+- [[01_Domains/Administration/README|Administration]]: system rubric catalog with narrowly defined permissions.
+- [[02_System/Domain-Model|Domain model]] and [[02_System/Data-Relationships|relationships]]: implemented baseline vs planned schema extension.
+- [[03_Decisions/Product-Decisions|Product decisions]]: Decisions 13a and 24.

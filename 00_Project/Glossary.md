@@ -46,7 +46,7 @@ The execution parameters that determine an interview's presentation and runtime 
 * **Recruiter Job Posting:** The Recruiter selects the company 3D interviewer model and Voice Profile before Admin approval. Candidates must use those settings and cannot override them.
 
 ### Interview Blueprint
-A conceptual and product term for the core-question bank generated following human confirmation of extracted requirements, skills, and seniority context. There is **no separate Blueprint table** in the database; persistent storage uses `core_questions`. Exactly **one current question bank** exists per JD (absent until generated). For a Job Posting it is generated once and editable only while the Posting is `pending` or `rejected`. It defines ONLY the persistent core-question bank. It does NOT contain grading rubrics, evaluation criteria, competency weights, depth benchmarks, or evaluation matrices.
+A conceptual and product term for the core-question bank generated following human confirmation of extracted requirements, skills, and seniority context. There is **no separate Blueprint table** in the database; persistent storage uses `core_questions`. Exactly **one current question bank** exists per JD (absent until generated). For a Job Posting it is generated once and editable only while the Posting is `pending` or `rejected`. It identifies the persistent pool of core questions. Decision 24 plans a rubric reference and private expected_answer on each question; rubric definitions and posting metric weights remain separate entities, not an embedded Blueprint grading matrix.
 * **Evaluation Configuration Separation:** Evaluation criteria, competency weights, and scoring settings are a separate concern from the question bank. Recruiters can configure posting-level evaluation weights on their Job Postings separately.
 * **Access Boundary:** Strictly **internal and hidden from the Candidate**. Candidates never view, edit, or directly confirm an Interview Blueprint. Recruiters **can** view and edit core questions within the question bank generated for their own Job Postings.
 
@@ -73,7 +73,7 @@ The Recruiter's evaluation of a candidate's uploaded CV/resume inside View Appli
 The definitive, terminal decision rendered by the Recruiter (`Approve` or `Reject` Application) inside View Application Detail after reviewing the candidate's complete profile, CV, technical Interview Result, and recruitment audio/video recordings and transcripts. Hard-gated until `MAX(interview_deadline)` across all interview-eligible Applications for the posting. Marks the strict termination of recruitment scope.
 
 ### Interview Result
-The persisted evaluation outcome (Performance Report) of the required technical interview associated with a Job Posting. Attached to the Application alongside recruitment recordings for Recruiter review inside View Application Detail. Candidates can view their recruitment score, but cannot view recruitment transcripts or recordings during recruitment.
+The persisted evaluation outcome (Performance Report) of the required technical interview associated with a Job Posting. Attached to the Application alongside recruitment recordings for Recruiter review inside View Application Detail. Candidates see recruitment status only; scores, criterion/metric details, expected answers, transcripts and recordings are not disclosed.
 
 ### Coin
 The internal digital unit of value on RoleCue used to fund platform capabilities. Purchased in coin packages via PayOS using real money. Coins are used to pay for Candidate practice interview starts (5 coins), Recruiter interview slots (1 coin per slot), and additional avatar inventory capacity slots (1 coin per slot). There is no separate avatar generation fee.
@@ -116,3 +116,16 @@ Facial morph target blend-shapes corresponding to phonemic sounds, used to anima
 
 ### 2D Waveform Fallback Mode
 A performance-resilient fallback interface displaying an animated audio waveform in place of the 3D canvas when client hardware lacks GPU acceleration or WebGL support, preserving uninterrupted voice interaction.
+
+
+### Rubric / Barem (Agreed 2026-11-07; Implementation Pending)
+A reusable scoring guide by question type, stored in the planned rubrics table. System templates are Admin-curated; private templates are Recruiter-owned. Many questions may share one rubric, while each question has its own expected_answer. Used definitions are locked; no snapshot/version table is part of MVP.
+
+### Rubric Criterion / Crit
+One observable scoring item in rubric_criteria, with maximum points and explicit scoring guidance. Each crit references exactly one metric. Awarded criterion points are real calculation inputs; feedback/evidence explains why those points were awarded.
+
+### Expected Answer
+Private question-specific reference material in core_questions.expected_answer TEXT: expected concepts, acceptable alternatives and relevant misconceptions. It is not a verbatim mandatory response, an extra point budget, or a separate expected-points table.
+
+### Question Score vs Session Metric vs Overall
+Question score sums/normalizes all criterion points for question detail. Session metric score averages the corresponding question-level metric scores and is stored in score_details. Overall applies posting metric weights to session metrics and is stored in interviews.score. Whole-question scores are not averaged into overall in this design. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the worked example: question totals 70/50, session metrics 70/50, overall 62]].

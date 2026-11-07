@@ -68,7 +68,9 @@ role-cue-brain/
 │   ├── Job-Posting-Application/README.md # Recruiter job postings, intake management, CV screening, and candidate applications
 │   ├── Interview/README.md     # Real-time simulation, configuration, and question-bank blueprint engine
 │   ├── Avatar-Voice/README.md  # 3D avatar rendering, Candidate/Recruiter avatar inventory, and TTS voices
-│   ├── Evaluation/README.md    # Technical competencies, posting-level weights, evaluation settings, and roadmaps
+│   ├── Evaluation/
+│   │   ├── README.md          # Metrics, rubrics, posting weights, result disclosure
+│   │   └── Scoring-Rubrics-Spec.md # Agreed rubric design and worked scoring example
 │   ├── Payment/README.md       # Coin packages, wallets, transactions, and interview/avatar slot funding
 │   └── Administration/README.md # Platform governance, moderation, voice profiles, payment audits, and operational oversight
 ├── 02_System/                  # System-level models and architectural boundaries
@@ -79,6 +81,11 @@ role-cue-brain/
 └── 03_Decisions/               # Long-lived product and architectural decisions
     └── Product-Decisions.md    # Ratified foundational decisions and unresolved rules
 ```
+
+---
+
+> [!note] Scoring design agreed 2026-11-07 — implementation pending
+> Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]] for rubric reuse, per-question expected answers, recruiter-owned rubrics and the worked crit → metric → overall example. Metric weights remain authoritative; question totals are explanatory.
 
 ---
 

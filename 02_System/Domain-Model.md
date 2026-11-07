@@ -17,9 +17,12 @@ This document maps the primary business entities of the RoleCue platform and ill
 > [!NOTE]
 > The frozen RoleCue Use Case Diagram and the RoleCue ERD (named `RoleCue`) are authoritative.
 > **ERD reconciliation (2026-10-27):** The ERD below was reconciled with the implemented schema (shared migrations `000001` through `000013`). It adds the additive columns and constraints introduced after the original frozen ERD (onboarding status, inventory constraints, Role Profile workflow and requirement classification, the metrics seed, interview session state, and question-bank review submission) and corrects attribute types and cardinalities to match the implementation.
-> Conceptual models and entity names in this document illustrate domain relationships and business invariants conforming strictly to that contract. RoleCue does not redesign payment models, propose V2/vNext schemas, or invent missing business rules.
+> Conceptual models and entity names in this document illustrate domain relationships and business invariants conforming strictly to that contract. RoleCue does not redesign payment models or invent missing business rules. Explicitly ratified scope extensions are documented separately from the implemented baseline.
 
 ---
+
+> [!note] New agreed target model, 2026-11-07
+> The diagram below remains the implemented baseline. Decision 24 adds a rubric extension, shown separately at the end so proposed tables are not mistaken for applied migrations. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]].
 
 ## 1. Conceptual Entity-Relationship Model
 
@@ -346,3 +349,35 @@ classDiagram
 * **`Inventory` (`inventories`):** Personal avatar inventory record owned by a **Candidate or Recruiter** (`user_id UNIQUE REFERENCES users(id)`), tracking allocated storage capacity `slot` (CHECK `slot >= 0`). Ratified on **2026-10-20**: every Candidate and Recruiter starts with **3 storage slots**; Admin has no personal inventory. This is a product allocation requirement, not a claim about a database default. Each saved avatar occupies one slot; avatar creation only checks capacity (refused with `INVENTORY_FULL` when full) and is not charged, as there is no separate generation fee (settled 2026-10-27, Decision 7). Users can purchase additional capacity using wallet coins at 1 coin per slot (1–10 per purchase, debited atomically through the shared ledger); purchased slots are permanent and deleting an avatar frees its slot. The frontend reads actual capacity from the authoritative API.
 * **`Avatar` (`avatars`):** Humanoid 3D avatar stored as a standardized VRM asset (`inventory_id REFERENCES inventories(id)`, `name`, `model_path`, `personality`). RoleCue converts Avaturn's final GLB to VRM, persists the asset, and associates it with the owning user in their personal inventory.
 * **`Voice` (`voices`):** Voice configuration sourced from external TTS providers (`name`, `is_active`, nullable `provider`, `provider_voice_id`, `locale`, `gender`; migration `000017_voice_provider`, 2026-10-30). `provider` and `provider_voice_id` are set together (CHECK), and `(provider, provider_voice_id)` is unique when present; for Azure AI Speech, `provider_voice_id` is the voice `ShortName` (e.g. `en-US-AvaNeural`). Voices created before the provider sync keep these columns `NULL` and remain valid. Curated and managed by Administrators.
+
+
+---
+
+## 3. Planned Rubric Extension — Decision 24 (Not Yet Implemented)
+
+Two configuration tables are agreed: rubrics and rubric_criteria. core_questions adds rubric_id and expected_answer TEXT. Metrics and metrics_percentage remain. Actual per-criterion results require separate result storage; interview_criterion_scores and interview_questions.score are proposed engineering additions, not snapshot/configuration tables.
+
+```mermaid
+erDiagram
+    USERS o|--o{ RUBRICS : "owns private templates"
+    RUBRICS ||--|{ RUBRIC_CRITERIA : contains
+    METRICS ||--o{ RUBRIC_CRITERIA : classifies
+    RUBRICS o|--o{ CORE_QUESTIONS : "assigned while drafting"
+    CORE_QUESTIONS ||--o{ INTERVIEW_QUESTIONS : assigned
+    INTERVIEW_QUESTIONS ||--o{ INTERVIEW_CRITERION_SCORES : "proposed criterion results"
+    RUBRIC_CRITERIA ||--o{ INTERVIEW_CRITERION_SCORES : assessed
+    INTERVIEWS ||--o{ SCORE_DETAILS : "session metric scores"
+    METRICS ||--o{ SCORE_DETAILS : dimension
+```
+
+- rubrics: id, name, question_type, scope(system/recruiter), owner_id, is_active; optional description/timestamps follow normal conventions. Admin manages system scope; Recruiter owns private scope.
+- rubric_criteria: id, rubric_id, metric_id, name, max_points, scoring_guide and ordering. Exactly one metric per criterion.
+- core_questions: expected_answer is private reference content; rubric_id links a reusable guide. Neither is candidate-editable or a new Blueprint table.
+- Proposed interview_criterion_scores: one earned-points/evidence result per interview, assigned core position and criterion. Composite FK targets interview_questions; a follow-up turn position is not assumed to equal its core assignment position.
+- Proposed interview_questions.score: explanatory normalized whole-question total.
+- score_details.score: session metric aggregate, not criterion score. Numeric precision change is proposed if metric decimals are retained.
+- interviews.score: weighted overall of session metrics, not mean of whole-question totals.
+
+No snapshot/version tables or separate expected-points table. Lock referenced definitions/question metadata at approval/start; archive prevents new use and preserves valid existing references. Expected-answer/criteria points are never backfilled into historical sessions. Disposable dev DB reset is allowed at implementation time, not executed by this document.
+
+For formulas, worked rows, proposed precision and unresolved engineering choices, use [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the rubric spec]] instead of inferring behavior from this diagram. The formal ERD/report must be reconciled during implementation; this target diagram does not claim its source artifact has already changed.

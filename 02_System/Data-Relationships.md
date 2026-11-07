@@ -68,7 +68,7 @@ flowchart LR
     INT -->|"Records Scores"| SD["Score Details (score_details)"]
 ```
 * **Invariant:** Every `Interview` maps its session turn positions to persistent `core_questions` via `interview_questions (interview_id, position, core_question_id)`.
-* **Integrity Guarantee:** Even if the source Job Description or Job Posting is updated, foreign key constraints (which reject deleting a referenced parent) ensure historical interview questions, dialogue turns, and score evaluations remain permanently reproducible and tamper-proof without requiring an unnormalized `blueprint_snapshot` column.
+* **Integrity Guarantee:** Even if the source Job Description or Job Posting is updated, foreign key constraints (which reject deleting a referenced parent) preserve historical question associations without an unnormalized `blueprint_snapshot` column. A foreign key alone does not prevent editing referenced content; reproducible grading additionally requires the content/barem immutability rules in Decision 24. Privacy erasure remains an explicit controlled exception.
 
 ### 2.2. Question Bank Preservation via `ON DELETE RESTRICT`
 * **Invariant:** The foreign key constraint between `interview_questions` and `core_questions` rejects deleting a referenced core question (`NO ACTION`, equivalent to `RESTRICT` here).
@@ -105,3 +105,23 @@ flowchart LR
 * **Ratified Initial Allocation (2026-10-20):** Every Candidate and Recruiter starts with **3 personal avatar storage slots**; Admin has no inventory. This is a business allocation rule, not an asserted SQL default.
 * **Capacity Authority:** Users may purchase additional capacity with wallet coins. The frontend reads actual `inventories.slot` capacity through the authoritative API because it can increase.
 * **No Generation Fee (Settled 2026-10-27):** Avatar creation only checks capacity (`INVENTORY_FULL` when no slot is free) and debits no coins. The only avatar charge is a capacity purchase (`POST /inventory/purchase`, 1–10 slots at 1 coin per slot), whose wallet debit, `transactions` entry, and `inventories.slot` increase commit atomically through the shared ledger (Decision 7).
+
+
+---
+
+## 3. Planned Rubric Relationships — Decision 24
+
+These rows describe agreed configuration relationships and proposed result storage; they are not applied schema claims. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]].
+
+| Parent | Child | Cardinality / constraint | Delete/edit rule |
+|---|---|---|---|
+| User | Rubric | Private scope has one owner; system scope has no recruiter owner | Owner-scoped operations; account erasure resolves references explicitly |
+| Rubric | RubricCriterion | One rubric contains multiple crits | Used definitions immutable; do not delete referenced crits |
+| Metric | RubricCriterion | Exactly one metric per crit | No arbitrary metric creation from AI/recruiter input |
+| Rubric | CoreQuestion | One selected rubric per ready question; many questions share a rubric | Missing while drafting only; RESTRICT referenced hard deletion; archive stops new assignment |
+| InterviewQuestion | InterviewCriterionScore (proposed) | Composite interview/assigned-core-position FK | Delete result evidence before removing interview during erasure |
+| RubricCriterion | InterviewCriterionScore (proposed) | One result per interview/core/criterion | Criterion points belong to a particular answer/session, not the reusable question |
+
+The two new configuration tables are rubrics/rubric_criteria; core_questions adds rubric_id and expected_answer TEXT. A separate results table is proposed because a single question total cannot reconstruct crit or metric points. Score detail remains one session metric row; interviews.score remains the weighted overall. No extra point budget is awarded for expected_answer. Follow-ups belong to their core question.
+
+Without snapshots, rubric definitions and question content/expected_answer/bindings must remain unchanged once referenced by an approved posting or started session. Archive retains old references; making a new template is the way to change used definitions for new drafts. No ordinary delete/update may masquerade as privacy erasure. Retention must cover criterion evidence and explanations, including private answer fragments copied outside conversation_turns.

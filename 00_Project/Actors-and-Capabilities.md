@@ -58,7 +58,7 @@ classDiagram
         +browseSearchJobPostings()
         +submitJobApplicationWithCV()
         +trackJobApplicationStatus()
-        +viewRecruitmentScore()
+        +viewRecruitmentStatus()
         +manageCoinWallet()
         +purchaseCoinPackage()
     }
@@ -70,6 +70,8 @@ classDiagram
         +searchFilterOwnJobPostings()
         +editOwnPostingQuestionBank()
         +configurePostingEvaluationWeights()
+        +manageOwnScoringRubrics()
+        +reviewQuestionExpectedAnswers()
         +manageCoinWallet()
         +purchaseCoinPackage()
         +fundInterviewSlots()
@@ -92,6 +94,7 @@ classDiagram
         +viewInterviewSessionDetail()
         +configureInterviewBehaviorGuidelines()
         +manageVoiceProfiles()
+        +manageSystemScoringRubrics()
         +viewPaymentTransactions()
         +generateRevenueReport()
     }
@@ -141,7 +144,7 @@ classDiagram
   * **Personal 3D Avatar Inventory:** Start with **3 personal avatar storage slots**; read actual capacity from the authoritative API. Access the embedded Avaturn generator (RoleCue stores the final VRM asset); creating an avatar is free while a slot is available, with no separate generation fee. When full (`INVENTORY_FULL`), delete models or purchase additional capacity with wallet coins (1 coin per slot).
   * **Job Posting Discovery & Application:** Browse, search, filter, and view moderated, funded recruiter Job Postings with Recruiter-opened intake, subject to account-lock visibility restrictions (Decision 13b). Submit application with CV/resume.
   * **Recruitment Interview Participation:** Upon passing Recruiter CV screening, participate in the required technical interview funded by the Recruiter's prepaid slots (no coin charge to Candidate).
-  * **Recruitment Result Visibility:** View overall recruitment evaluation score. Candidates **cannot** view recruitment transcripts or audio/video recordings during recruitment.
+  * **Recruitment Result Visibility:** View recruitment status only. Candidate recruitment scores, criterion results, metric breakdowns, expected answers, transcripts and recordings remain private.
   * **Coin Wallet Management:** Purchase coin packages via payment gateway; view wallet coin balance and transaction history.
 * **Boundary Invariant:** Candidates **never** view, edit, or confirm Interview Blueprints. Candidates do not purchase memberships or subscriptions.
 
@@ -151,6 +154,7 @@ classDiagram
   * **Create Job Posting:** Begin a Job Posting (the company's Job Description) from JD-like content; review and confirm AI-extracted structured requirements.
   * **Configure Job Posting Interview:** Select the company 3D interviewer model and Voice Profile that Candidates must use for that Job Posting's interview.
   * **Manage Question Bank (Blueprint):** Generate the question bank once, then view and edit core questions for own Job Postings while `pending` or `rejected`; explicitly submit (or resubmit) the Posting for review, which requires a non-empty bank.
+  * **Manage Own Scoring Rubrics (agreed 2026-11-07, implementation pending):** Create private reusable rubrics, copy permitted system/own rubrics, assign to own questions, review expected_answer, and edit/archive/delete within lock/reference rules.
   * **Configure Evaluation Weights:** Optionally select a metric subset totaling 100%, separately from the question bank; otherwise valid equal-split defaults apply (currently five metrics at 20% each). Defaults do not block approval. Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping (Decision 13a).
   * **Update Job Posting:** Modify requirements or description for submitted or active Job Postings.
   * **Close Job Posting Intake:** Close application intake. Halts receiving new Applications; automatically rejects remaining unscreened / not-approved Applications; Candidates already approved for interview remain interview-eligible. There is NO Reopen Intake flow and NO manual End Recruitment command.
@@ -171,11 +175,12 @@ classDiagram
   * **Job Posting Moderation:** View and filter submitted Job Postings; approve and reject Job Postings.
   * **Interview Session Oversight:** Search and filter interview sessions; inspect operational session details.
   * **Configure Interview Behavior Guidelines:** Mandatory registered capability ratified on **2026-10-20**. Admin configures guidelines influencing the intended behavior of the AI interviewer; Admin authorization is required and completed historical interview results remain unchanged. UI, schema, persistence, guideline fields, versioning, and prompt composition remain TBD; implementation in `main` is not asserted.
+  * **System Scoring Rubric Catalog (agreed 2026-11-07, implementation pending):** Create and curate system templates and their crit-to-metric mappings. Used templates are immutable; this is not authority to edit private recruiter rubrics, posting weights or historical scores.
   * **Voice Profile Catalog Management:** Manage Voice Profiles (view voice profiles, fetch voice profiles from external TTS providers, delete obsolete profiles). `Manage Voice Profiles` serves as an uncounted grouping capability; its child use cases are counted.
   * **Financial Audit & Reporting:** View unified payment transactions (PayOS orders and internal ledger movements); generate revenue reports.
 * **Boundary Invariant:**
   * **Admin DOES manage:** Interview Behavior Guidelines, provider-sourced Voice Profiles (viewing, fetching, deleting), account locks, posting moderation, operational session oversight, and financial audits.
-  * **Separate Exclusions:** The guideline capability does not authorize unrestricted raw LLM system-prompt editing, global evaluation rubric/weight editing, runtime feature toggles, provider configuration management, or coin package pricing administration (Decision 16).
+  * **Separate Exclusions:** The guideline capability does not authorize unrestricted raw LLM system-prompt editing, administrative overrides of posting weights or historical evaluation results, runtime feature toggles, provider configuration management, or coin package pricing administration (Decision 16).
   * **Admin does NOT manage:** 3D avatar meshes or 3D background presets (built-in platform presets).
   * **No Wallets or Inventories:** Admin does not hold a personal coin wallet or personal avatar inventory.
   * **No Recording Access by Inference:** Session oversight does not grant Admin access to recruitment audio/video recordings.
@@ -189,6 +194,11 @@ classDiagram
   * **Interview Deadline Expiry Enforcement:** If an approved Candidate does not complete the recruitment interview by `interview_deadline` (calculated as `approval_time + 24 hours`; merely starting the interview before the deadline is insufficient), automatically transitions the Application to terminal `REJECTED`.
   * **Terminal Job Posting Close & Refund (Refund unused JP Candidate Slot):** Once intake is closed and EVERY Application in scope reaches a terminal result (`APPROVED` or `REJECTED`), or there are no Applications, automatically transitions the Job Posting to terminal closed state and refunds all still-unused recruitment interview capacity (`interview_slot` minus consumed sessions) to the owning Recruiter's personal wallet as internal coins, exactly once per Posting.
 * **Boundary Invariant:** The System Handler is strictly an **internal concept**, not an external entity on context diagrams. It does **not** manage invented background jobs like draft JD expiration, subscription reconciliation, or generic scheduled maintenance.
+
+---
+
+> [!note] Rubric authoring extension — agreed, not implemented
+> Admin manages system rubrics. Recruiters create/copy/manage private rubrics and assign allowed templates to own questions; each question has a private expected_answer. Criteria reference metrics; posting metric weights still determine overall. Candidate recruitment access is status-only. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]]. These are new capability requirements; the frozen formal UC count/IDs are not silently changed.
 
 ---
 
@@ -243,7 +253,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * Candidate views personal practice interview history and session listings
   * Candidate views practice performance report with overall score (0–100), competency breakdown, radar visualization, turn critiques, and actionable study roadmap
   * Candidate exports practice results
-  * Candidate views recruitment evaluation score (transcripts and recordings remain hidden from candidate during recruitment)
+  * Candidate views recruitment status only (scores, grading evidence, transcripts and recordings remain hidden)
   * Recruiter reviews applicant evaluation result, competency breakdown, turn critiques, and recruitment audio/video recordings and transcripts
 
 ### 2.6. Personal 3D Avatar Inventory
@@ -281,7 +291,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * System attaches Interview Result and recruitment recordings to Application
   * Hard-Gated Final Review: Recruiter final Approve/Reject decisions are hard-gated until `MAX(interview_deadline)` across all interview-eligible Applications for that Job Posting
   * Recruiter opens **View Application Detail**, inspects candidate profile, CV, and authorized interview score, result, recordings, and transcripts, and executes **Approve / Reject Application** (all review capabilities consolidated inside View Application Detail)
-  * Candidate tracks application status and views recruitment score (recordings and transcripts hidden)
+  * Candidate tracks application/interview status; recruitment scores, grading evidence, recordings and transcripts stay hidden
 
 ### 2.9. Coin Wallets & Payment Governance
 * **Actors:** Candidate, Recruiter, Admin, PayOS (Payment Gateway)
