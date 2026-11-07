@@ -330,3 +330,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
    Audio/video recordings and transcripts captured during recruitment interviews are accessible exclusively to the owning Recruiter. Candidates view their evaluation score, but cannot view recruitment transcripts or recordings during recruitment. Admin does not possess recruitment recording access by inference. Practice interviews do not record video.
 7. **No Company Hiring Headcount Persistence or Enforcement:**
    `interview_slot` represents exclusively maximum recruitment interview capacity (the maximum number of Candidates approved to interview). RoleCue does NOT persist or enforce company hiring headcount or target hire counts.
+
+## Planned Learning Roadmap Extension — Decision 25
+
+Agreed 2026-11-07; implementation pending. Candidate views the private linear Roadmap belonging to their Role Profile, chooses general/focused practice, reviews topic evidence/history and may regenerate only before the first practice session. There is no direct topic/score/threshold editor. System Handler creates the Roadmap row with the profile, generates content after requirement confirmation, updates progress from valid practice results and reconciles missed updates. Recruiter/Admin gain no access to Candidate Roadmaps. Existing formal UC IDs/count remain unchanged pending documentation reconciliation. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed spec]].

@@ -381,3 +381,19 @@ erDiagram
 No snapshot/version tables or separate expected-points table. Lock referenced definitions/question metadata at approval/start; archive prevents new use and preserves valid existing references. Expected-answer/criteria points are never backfilled into historical sessions. Disposable dev DB reset is allowed at implementation time, not executed by this document.
 
 For formulas, worked rows, proposed precision and unresolved engineering choices, use [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the rubric spec]] instead of inferring behavior from this diagram. The formal ERD/report must be reconciled during implementation; this target diagram does not claim its source artifact has already changed.
+
+## 4. Planned Learning Roadmap Extension — Decision 25 (Not Yet Implemented)
+
+Target extension, not applied migrations: one role_profiles row owns one roadmaps row; ordered roadmap_items hold topics; roadmap_assessments links a topic to a graded interview_questions assignment. Add nullable core_questions.roadmap_item_id and interviews.focus_item_id. Ownership is through the Role Profile; no independent user/goal linkage or snapshot/version tables. generation_status is stored, learning_status/topic score/progress are derived. No archived_at or topic editor in MVP.
+
+```mermaid
+erDiagram
+    ROLE_PROFILES ||--|| ROADMAPS : owns
+    ROADMAPS ||--o{ ROADMAP_ITEMS : ordered_topics
+    ROADMAP_ITEMS ||--o{ CORE_QUESTIONS : primary_topic
+    ROADMAP_ITEMS ||--o{ ROADMAP_ASSESSMENTS : evidence
+    INTERVIEW_QUESTIONS ||--o| ROADMAP_ASSESSMENTS : graded_assignment
+    ROADMAP_ITEMS o|--o{ INTERVIEWS : practice_focus
+```
+
+Cross-profile/recruitment mappings are forbidden. Regeneration before any practice session replaces topic/bank mapping together; used structure is preserved. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed approved spec]] for all fields, five-question/80 threshold, examples, resume/charge, and privacy behavior. Formal SRS/ERD/UC reconciliation happens during implementation without silently renumbering frozen artifacts.

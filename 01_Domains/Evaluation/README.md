@@ -80,3 +80,7 @@ No completed results are recalculated because configurations change. Disposable 
 - [[01_Domains/Administration/README|Administration]]: system rubric catalog with narrowly defined permissions.
 - [[02_System/Domain-Model|Domain model]] and [[02_System/Data-Relationships|relationships]]: implemented baseline vs planned schema extension.
 - [[03_Decisions/Product-Decisions|Product decisions]]: Decisions 13a and 24.
+
+## Planned Topic Evidence Consumer — Decision 25
+
+The agreed [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap extension]] consumes normalized practice question scores from the Barem result, retaining the latest result per core question then the five most recent distinct questions for each topic. Topic mean>=80 with five questions is achieved; this does not replace the weighted metric overall or reveal recruitment scores. Roadmap integration requires activating Barem per-core persistence for practice. Explicit delivered skips receive 0; unasked or technically failed evidence is excluded. A saved interview result remains valid if Roadmap linking must retry after failure.

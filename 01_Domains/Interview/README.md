@@ -181,3 +181,7 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
 * **LLM Provider:** Generates internal question banks, analyzes candidate answers, and assists in dialogue orchestration. (Follow-up decision provider unselected; Jev is tentative and not approved).
 * **STT Provider:** Transcribes candidate spoken audio to text.
 * **TTS Provider:** Synthesizes realistic interviewer voice audio and supplies viseme timing metadata for avatar lip-sync animation.
+
+## Planned Roadmap Practice Extension — Decision 25
+
+Agreed 2026-11-07; implementation pending. Practice may be general (focus_item_id=NULL) or focused on one owned Roadmap topic. Focus does not change the profile's target/seniority. Sample only that topic, prioritize unseen questions/unachieved topics while preserving Barem metric coverage, and validate/top up topic coverage before start. Default8 core questions and5 coins/start remain; resume is free and retains the original focus. A new focus request cannot rewrite an unfinished session or double-charge. Recruitment has no Roadmap focus/evidence. After finalized successful Barem evaluation, question results update topic history; question-level scores must first be available for practice. Explicit skips are0, unasked/evaluation-error cases are not. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]].

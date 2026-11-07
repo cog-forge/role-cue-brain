@@ -125,3 +125,16 @@ These rows describe agreed configuration relationships and proposed result stora
 The two new configuration tables are rubrics/rubric_criteria; core_questions adds rubric_id and expected_answer TEXT. A separate results table is proposed because a single question total cannot reconstruct crit or metric points. Score detail remains one session metric row; interviews.score remains the weighted overall. No extra point budget is awarded for expected_answer. Follow-ups belong to their core question.
 
 Without snapshots, rubric definitions and question content/expected_answer/bindings must remain unchanged once referenced by an approved posting or started session. Archive retains old references; making a new template is the way to change used definitions for new drafts. No ordinary delete/update may masquerade as privacy erasure. Retention must cover criterion evidence and explanations, including private answer fragments copied outside conversation_turns.
+
+## 4. Planned Roadmap Relationships — Decision 25 (Not Yet Implemented)
+
+| Parent | Child/reference | Cardinality / constraint | Meaning |
+|---|---|---|---|
+| role_profiles | roadmaps |1:1, UNIQUE(role_profile_id) | Create row together; owner through candidate_id |
+| roadmaps | roadmap_items |1:N, zero while pending/failed | Ordered knowledge topics; no archived_at |
+| roadmap_items | core_questions.roadmap_item_id |1:N, nullable for non-Roadmap questions | One primary topic per practice question |
+| roadmap_items | interviews.focus_item_id |1:N optional | NULL=general, topic ID=focused practice; recruitment NULL |
+| interview_questions | roadmap_assessments |1:0..1 | UNIQUE(interview_id,question_position), composite assignment FK |
+| roadmap_items | roadmap_assessments |1:N | Evidence links, no duplicate score/transcript |
+
+FKs alone do not establish same owner/profile; validate transactionally. Topic/bank regeneration is permitted only before any practice session, under the same profile guard as start. Do not delete/relabel used topics; account/profile erasure remains a coordinated deletion flow. Points/status/progress are derived from valid practice results; event time controls the latest-five distinct-question window. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|field-level schema and worked examples]].

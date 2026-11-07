@@ -107,3 +107,7 @@ flowchart TD
 ## 7. External Integrations
 
 * **LLM Provider:** Executes structured extraction prompts to parse unstructured raw text into valid JSON competency schemas.
+
+## Planned Roadmap Trigger — Decision 25
+
+Agreed 2026-11-07; implementation pending. Role Profile creation also creates its one Roadmap row in pending state. Topic content is generated only from confirmed requirements/seniority/refinement, before bank use. This does not expose the hidden bank or reopen confirmed Role Profile editing. Roadmap regeneration is a separate operation permitted only before any practice session; it must replace topic/bank mapping consistently. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]].

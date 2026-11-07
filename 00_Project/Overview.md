@@ -155,3 +155,7 @@ To maintain focus on interview simulation and delivery excellence, RoleCue estab
 * Terminology Standards: [[00_Project/Glossary|Glossary]]
 * System Architecture: [[02_System/Context|System Context]] & [[02_System/Domain-Model|Domain Model]]
 * Long-Lived Decisions: [[03_Decisions/Product-Decisions|Product Decisions]]
+
+## Agreed Learning Roadmap Extension (2026-11-07; Implementation Pending)
+
+Each Candidate Role Profile gains a private linear learning Roadmap generated from confirmed requirements, with general/focused practice and progress driven by Barem question results. Each topic uses the latest five distinct core-question results after deduplicating repeated attempts; five with mean>=80 is achieved. All topics must be achieved to complete the Roadmap, and lower new results may lower the status. This remains separate from metric-weighted interview overall and excludes recruitment evidence. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the approved specification]] and Decision 25.

@@ -94,7 +94,13 @@ flowchart TD
 
 #### 8. Evaluation & Learning Roadmap
 * Upon session completion, the turn transcript is graded against the assigned questions and evaluation configuration across technical competencies.
-* Evaluation results are stored relationally across `interviews.score`, `interviews.feedback`, `score_details (interview_id, metric_id, score)`, and `conversation_turns.feedback`, and displayed on the candidate's dashboard featuring an overall score (0–100), competency breakdown, radar chart, turn-by-turn critiques with model answers, and a prioritized study roadmap.
+* Evaluation results are stored relationally across `interviews.score`, `interviews.feedback`, `score_details (interview_id, metric_id, score)`, and `conversation_turns.feedback`, and displayed on the candidate's dashboard featuring an overall score (0–100), competency breakdown, radar chart, turn-by-turn critiques with model answers, and actionable study guidance. The durable per-Role-Profile Roadmap is the agreed extension below; generic feedback alone is not its persisted progress.
+
+---
+
+## Planned Durable Roadmap Extension to Flow A — Decision 25
+
+Agreed 2026-11-07; implementation pending. Create one Roadmap row with each Role Profile. Once requirements are confirmed, generate ordered topics and a topic-mapped bank. Candidate views the linear path and starts general practice or focuses on one topic (default 8 core questions,5 coins/start, same-session resume free). After finalized successful Barem evaluation, link each evaluated core result to its topic and compute the latest-five-distinct-question window. Five results with mean>=80 achieves that topic; all topics must be achieved to complete the Roadmap. Lower new results can lower status. Explicit skips receive 0, unasked/technical-error cases do not. Existing unfinished sessions retain their original focus. No recruitment evidence feeds this flow; no Candidate question-bank preview is introduced. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the full schema, formulas, regeneration and catch-up rules]].
 
 ---
 

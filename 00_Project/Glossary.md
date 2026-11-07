@@ -129,3 +129,12 @@ Private question-specific reference material in core_questions.expected_answer T
 
 ### Question Score vs Session Metric vs Overall
 Question score sums/normalizes all criterion points for question detail. Session metric score averages the corresponding question-level metric scores and is stored in score_details. Overall applies posting metric weights to session metrics and is stored in interviews.score. Whole-question scores are not averaged into overall in this design. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the worked example: question totals 70/50, session metrics 70/50, overall 62]].
+
+### Learning Roadmap (Agreed 2026-11-07; Implementation Pending)
+One private learning path per Candidate Role Profile. Its row exists at profile creation; ordered knowledge topics are generated from user-confirmed requirements. A general/focused practice session contributes evidence only to topics actually evaluated. No recruitment results contribute. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]].
+
+### Roadmap Topic / Item
+A knowledge subject such as SQL or Go concurrency, ordered by position for linear rendering. It is distinct from a rubric question type and an evaluation metric. There is no user-edited activity completion in MVP.
+
+### Topic Score, Roadmap Progress and Generation Status
+Topic score averages the five most recent distinct core-question results after retaining only the latest attempt per core question; fewer than five is provisional. Five with average>=80 is achieved. Progress is the percentage of topics achieved; all topics must be achieved for a nonempty ready Roadmap to be completed. Status can fall after lower new results. generation_status describes content preparation and is separate from derived learning_status. None of these replaces interviews.score or score_details.

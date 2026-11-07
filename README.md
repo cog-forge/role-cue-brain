@@ -71,6 +71,9 @@ role-cue-brain/
 │   ├── Evaluation/
 │   │   ├── README.md          # Metrics, rubrics, posting weights, result disclosure
 │   │   └── Scoring-Rubrics-Spec.md # Agreed rubric design and worked scoring example
+│   ├── Learning-Roadmap/       # Agreed per-profile Roadmap, topic evidence and progress (implementation pending)
+│   │   ├── README.md
+│   │   └── Learning-Roadmaps-Spec.md
 │   ├── Payment/README.md       # Coin packages, wallets, transactions, and interview/avatar slot funding
 │   └── Administration/README.md # Platform governance, moderation, voice profiles, payment audits, and operational oversight
 ├── 02_System/                  # System-level models and architectural boundaries
@@ -88,6 +91,9 @@ role-cue-brain/
 > Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]] for rubric reuse, per-question expected answers, recruiter-owned rubrics and the worked crit → metric → overall example. Metric weights remain authoritative; question totals are explanatory.
 
 ---
+
+> [!note] Learning Roadmap agreed 2026-11-07 — implementation pending
+> Read [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]] for the three-table design, linear topics, focused practice, five-question window, threshold 80 and reversible learning status. One Roadmap belongs to one Role Profile; only practice results contribute.
 
 ## 4. Reading Guide
 

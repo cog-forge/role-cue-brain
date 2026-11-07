@@ -111,3 +111,7 @@ flowchart TD
 | **TTS Provider** | Bidirectional | HTTPS | Ingests interviewer dialogue text $\rightarrow$ outputs synthesized audio buffer with facial blend-shape viseme timing metadata. |
 | **Payment Gateway (PayOS)** | Bidirectional | HTTPS | Ingests coin package checkout intent $\rightarrow$ returns PayOS checkout portal URL.<br/>Dispatches cryptographically signed webhooks confirming real-money transaction status. |
 | **Email Provider** | Outbound | HTTPS / SMTP | Ingests email payloads (verification tokens, password-recovery links, application notices, system alerts) $\rightarrow$ dispatches to destination mailboxes. |
+
+## Planned Learning Roadmap Boundary — Decision 25
+
+Agreed 2026-11-07; implementation pending. Candidate alone sees their Role Profile's Roadmap and practice evidence. Existing AI integration generates topic content only from confirmed requirements; deterministic backend aggregation derives learning progress. Existing System Handler reconciliation catches up missing assessment links. No new external service/human actor, recruiter access or recruitment-score disclosure is introduced. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]]; formal UC IDs/count are not renumbered here.

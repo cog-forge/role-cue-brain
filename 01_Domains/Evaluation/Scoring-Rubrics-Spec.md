@@ -351,3 +351,7 @@ bun run test:e2e tests/e2e/recruiter-question-bank.spec.ts tests/e2e/recruiter-e
 4. Bộ mẫu ban đầu, giới hạn dữ liệu và bộ kiểm chuẩn/owner/ngưỡng chất lượng.
 
 Không tạo/cập nhật backlog Jira mới trước khi user duyệt bản chia task. Spec không chứa sprint, người được gán việc hoặc tiến độ ticket; các nội dung vận hành đó thuộc Jira theo quy ước Brain.
+
+## Phần sử dụng điểm câu đã chốt sau spec Barem: Roadmap
+
+[[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Decision 25 — Roadmap theo Role Profile]] dùng normalized question score của practice để theo dõi topic qua nhiều phiên. Cửa sổ 5 câu khác nhau (mỗi câu lấy lần mới nhất), mean >= 80 và đủ 5 câu thì topic đạt. Đây là consumer riêng, không thay công thức metric-weighted overall của spec này và không đưa recruitment evidence cho Candidate. Practice activation/per-core persistence là dependency phải triển khai trước cập nhật tiến độ; không giả đã có trên main. Skip/no-answer đã hiển thị là 0 khi hoàn tất; unasked/technical-error không tự thành 0. Các chính sách này đã được duyệt cho Roadmap practice, không tự chốt threshold hoặc partial-session rule cho recruitment.
