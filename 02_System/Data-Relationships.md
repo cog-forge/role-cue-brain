@@ -138,3 +138,15 @@ Without snapshots, rubric definitions and question content/expected_answer/bindi
 | roadmap_items | roadmap_assessments |1:N | Evidence links, no duplicate score/transcript |
 
 FKs alone do not establish same owner/profile; validate transactionally. Topic/bank regeneration is permitted only before any practice session, under the same profile guard as start. Do not delete/relabel used topics; account/profile erasure remains a coordinated deletion flow. Points/status/progress are derived from valid practice results; event time controls the latest-five distinct-question window. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|field-level schema and worked examples]].
+
+## 5. Planned Marketplace Relationships — Decision 26 (Not Yet Implemented)
+
+| Parent | Child | Target constraint / meaning |
+|---|---|---|
+| users | avatar_assets.created_by | Creator reference, nullable/anonymizable under erasure policy; not every buyer |
+| avatar_assets | avatars.asset_id |1:N shared file, each avatar retains own inventory_id; move model_path into asset |
+| avatar_assets | avatar_listings.asset_id | Target one listing per asset; seller/asset identity fixed |
+| users | avatar_listings.seller_id | Seller reference; ordinary listing lifecycle uses statuses, privacy deletion handled separately |
+| transactions | Marketplace product | **No FK/columns added**; purchase information only in description |
+
+No avatar_purchases/entitlement table, avatars.purchase_transaction_id, preview_path/source on assets, or transaction purpose/access_status/avatar_listing_id. Wallet movement+ledger+inventory grant must commit together, using existing idempotency_key to prevent repeated charges. Ownership for use comes from inventory, not description parsing. A deleted copy has no free restore entitlement; shared file cleanup must preserve all remaining avatar/listing references. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the approved limits and engineering contract]].

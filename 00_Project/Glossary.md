@@ -138,3 +138,9 @@ A knowledge subject such as SQL or Go concurrency, ordered by position for linea
 
 ### Topic Score, Roadmap Progress and Generation Status
 Topic score averages the five most recent distinct core-question results after retaining only the latest attempt per core question; fewer than five is provisional. Five with average>=80 is achieved. Progress is the percentage of topics achieved; all topics must be achieved for a nonempty ready Roadmap to be completed. Status can fall after lower new results. generation_status describes content preparation and is separate from derived learning_status. None of these replaces interviews.score or score_details.
+
+### Avatar Asset / Avatar Inventory Row (Agreed 2026-11-07; Implementation Pending)
+Avatar asset is the immutable model/file stored independently of an inventory. An avatar row is one user's selectable copy, linking inventory_id to asset_id with its own name/personality. Multiple owned avatar rows may share a model without sharing private inventory access.
+
+### Avatar Listing / Marketplace Purchase Description
+Listing stores seller, asset, public content, coin price and moderation state. A purchase updates two wallets, grants an owned avatar and writes ordinary transactions.description. It does not create a purchase/entitlement table or transaction product FK. Human-readable financial history is not a permanent rights registry; deleting a copy does not retain free restore rights. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|Decision 26's spec]].

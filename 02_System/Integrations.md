@@ -180,3 +180,7 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 * **Operational Invariants:**
   * Asynchronous queue-based dispatch; failures in email delivery must never block core transactional API flows.
   * **Decoupling Invariant for Account Locks:** The database status transition (`is_locked`, `lock_reason`) executes immediately and independently of email transmission. A failure in the external email service must never roll back or block an administrative lock or unlock action.
+
+## Planned Marketplace Asset and Payment Reuse — Decision 26
+
+The approved Marketplace reuses current VRM conversion/rendering/storage and internal coin wallets; it adds no new payment provider or asset-creation vendor. PayOS remains coin top-up only. Asset storage is resolved via avatar_assets, with separate owned inventory rows for buyers. Transactions keep their schema and human-readable description; no vendor API is called inside coin settlement. Rights to distribute any source asset must be established before live sales; product approval alone does not grant vendor rights. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the agreed scope]] (implementation pending).

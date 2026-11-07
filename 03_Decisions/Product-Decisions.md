@@ -66,7 +66,7 @@ This document records the ratified, long-lived product decisions that govern the
 * **Decision:** `Configure Interview Session` is modeled as a single composite capability for a Candidate's Target JD practice interview, encompassing an available system 3D interviewer or eligible model from avatar inventory, an available Voice Profile, 3D room environment, difficulty, and duration.
 * **Rationale:** Breaking visual, vocal, environmental, and difficulty settings into separate top-level use cases adds unnecessary administrative overhead. The user configures their session in a cohesive wizard.
 * **Rule:** Interview configuration is a unified setup step. An interview originating from a Recruiter Job Posting instead uses that Job Posting's company-defined 3D interviewer model and Voice Profile, which the Candidate cannot override; a recruitment start that names its own avatar or voice is refused.
-  * **Practice Avatar & Voice Eligibility:** A practice session may use only a system 3D interviewer or an avatar in the Candidate's **own** inventory; another user's personal avatar is their likeness and is never usable. The selected Voice Profile must be active (`voices.is_active`). No system avatar presets are currently persisted, so in practice the Candidate's own inventory avatars are the eligible models.
+  * **Practice Avatar & Voice Eligibility:** A practice session may use only a system 3D interviewer or an avatar in the Candidate's **own** inventory; another user's private avatar cannot be selected directly. Decision 26 adds a purchased copy in the buyer's own inventory after implementation, without opening access to the seller's private avatar row. The selected Voice Profile must be active (`voices.is_active`). No system avatar presets are currently persisted, so in practice the Candidate's own inventory avatars are the eligible models.
 
 ---
 
@@ -79,15 +79,15 @@ This document records the ratified, long-lived product decisions that govern the
   * Avatar slots represent **storage capacity**: each saved avatar occupies one slot. At capacity, users delete existing models or purchase additional capacity slots using coins.
   * **Initial Capacity:** Every Candidate and Recruiter starts with 3 storage slots. Creating an avatar is free while a slot is available; when the inventory is full, creation is refused (`INVENTORY_FULL`) until the user deletes an avatar or buys more slots. Effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs). The frontend reads actual capacity from the authoritative API because purchases can increase it.
   * **Capacity Price (Settled 2026-10-27):** One additional avatar storage slot costs **1 coin**, purchased 1–10 slots at a time (`POST /inventory/purchase`) and debited atomically through the shared ledger. This is a fixed system constant for now, not configuration. Purchased slots are permanent capacity; deleting an avatar frees its slot.
-  * **No Generation Fee (Settled 2026-10-27):** There is **no** separate avatar generation fee. Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot; the only avatar charge is a storage slot purchase.
-  * RoleCue embeds the free Avaturn iframe; Avaturn generates the final GLB; RoleCue converts it to VRM and persists it. No Avaturn Pro backend API, marketplace, or admin catalog is supported.
+  * **No Generation Fee (Settled 2026-10-27):** There is **no** separate avatar generation fee. Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot; creating an avatar has no generation charge. Decision 26 separately adds payment for an avatar listed by another user (implementation pending); capacity pricing is unchanged.
+  * RoleCue embeds the free Avaturn iframe; Avaturn generates the final GLB; RoleCue converts it to VRM and persists it. No Avaturn Pro backend API or Admin-authored avatar catalog is supported. Decision 26 adds moderated user listings as approved future scope; it does not establish provider resale rights.
 
 ---
 
 ## 8. Admin Manages Voice Profiles, but NOT 3D Avatars or Environments
 * **Decision:** The Administrator manages the catalog of Voice Profiles sourced from TTS providers, but does **NOT** manage the 3D avatar catalog or 3D background scenes.
 * **Rationale:** 3D avatar meshes and WebGL environment scenes require 3D modeling, vertex optimization, and collision rigging, making ad-hoc administrative uploads impractical. Conversely, TTS voice profiles simply reference provider API identifiers and string metadata, which are safe and practical for admin curation.
-* **Rule:** 3D avatars and environments are built-in presets; Voice Profiles are admin-governed. Admin does not possess a personal avatar inventory or personal coin wallet.
+* **Rule:** Admin does not author/upload 3D meshes or environments; Voice Profiles are admin-governed. Admin has no personal avatar inventory or wallet. Decision 26 adds moderation of user Marketplace listings, not an Admin-owned mesh catalog (implementation pending).
 
 ---
 
@@ -99,9 +99,9 @@ This document records the ratified, long-lived product decisions that govern the
 ---
 
 ## 10. No 3D Marketplace or Community Publishing
-* **Decision:** 3D avatar marketplace, trading, and community model publishing are strictly excluded from the product.
-* **Rationale:** A 3D asset marketplace introduces asset moderation, copyright liability, 3D mesh security scanning, and creator payout systems that fall outside RoleCue's core mission.
-* **Rule:** Avatars are restricted to curated platform presets and user-generated personal avatars stored in Candidate or Recruiter inventories.
+* **Status:** SUPERSEDED on 2026-11-07 by Decision 26 for the agreed minimal, coin-only, moderated Avatar Marketplace. Preserve this entry as historical rationale, not a current exclusion.
+* **Historical Decision:** Marketplace, community model trading and publishing were excluded to avoid moderation, redistribution and payout complexity.
+* **Current Rule:** Decision 26 permits user listings and paid copies in own inventory; no cash-out, fee engine, per-buyer entitlement/revoke/refund, resale/gifting/NFT or structured purchase table. Implementation is pending; consult [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the approved spec]].
 
 ---
 
@@ -195,7 +195,7 @@ This document records the ratified, long-lived product decisions that govern the
   * **External vs. Internal:** External payment gateway (PayOS) handles real-money checkout to acquire coin packages. Internal spending (practice interview start fees, interview slot funding, avatar storage slot purchases) and internal refunds (`Refund unused JP Candidate Slot` at terminal auto-close) are internal database ledger operations that do not invoke PayOS.
   * **Start Charging Boundary:** Practice interviews are debited in coins (5 coins) from the Candidate's wallet upon session start (not completion); reconnecting to or resuming the same active session incurs no second charge. Starting again while the Candidate has an unfinished practice session for the same Role Profile returns that session instead of charging again, and a retried start carrying the same idempotency key returns the session it created.
   * **Slot Consumption Boundary:** Recruitment interviews consume one prepaid Recruiter slot upon Candidate's first successful interview start, when the Application's single recruitment session is created; resuming that session consumes no additional slot; Candidates are never charged. Consumption is counted from recruitment sessions, so the terminal-close refund never double-debits or double-credits.
-  * **Avatar Charging Boundary:** Avatar creation is free while a storage slot is available; the only avatar charge is buying storage slots at 1 coin per slot, debited atomically through the ledger. There is no separate generation fee (Settled 2026-10-27).
+  * **Avatar Charging Boundary:** Avatar creation is free while a storage slot is available; capacity costs 1 coin per slot, debited atomically through the ledger. Decision 26 adds a separate coin payment to a seller for a listed avatar copy (implementation pending). There is no separate generation fee (Settled 2026-10-27).
   * **Terminal Auto-Close Refund:** Only terminal Job Posting auto-close refunds eligible unused interview slots as coins back to the Recruiter's wallet (`Refund unused JP Candidate Slot`), once per Posting. Close intake itself does not refund slots; when it chains straight into terminal close, the refund comes from the terminal-close step.
 
 ---
@@ -341,3 +341,14 @@ The following entries distinguish ratified scope from unresolved implementation 
 * **Structure:** No direct user editing of topics/scores/status/thresholds or AI topic changes after interviews. Regenerate only before any practice session, replacing topic/bank mapping consistently under a start/regenerate guard. After first start, keep structure; a changed goal uses a new profile/Roadmap. Privacy erasure remains supported.
 * **Reliability:** Assessment links reference existing question results. Use event time, not catch-up insert time, for recency. Existing System Handler reconciliation must recover missed updates after restart; Roadmap update failure does not discard a saved interview result.
 * **Source:** [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Detailed Vietnamese spec and worked examples]]. The formal SRS/UC/ERD must be reconciled during implementation; frozen IDs/count are not silently renumbered. This decision records agreed future behavior, not applied migrations or completed implementation.
+
+## 26. Minimal Moderated Avatar Marketplace (Agreed 2026-11-07; Implementation Pending)
+
+* **Decision:** Candidates and Recruiters may list their own distributable avatar for Admin review, browse approved listings and buy a non-exclusive copy into their own inventory. Seller retains the original. Admin moderates but has no inventory/wallet and does not author an asset catalog. Supersedes Decision 10 and extends Decisions 6/7/8/15 only as stated here.
+* **Money:** Use coins, seller receives the full price, no Marketplace fee/cash-out in MVP. Debit buyer, credit seller, record one COIN transaction and grant one buyer-owned avatar in the same DB transaction. Same-intent retry must not charge/grant twice; no PayOS call except separate existing coin top-up.
+* **Data:** Exactly two new tables: avatar_assets and avatar_listings. avatars gains asset_id and moves model_path into assets. No preview_path/source fields, avatar_purchases/entitlement table, purchase_transaction_id or Marketplace columns on transactions. Purchase details are human-readable description in existing transactions; never parse it into a fake FK/rights registry.
+* **Ownership:** Buyer uses their own avatar row through existing inventory/setup permissions, sharing an immutable asset with seller/other buyers. Do not select the seller's private avatar ID. A bought copy occupies one slot; no duplicate purchase while that asset is already in the inventory. Delete frees the row/slot and does not retain a free restore entitlement; a new purchase after deletion is a new intent/key.
+* **Lifecycle:** Draft/rejected listings can be edited/submitted; Admin approves/rejects. Seller may delist and Admin may suspend to prevent new purchases. Neither operation removes avatar copies already granted. Asset/seller identity is fixed on a listing; normal business deletion does not erase financial history. Source-avatar deletion/account erasure must not remove shared files still used by buyers.
+* **Use cases:** Seven Candidate/Recruiter capabilities (browse/search, detail, My Listings, create/submit, edit/resubmit, delist, purchase) and three Admin capabilities (queue, review, suspend). Existing inventory/setup/history extend instead of adding duplicate modules. Do not silently renumber frozen formal UC IDs/count.
+* **Limits:** No per-listing sales dashboard, exact transaction-to-product FK, free restore after delete, per-buyer revoke/refund or structured purchase history. Transactions remain financial history; use inventory ownership to allow normal avatar use. Provider redistribution permission must be established for assets before live sales; product scope approval is not vendor authorization.
+* **Source:** [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|Approved Vietnamese spec]]. These are agreed future capabilities; target schema/API/index/retry contract still require engineering review. Task plan must be approved before Jira creation.

@@ -40,7 +40,7 @@ Provide a lifelike, engaging human presence during virtual technical interviews.
   * **Initial Capacity & API Authority:** Every Candidate and Recruiter starts with 3 storage slots. The frontend reads actual capacity from the authoritative API because purchases can increase it; 3 is the initial allocation, not a permanent frontend limit. Purchased slots are permanent capacity; deleting an avatar frees its slot.
   * **No Generation Fee:** There is **no** separate avatar generation fee (Settled 2026-10-27, Decision 7). Effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs).
 * **Free Creation While a Slot Is Available:**
-  Opening the avatar creator, Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot. The only avatar charge is buying storage slots.
+  Opening the avatar creator, Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence cost nothing as long as the user has a free storage slot. Capacity purchases remain a separate charge; Decision 26 adds payment to a seller for listed avatar copies (agreed future scope, implementation pending).
 * **Voice Profile (`voices`):**
   A synthesized vocal persona sourced from third-party Text-to-Speech (TTS) providers. Encapsulates voice name, status (`is_active`), and provider identity (`provider`, `provider_voice_id`, `locale`, `gender`). Curated and managed exclusively by Administrators. Only an active Voice Profile can be selected for a practice session.
   * **Provider Sync (KAN-201, 2026-10-30):** The Admin "Sync from provider" action upserts voices by `(provider, provider_voice_id)`. Voices the provider no longer offers become `is_active = false` and are never deleted, so historical sessions and postings keep their reference. A provider failure or invalid response leaves the catalog unchanged. The sync keeps only standard neural `en-US` voices (`TTS_SYNC_LOCALES=en-US`, Azure `VoiceType` `Neural`; decided 2026-10-30). The reason is that the interview speaks one language and one accent, US English; blend shapes are not limited to en-US (Azure lists them for about 47 locales, while SVG visemes are en-US only). HD voices (`DragonHD…`, `DragonHDOmni…`) are excluded because Microsoft documents that they do not support `<mstts:viseme>`. Multilingual voices (`…MultilingualNeural`, including Turbo) are excluded because Azure lists them as a separate type and does not state viseme support for them. Whether every standard en-US voice actually returns visemes and blend shapes is verified per voice in KAN-248.
@@ -110,16 +110,16 @@ flowchart TD
 2. **Avatar Slots Represent Storage Capacity:**
    The initial 3 slots represent storage capacity; each saved avatar occupies one slot. At capacity, creation is refused (`INVENTORY_FULL`) and the user must remove an existing model or purchase additional capacity slots using wallet coins (1 coin per slot, 1–10 slots per purchase, debited atomically through the shared ledger). Purchased slots are permanent capacity; deleting an avatar frees its slot. The frontend reads actual capacity from the authoritative API.
 3. **No Separate Generation Fee:**
-   Avatar creation (Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence) costs nothing as long as the user has a free storage slot (Settled 2026-10-27, Decision 7). The only avatar charge is buying storage slots; effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs).
+   Avatar creation (Avaturn capture, GLB generation, GLB-to-VRM conversion, and VRM persistence) costs nothing as long as the user has a free storage slot (Settled 2026-10-27, Decision 7). Capacity purchases remain a separate charge; Decision 26 adds paid avatar copies from user listings (implementation pending); effectively, an avatar beyond the free capacity costs 1 coin (the slot it needs).
 4. **Embedded Avaturn Free Iframe Boundary:**
    RoleCue embeds the free Avaturn iframe directly. Avaturn owns capture instructions, photo collection, validation and retakes, preview generation, customization, and final GLB generation. RoleCue does not orchestrate these steps through Avaturn Pro APIs or backend reconstruction calls.
 5. **VRM is the Production Artifact:**
    RoleCue receives Avaturn's final GLB as an intermediate payload, converts it to standardized VRM, persists the VRM asset, and associates it with the owning user (`user_id`).
-6. **No 3D Marketplace:**
-   RoleCue does **NOT** provide a 3D asset marketplace, community model trading, or creator monetization. Avatars are restricted to system presets and user-owned personal avatars.
+6. **Minimal Marketplace Extension (Decision 26; Implementation Pending):**
+   The former Marketplace exclusion is superseded. Candidate/Recruiter sellers can publish moderated listings and buyers receive owned avatar copies using coins. No cash-out, fee engine, resale or purchase entitlement manager; existing private avatar flow remains.
 7. **Admin Governance Boundary:**
    * **Admin DOES manage:** Voice Profiles sourced from TTS providers (viewing, fetching, deleting).
-   * **Admin does NOT manage:** 3D avatar meshes or 3D background presets.
+   * **Admin does NOT author/upload:** 3D avatar meshes or 3D backgrounds. Decision 26 adds listing moderation only, without an Admin avatar inventory or seller wallet.
 8. **Speech and Facial Synchronization:**
    TTS audio playback and 3D facial morph animation articulate in tight visual synchronization via phoneme/viseme timing metadata.
 9. **Graceful 2D Degradation:**
@@ -145,3 +145,7 @@ flowchart TD
 * **Interviewer Performance (decided 2026-10-30):** The server decides what the interviewer says and how it is performed. Each turn carries the audio, a viseme and blend-shape timeline, word timings, and bounded emotion and gesture cues (KAN-248, KAN-250). The browser performs the turn with layered animation on the VRM, in this order: idle base pose, gestures (VRMA or retargeted motions, KAN-251), procedural blink, gaze and listening behavior, facial emotion, and the mouth. The mouth layer wins while speaking, using VRM `overrideMouth`. The mouth falls back in this order: Azure blend shapes, then viseme IDs, then in-browser vowel analysis, then amplitude.
 * **TTS Provider:** Synthesizes spoken voice audio and produces phoneme/viseme timing metadata for facial blend-shape animation. **Azure AI Speech** is the selected provider (2026-10-29); see [[02_System/Integrations|Integrations]] §3.3 for the current viseme delivery status.
 * **Avaturn:** Provides the embedded free iframe experience for capture, validation, preview, customization, and final GLB generation. RoleCue receives the final GLB and performs GLB-to-VRM conversion and VRM persistence.
+
+## Planned Shared Assets and Marketplace — Decision 26
+
+Agreed 2026-11-07; implementation pending. Current baseline stores model_path on avatars. Target moves it into avatar_assets and adds avatars.asset_id for original and purchased rows. Each user retains separate inventory/avatar IDs; file bytes may be shared. Do not delete a shared file when only the source avatar is removed; account erasure/cleanup must preserve other users' references. No preview_path/source columns or purchase table. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the approved spec]] for all fields and minimal purchase-description flow.

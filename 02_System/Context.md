@@ -115,3 +115,7 @@ flowchart TD
 ## Planned Learning Roadmap Boundary — Decision 25
 
 Agreed 2026-11-07; implementation pending. Candidate alone sees their Role Profile's Roadmap and practice evidence. Existing AI integration generates topic content only from confirmed requirements; deterministic backend aggregation derives learning progress. Existing System Handler reconciliation catches up missing assessment links. No new external service/human actor, recruiter access or recruitment-score disclosure is introduced. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]]; formal UC IDs/count are not renumbered here.
+
+## Planned Avatar Marketplace Boundary — Decision 26
+
+Agreed 2026-11-07; implementation pending. Existing Candidate/Recruiter actors become sellers/buyers; Admin reviews user listings without acquiring inventory/wallet capabilities. No new external payment actor: PayOS remains coin top-up only, Marketplace settles coins internally. Asset redistribution permission remains a source-specific prerequisite. Seven user/three Admin capabilities require formal UC reconciliation, without silently renumbering existing IDs/count. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|approved spec]].

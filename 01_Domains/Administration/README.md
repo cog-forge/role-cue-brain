@@ -123,3 +123,7 @@ flowchart TD
 
 * **TTS Providers:** Fetches available voice profiles from provider APIs and manages active voice options.
 * **Email Provider:** Dispatches administrative notices (e.g., account lock/unlock notifications).
+
+## Planned Marketplace Listing Moderation — Decision 26
+
+Agreed2026-11-07; implementation pending. Admin views pending user listings, approves/rejects the exact payload with reason, and suspends a listing to stop new sales. Admin does not author/upload a mesh catalog and does not gain an inventory, wallet or seller payout account. Suspension does not remove buyer-owned avatar copies; individual revoke/refund is outside MVP. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|Marketplace spec]]; formal UC IDs/count are reconciled separately.

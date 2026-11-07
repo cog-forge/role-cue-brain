@@ -322,8 +322,8 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
    Candidates **never** view, edit, or confirm an Interview Blueprint. Blueprints are ONLY the persistent core-question banks generated after requirement confirmation (evaluation configuration is a separate concern). Recruiters **can** view and edit core questions in the question bank for their own Job Postings. There is no separate Blueprint table in the database; persistent storage uses `core_questions`.
 3. **No Multi-Tenancy Architecture:**
    Recruiters manage their Job Postings directly. There are no company tenants, company workspaces, tenant-specific schemas, or tenant isolation middleware.
-4. **No 3D Marketplace:**
-   Avatars are limited to curated platform presets and user-generated personal avatars in Candidate or Recruiter inventories. There is no community publishing, avatar store, trading, or monetization.
+4. **Minimal Moderated Marketplace (Decision 26; Implementation Pending):**
+   Candidates/Recruiters list and buy permitted avatar copies into their own inventory. Admin reviews listings without owning inventory/wallet. This supersedes the old exclusion, while cash-out/resale/NFT, structured purchase/entitlement tables and per-buyer revoke/refund remain outside MVP.
 5. **Coin Wallets & Unified Transactions:**
    Platform monetization is structured around coin packages and personal wallets for Candidates and Recruiters. Admin has no wallet. PayOS is the confirmed real-money payment provider. The platform uses a unified transaction model rather than separate payment orders and coin transactions. Unused funded interview slots are refunded as coins upon terminal Job Posting auto-close.
 6. **Recruitment Recording & Visibility Boundary:**
@@ -334,3 +334,9 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 ## Planned Learning Roadmap Extension — Decision 25
 
 Agreed 2026-11-07; implementation pending. Candidate views the private linear Roadmap belonging to their Role Profile, chooses general/focused practice, reviews topic evidence/history and may regenerate only before the first practice session. There is no direct topic/score/threshold editor. System Handler creates the Roadmap row with the profile, generates content after requirement confirmation, updates progress from valid practice results and reconciles missed updates. Recruiter/Admin gain no access to Candidate Roadmaps. Existing formal UC IDs/count remain unchanged pending documentation reconciliation. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed spec]].
+
+## Agreed Minimal Marketplace Extension — Decision 26 (Implementation Pending)
+
+Candidate/Recruiter gains seven conceptual capabilities: browse/search active Marketplace, view listing detail, My Listings, create/submit listing, edit/resubmit draft or rejected listing, delist own listing, purchase using coins. Admin gains queue, review approve/reject, and suspend listing. Existing inventory, avatar setup and transaction history are extended rather than duplicated. No Admin wallet/inventory/mesh-authoring capability is added.
+
+These ten names are approved product scope, not newly assigned formal UC IDs or an automatic change to the frozen UC count. No free restore, per-listing sales dashboard, purchase entitlement table, cash-out or individual revoke/refund. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the approved spec]] for the description-only transaction decision and limits.

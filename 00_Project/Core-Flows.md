@@ -70,7 +70,7 @@ flowchart TD
 
 #### 5. Configure Interview Session
 * The Candidate configures presentation and execution parameters:
-  * **Interviewer Persona:** Visual appearance choice (system preset or eligible model from the Candidate's **own** personal avatar inventory; another user's avatar is never usable).
+  * **Interviewer Persona:** Visual appearance choice (system preset or eligible model from the Candidate's **own** personal avatar inventory; another user's private avatar cannot be selected directly; Decision 26's planned purchased copy is a separate owned inventory row).
   * **Voice Profile:** Voice profile choice (tone, accent, gender) sourced from TTS providers; only an active Voice Profile can be selected.
   * **Interview Environment:** 3D virtual room background choice.
   * **Difficulty & Horizon:** Session difficulty and duration horizon.
@@ -308,8 +308,12 @@ flowchart TD
    * RoleCue receives the GLB and executes deterministic conversion to the standardized VRM format.
 4. **Successful VRM Persistence (no charge; uses one free slot):**
    * RoleCue persists the VRM model and associates it with the owning user (`user_id`).
-   * **No Charge:** Persisting the avatar occupies one free storage slot and debits no coins. Opening the creator, Avaturn capture, GLB generation, conversion, and persistence are all free while a slot is available; the only avatar charge is buying storage slots.
+   * **No Charge:** Persisting the avatar occupies one free storage slot and debits no coins. Opening the creator, Avaturn capture, GLB generation, conversion, and persistence are all free while a slot is available; this creation flow only charges for extra capacity. Decision 26 separately adds seller-priced Marketplace copies (implementation pending).
 5. **Eligible Interview Usage:**
    * Once persisted, the avatar is stored in the user's personal library.
    * A Candidate can select an eligible personal avatar as the interviewer appearance for personal Target JD practice sessions.
    * For Job Posting interviews, company presentation settings remain locked by the Job Posting.
+
+## Flow D: Planned Moderated Avatar Marketplace — Decision 26
+
+Agreed 2026-11-07; implementation pending. Seller chooses a permitted creator-owned avatar, drafts/submits a listing; Admin reviews the exact payload and approves/rejects. Candidate/Recruiter buyer browses active listings, confirms price and has free slot/coins; the backend atomically debits buyer, credits seller, writes the existing transaction description and inserts the buyer's own avatar row sharing asset_id. No per-buyer entitlement table or transaction columns. The copy is used through normal inventory/practice/own-posting selectors. Seller may delist, Admin may suspend; buyer copies remain. Deleting a bought copy has no free restore; a later purchase is a new intent. Same-intent retry never charges/grants twice. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the complete scope and field definitions]].

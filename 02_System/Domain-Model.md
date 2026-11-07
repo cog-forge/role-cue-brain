@@ -397,3 +397,18 @@ erDiagram
 ```
 
 Cross-profile/recruitment mappings are forbidden. Regeneration before any practice session replaces topic/bank mapping together; used structure is preserved. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed approved spec]] for all fields, five-question/80 threshold, examples, resume/charge, and privacy behavior. Formal SRS/ERD/UC reconciliation happens during implementation without silently renumbering frozen artifacts.
+
+## 5. Planned Minimal Avatar Marketplace — Decision 26 (Not Yet Implemented)
+
+Two target tables only: avatar_assets (file/creator/status) and avatar_listings (seller/asset/content/price/moderation). avatars gains asset_id and removes model_path after migration. transactions/wallets/inventories schemas remain; purchase description uses existing financial fields and no product/entitlement FK.
+
+```mermaid
+erDiagram
+    USERS o|--o{ AVATAR_ASSETS : created_by
+    AVATAR_ASSETS ||--o{ AVATARS : shared_model
+    INVENTORIES ||--o{ AVATARS : owns_copy
+    AVATAR_ASSETS ||--o| AVATAR_LISTINGS : listed_as
+    USERS ||--o{ AVATAR_LISTINGS : sells
+```
+
+This is approved future scope, not the implemented baseline diagram above. Shared assets are retained while another user's avatar references them; seller delist does not revoke buyer copies. No structured purchase table, per-listing financial FK or free restore after delete. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|canonical spec]]; formal ERD/SRS reconciliation remains a later implementation deliverable.

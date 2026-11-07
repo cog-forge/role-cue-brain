@@ -68,6 +68,9 @@ role-cue-brain/
 │   ├── Job-Posting-Application/README.md # Recruiter job postings, intake management, CV screening, and candidate applications
 │   ├── Interview/README.md     # Real-time simulation, configuration, and question-bank blueprint engine
 │   ├── Avatar-Voice/README.md  # 3D avatar rendering, Candidate/Recruiter avatar inventory, and TTS voices
+│   ├── Avatar-Marketplace/    # Approved minimal coin-only Marketplace (implementation pending)
+│   │   ├── README.md
+│   │   └── Avatar-Marketplace-Spec.md
 │   ├── Evaluation/
 │   │   ├── README.md          # Metrics, rubrics, posting weights, result disclosure
 │   │   └── Scoring-Rubrics-Spec.md # Agreed rubric design and worked scoring example
@@ -94,6 +97,9 @@ role-cue-brain/
 
 > [!note] Learning Roadmap agreed 2026-11-07 — implementation pending
 > Read [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]] for the three-table design, linear topics, focused practice, five-question window, threshold 80 and reversible learning status. One Roadmap belongs to one Role Profile; only practice results contribute.
+
+> [!note] Avatar Marketplace agreed 2026-11-07 — implementation pending
+> [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|Approved spec]] supersedes the old exclusion (Decision 10→26): two new tables, owned copies sharing assets, coin-only purchase with existing transaction description. No purchase table/new transaction columns, free restore, per-listing sales analytics or cash-out.
 
 ## 4. Reading Guide
 
