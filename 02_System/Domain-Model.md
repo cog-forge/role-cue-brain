@@ -353,9 +353,9 @@ classDiagram
 
 ---
 
-## 3. Planned Rubric Extension — Decision 24 (Not Yet Implemented)
+## 3. Rubric Extension — Decision 24 (Configuration Tables Applied 2026-11-11; Result Tables Not Yet Implemented)
 
-Two configuration tables are agreed: rubrics and rubric_criteria. core_questions adds rubric_id and expected_answer TEXT. Metrics and metrics_percentage remain. Actual per-criterion results require separate result storage; interview_criterion_scores and interview_questions.score are proposed engineering additions, not snapshot/configuration tables.
+Two configuration tables are agreed and applied by migration 000032: rubrics and rubric_criteria. core_questions adds rubric_id and expected_answer TEXT. Metrics and metrics_percentage remain. Actual per-criterion results require separate result storage; interview_criterion_scores and interview_questions.score are proposed engineering additions, not snapshot/configuration tables.
 
 ```mermaid
 erDiagram
@@ -412,3 +412,14 @@ erDiagram
 ```
 
 This is approved future scope, not the implemented baseline diagram above. Shared assets are retained while another user's avatar references them; seller delist does not revoke buyer copies. No structured purchase table, per-listing financial FK or free restore after delete. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|canonical spec]]; formal ERD/SRS reconciliation remains a later implementation deliverable.
+
+## 6. Interview Behavior Guidelines — Decision 27 (Implemented 2026-11-11)
+
+```mermaid
+erDiagram
+    USERS ||--o{ INTERVIEW_BEHAVIOR_GUIDELINES : "saved by (audit, no FK)"
+    INTERVIEW_BEHAVIOR_GUIDELINES o|--o{ INTERVIEWS : "snapshot at session start"
+```
+
+- interview_behavior_guidelines: append-only versions (version, tone, question_length, follow_up_max nullable, follow_up_focus, avoid_topics array, updated_by, created_at). The highest version is current; no row means defaults. `updated_by` is a plain column so the audit row outlives the account.
+- interviews.behavior_guideline_id: nullable reference set when a session starts; NULL means the defaults the session ran under. Completed interviews are never rewritten.

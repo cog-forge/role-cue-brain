@@ -16,7 +16,7 @@ This document defines the high-level boundary of the **RoleCue Platform**, detai
 
 ---
 
-> [!note] Agreed rubric capability extension — implementation pending
+> [!note] Agreed rubric capability extension — foundation implemented 2026-11-11, screens and live grading pending
 > Admin additionally curates structured system rubric templates; Recruiter creates/copies private templates and reviews per-question expected_answer. No new external actor/service is introduced. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]]; existing frozen UC IDs are not renumbered here.
 
 
@@ -84,7 +84,7 @@ flowchart TD
    * Avaturn does not introduce a separate external human actor.
    * RoleCue embeds Avaturn's free iframe experience for personal avatar creation. Avaturn returns a final GLB; RoleCue converts and persists the VRM artifact in the user's inventory. The integration detail is specified in [[02_System/Integrations|External Integrations]].
 5. **Interview Behavior Guideline Scope:**
-   * Admin-authorized `Configure Interview Behavior Guidelines` is mandatory registered scope, ratified on 2026-10-20. Guidelines influence intended AI interviewer behavior without changing completed historical results. UI, fields, schema, persistence, versioning, and prompt composition remain TBD; this diagram does not assert implementation in `main`.
+   * Admin-authorized `Configure Interview Behavior Guidelines` is mandatory registered scope, ratified on 2026-10-20. Guidelines influence intended AI interviewer behavior without changing completed historical results. Fields, persistence, versioning and prompt composition are settled by Decision 27 and implemented (KAN-276).
    * This does not include unrestricted raw LLM system-prompt editing, administrative overrides of posting weights or historical evaluation results, runtime feature toggles, LLM provider configuration management, or coin package pricing administration (Decision 16). The formal UC diagram/SRS discrepancy is tracked in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the 62 count and existing IDs are preserved.
 6. **Internal Authentication Deployment Boundary:**
    * Better Auth 1.7.7 runs in RoleCue's standalone, independently deployable authentication service; it is an internal component, not an external-provider integration. The web origin routes `/api/auth/*` to it directly. One Better Auth-owned session model and the existing identity/database contract remain authoritative; Go verifies sessions against the auth service and enforces RoleCue business authorization (Decision 17). See [[01_Domains/Auth/README|Auth Domain]].

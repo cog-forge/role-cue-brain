@@ -118,7 +118,7 @@ Facial morph target blend-shapes corresponding to phonemic sounds, used to anima
 A performance-resilient fallback interface displaying an animated audio waveform in place of the 3D canvas when client hardware lacks GPU acceleration or WebGL support, preserving uninterrupted voice interaction.
 
 
-### Rubric / Barem (Agreed 2026-11-07; Implementation Pending)
+### Rubric / Barem (Agreed 2026-11-07; Tables and Management API Implemented 2026-11-11)
 A reusable scoring guide by question type, stored in the planned rubrics table. System templates are Admin-curated; private templates are Recruiter-owned. Many questions may share one rubric, while each question has its own expected_answer. Used definitions are locked; no snapshot/version table is part of MVP.
 
 ### Rubric Criterion / Crit

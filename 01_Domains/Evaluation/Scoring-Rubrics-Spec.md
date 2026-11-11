@@ -151,11 +151,21 @@ Chi tiết làm tròn đề xuất: giữ độ chính xác khi tính question_m
 
 Phần authoring MVP tập trung recruiter/recruitment. Đề xuất dùng chung engine cho practice với system rubrics, không mở quyền candidate xem/sửa bank; phạm vi chuyển practice trong cùng đợt là điểm cần xác nhận trước implementation. Không được làm hỏng practice đang hoạt động chỉ vì reset dữ liệu dev.
 
+### 3.1. Bổ sung đã chốt ngày 2026-11-11 (khi triển khai)
+
+- **Chính sách tính điểm (RB-08):** điểm metric và overall giữ 2 chữ số thập phân; thiếu coverage của một metric đang hoạt động thì không xuất overall (không coi là 0); phiên dở dang vẫn được chấm nếu mọi metric đang hoạt động đều có đủ bằng chứng. Ngưỡng đạt/rớt tuyển dụng vẫn chưa chốt.
+- **Giới hạn kỹ thuật (RB-02):** 1–10 criteria mỗi barem; `max_points` là số nguyên 1–10; tên barem ≤120 ký tự, mô tả ≤1000, tên criterion ≤160, scoring_guide ≤2000. Sửa đồng thời dùng `updated_at` làm token, không thêm cột revision. Mã lỗi ổn định: `RUBRIC_NOT_FOUND` (404), `RUBRIC_LOCKED`, `RUBRIC_IN_USE`, `RUBRIC_STALE` (409).
+- **Mẫu hệ thống ban đầu:** 4 mẫu, 14 criteria, mỗi criteria 10 điểm, seed trong migration 000032.
+- **Generate (RB-05):** bank mặc định 20 câu (trước đây 50); một call duy nhất trả câu hỏi cùng `rubric_id` và `expected_answer`. Tập barem được phép là barem system đang hoạt động cộng barem đang hoạt động của chủ posting, tối đa 20 barem × 8 criteria, chữ do người dùng viết được làm sạch và đóng gói như dữ liệu không tin cậy. `expected_answer` tối đa khoảng 80 từ (server nhận tới 100 từ và 1000 ký tự). `rubric_id` ngoài tập cho phép làm cả batch bị từ chối để retry; barem đã archive hoặc không còn thuộc quyền lúc lưu thì câu được lưu không có barem; `expected_answer` trông như injection thì lưu null. Câu thiếu barem hoặc đáp án hợp lệ được đánh dấu chưa đủ cấu hình chấm, không tự xác nhận. DTO của Recruiter có các trường chấm điểm; DTO runtime và Candidate không bao giờ có.
+- **Readiness và thu hồi (RB-07):** gửi duyệt hoặc gửi lại bị 409 `GRADING_CONFIG_INCOMPLETE` nếu còn câu chưa đủ cấu hình chấm (barem bị archive sau khi gán cũng tính là thiếu); Admin approve kiểm tra lại dưới cùng khóa posting. Thêm, sửa chữ hoặc xóa câu hỏi đặt lại `review_submitted`; lưu lại đúng chữ cũ thì không thu hồi.
+- **Luật khóa barem:** chỉ cần một câu hỏi nào đó đang tham chiếu, barem và criteria của nó bị khóa (không sửa, không hard-delete, kể cả Admin với mẫu system); archive vẫn được và giữ reference; muốn đổi thì sao chép. Bản nới (chỉ khóa khi posting đã approve hoặc đã có session) bị bác vì cần cột thời điểm nộp duyệt và tạo nguy cơ deadlock giữa sửa bank và sửa barem.
+- **Trạng thái triển khai:** nền (hai bảng, seed, bộ tính điểm thuần Go, API `/rubrics`) đã nằm trong `main`; generate, readiness và khóa đã code và chờ merge; UI quản lý barem và duyệt bank, chọn câu theo coverage, AI chấm từng crit, bảng kết quả, báo cáo và kiểm chuẩn chưa làm.
+
 ## 4. DB: cấu hình và kết quả là hai loại dữ liệu khác nhau
 
 ### 4.1. Hai bảng cấu hình mới
 
-Tên trường dưới đây là thiết kế kỹ thuật đề xuất, chưa áp dụng DDL.
+Hai bảng cấu hình và hai cột của `core_questions` đã được áp dụng ở migration 000032 (2026-11-11); bảng kết quả ở 4.2 vẫn là đề xuất.
 
 | Bảng | Trường chính | Ý nghĩa |
 |---|---|---|
@@ -215,7 +225,7 @@ Admin quản lý nội dung mẫu hệ thống là phạm vi mới được rati
 
 ## 6. Generate và duyệt 50 câu mà không viết 50 barem
 
-Mặc định application hiện có bank size 50 và session question_limit 8. Đó là hai khái niệm khác nhau: recruiter chuẩn bị bank, runtime chỉ lấy một mẫu core questions cộng follow-ups. Không tuyên bố mỗi phiên hỏi hết 50 câu.
+Mặc định bank size là 20 (hạ từ 50 ngày 2026-11-11) và session question_limit 8. Đó là hai khái niệm khác nhau: recruiter chuẩn bị bank, runtime chỉ lấy một mẫu core questions cộng follow-ups. Không tuyên bố mỗi phiên hỏi hết 50 câu.
 
 ```text
 JD/requirements đã xác nhận
@@ -265,7 +275,7 @@ UI chrome có vi/en theo hệ thống hiện tại; không tự dịch câu hỏ
 ## 8. Khóa sửa/xóa mà không cần snapshot
 
 - Mẫu chưa có reference có thể sửa/xóa bởi đúng chủ thể quản lý.
-- Mẫu đã được câu nháp tham chiếu không được hard-delete làm gãy FK; phải đổi/gỡ reference hợp lệ hoặc archive. Sửa khi còn được phép phải làm các submission nháp bị ảnh hưởng cần duyệt lại.
+- Chốt 2026-11-11: chỉ cần một câu hỏi nào đó đang tham chiếu, barem và criteria của nó bị khóa (không sửa, không hard-delete, kể cả Admin với mẫu system); archive vẫn được và giữ reference; muốn đổi thì sao chép (xem 3.1). Câu mô tả cũ về việc sửa mẫu đang được câu nháp tham chiếu không còn áp dụng.
 - Barem/criteria được một posting đã approve (`open`, `intake_closed`, `closed`) sử dụng, hoặc được session đã bắt đầu sử dụng, là bất biến. Không chỉ khóa đến khi kết thúc tuyển dụng; đã có lịch sử thì không mở lại để sửa.
 - Muốn đổi nội dung/điểm/metric mapping của mẫu bị khóa: tạo/copy mẫu khác, áp vào các câu còn được sửa. Không cần version table.
 - Archive ngăn gán mới/generate mới, không xóa nội dung hay làm session đã chuẩn bị hợp lệ bị hỏng. Archive không tự động sửa barem của bất kỳ câu nào.
@@ -289,7 +299,7 @@ Giữ cờ nghi ngờ injection và kiểm tra evidence hiện có; quote không
 
 ## 10. API, codebase và phạm vi triển khai
 
-Các route sau là đề xuất hợp đồng, không phải endpoint đã tồn tại:
+Các route `/rubrics` dưới đây đã tồn tại trong `main` từ 2026-11-11 (RB-02); các route bank/posting/report còn lại là hợp đồng đề xuất hoặc đã được mở rộng theo 3.1:
 
 - GET /rubrics: Admin/Recruiter được đọc catalog theo scope system/own, phân trang/lọc loại câu và trạng thái; không mặc định mở authoring API cho Candidate.
 - POST /rubrics: tạo private với recruiter hoặc system với Admin; validation crit/metric/điểm/guide.
@@ -345,8 +355,8 @@ bun run test:e2e tests/e2e/recruiter-question-bank.spec.ts tests/e2e/recruiter-e
 
 ## 12. Các điểm kỹ thuật cần xác nhận khi review plan
 
-1. Tên/DDL bảng kết quả crit, precision và làm tròn. Đây là phần thêm để lưu căn cứ tính toán, khác hai bảng cấu hình đã chốt.
-2. Sampling đảm bảo metric coverage, chính sách skip/phiên chưa đủ bằng chứng và trạng thái report tương ứng.
+1. Tên/DDL bảng kết quả crit và kiểu lưu số. Làm tròn 2 chữ số ở mức bộ tính điểm đã chốt (3.1). Đây là phần thêm để lưu căn cứ tính toán, khác hai bảng cấu hình đã chốt.
+2. Sampling đảm bảo metric coverage, chính sách skip và trạng thái report tương ứng (quy tắc thiếu coverage và phiên dở dang ở mức bộ tính điểm đã chốt ở 3.1).
 3. Phạm vi dùng system rubrics cho practice trong cùng đợt; không cấp candidate quyền authoring hay xem bank.
 4. Bộ mẫu ban đầu, giới hạn dữ liệu và bộ kiểm chuẩn/owner/ngưỡng chất lượng.
 

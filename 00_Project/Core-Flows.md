@@ -267,7 +267,7 @@ sequenceDiagram
 
 ## Planned rubric extension to recruitment preparation and evaluation
 
-Agreed 2026-11-07; not yet implemented. Generate proposes question + allowed rubric_id + expected_answer. Recruiter reviews by shared rubric, adjusts exceptions or creates a private rubric, keeps posting metric weights/defaults, and submits valid grading configuration with the posting. Runtime grades each core and its follow-ups against that rubric; backend aggregates crits → question metrics → session metrics → weighted overall. Question totals are diagnostic, not averaged into overall. Candidate recruitment response stays status-only. Used definitions are locked instead of snapshotted; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+Agreed 2026-11-07; tables, calculator and management API on `main` since 2026-11-11, generation and readiness built and pending merge, live grading and reports not yet implemented. Generate proposes question + allowed rubric_id + expected_answer. Recruiter reviews by shared rubric, adjusts exceptions or creates a private rubric, keeps posting metric weights/defaults, and submits valid grading configuration with the posting. Runtime grades each core and its follow-ups against that rubric; backend aggregates crits → question metrics → session metrics → weighted overall. Question totals are diagnostic, not averaged into overall. Candidate recruitment response stays status-only. Used definitions are locked instead of snapshotted; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
 
 ---
 

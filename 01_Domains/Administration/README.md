@@ -34,7 +34,7 @@ Empower platform administrators with centralized governance tools to enforce acc
   Supervisory access to interview session records. Enables searching, filtering, and inspecting operational session metadata and diagnostics.
   * **Privacy Invariant:** Operational oversight does **not** grant Administrators access to recruitment audio/video recordings or conversational transcripts.
 * **Configure Interview Behavior Guidelines:**
-  Mandatory registered capability, ratified on **2026-10-20**: an authorized Admin configures guidelines that influence the intended behavior of the AI interviewer. This is a product requirement, not a claim of implementation in `main`. Configuration UI, schema, persistence, guideline fields, versioning, and prompt composition remain **TBD** (Decision 16).
+  Mandatory registered capability, ratified on **2026-10-20**: an authorized Admin configures guidelines that influence the intended behavior of the AI interviewer. Five bounded fields (tone, question length, follow-up maximum, follow-up focus, topics to avoid), append-only versions and application to new sessions only are settled by Decision 27 and implemented (KAN-276); the Admin screen is `/admin/interview-guidelines` (Decision 16.6, Decision 27).
 * **Voice Profile Catalog Management:**
   Administrative management of Text-to-Speech (TTS) voice profiles made available during session configuration. Supports viewing voice profiles, fetching new voice profiles from TTS providers, and deleting obsolete voice profiles.
 * **Financial Audit & Reporting:**
@@ -70,8 +70,8 @@ flowchart TD
     CONSOLE --> ACC["Account Governance<br/>(View/Filter Accounts, Lock/Unlock)"]
     CONSOLE --> JP["Job Posting Moderation<br/>(View/Filter Postings, Approve/Reject)"]
     CONSOLE --> SESS["Session Operational Oversight<br/>(Search/Filter Sessions, Inspect Metadata)"]
-    CONSOLE --> GUIDE["Configure Interview Behavior Guidelines<br/>(Admin authorization required, implementation TBD)"]
-    GUIDE -.->|"Influences intended behavior"| INTERVIEW["AI Interviewer<br/>(Guideline integration details TBD)"]
+    CONSOLE --> GUIDE["Configure Interview Behavior Guidelines<br/>(Admin authorization required, Decision 27)"]
+    GUIDE -.->|"Influences intended behavior"| INTERVIEW["AI Interviewer<br/>(fixed prompt sentences for follow-ups, Decision 27)"]
     CONSOLE --> RUBRIC["System Scoring Rubric Catalog<br/>(Decision 24, implementation pending)"]
     CONSOLE --> VOICE["Voice Profile Management<br/>(View Profiles, Fetch from TTS Provider, Delete)"]
     CONSOLE --> FIN["Financial Audit<br/>(Inspect Transactions, Generate Revenue Report)"]
@@ -111,7 +111,7 @@ flowchart TD
 * **[[01_Domains/Job-Posting-Application/README|Job-Posting-Application Domain]]:**
   Enables administrative review, filtering, and approval/rejection of submitted Job Postings.
 * **[[01_Domains/Interview/README|Interview Domain]]:**
-  Allows Administrators to search, filter, and inspect operational interview session metadata and diagnostics, and Configure Interview Behavior Guidelines influencing intended AI interviewer behavior. Guideline integration details remain TBD; completed results remain unchanged.
+  Allows Administrators to search, filter, and inspect operational interview session metadata and diagnostics, and Configure Interview Behavior Guidelines influencing intended AI interviewer behavior. Guideline fields, versioning and prompt integration are settled by Decision 27; completed results remain unchanged.
 * **[[01_Domains/Avatar-Voice/README|Avatar-Voice Domain]]:**
   Maintains the active catalog of Voice Profiles sourced from TTS providers.
 * **[[01_Domains/Payment/README|Payment Domain]]:**

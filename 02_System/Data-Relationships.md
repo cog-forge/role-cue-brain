@@ -109,9 +109,9 @@ flowchart LR
 
 ---
 
-## 3. Planned Rubric Relationships — Decision 24
+## 3. Rubric Relationships — Decision 24 (Configuration Applied 2026-11-11; Results Proposed)
 
-These rows describe agreed configuration relationships and proposed result storage; they are not applied schema claims. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]].
+These rows describe agreed configuration relationships and proposed result storage; the configuration tables and the two core_questions columns are applied by migration 000032, while the result table remains proposed. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]].
 
 | Parent | Child | Cardinality / constraint | Delete/edit rule |
 |---|---|---|---|
@@ -124,7 +124,7 @@ These rows describe agreed configuration relationships and proposed result stora
 
 The two new configuration tables are rubrics/rubric_criteria; core_questions adds rubric_id and expected_answer TEXT. A separate results table is proposed because a single question total cannot reconstruct crit or metric points. Score detail remains one session metric row; interviews.score remains the weighted overall. No extra point budget is awarded for expected_answer. Follow-ups belong to their core question.
 
-Without snapshots, rubric definitions and question content/expected_answer/bindings must remain unchanged once referenced by an approved posting or started session. Archive retains old references; making a new template is the way to change used definitions for new drafts. No ordinary delete/update may masquerade as privacy erasure. Retention must cover criterion evidence and explanations, including private answer fragments copied outside conversation_turns.
+Without snapshots, rubric definitions are locked as soon as any question references them, and question content/expected_answer/bindings are locked once the posting is approved or a session started (Decision 24, 2026-11-11). Archive retains old references; making a new template is the way to change used definitions for new drafts. No ordinary delete/update may masquerade as privacy erasure. Retention must cover criterion evidence and explanations, including private answer fragments copied outside conversation_turns.
 
 ## 4. Planned Roadmap Relationships — Decision 25 (Not Yet Implemented)
 
@@ -150,3 +150,10 @@ FKs alone do not establish same owner/profile; validate transactionally. Topic/b
 | transactions | Marketplace product | **No FK/columns added**; purchase information only in description |
 
 No avatar_purchases/entitlement table, avatars.purchase_transaction_id, preview_path/source on assets, or transaction purpose/access_status/avatar_listing_id. Wallet movement+ledger+inventory grant must commit together, using existing idempotency_key to prevent repeated charges. Ownership for use comes from inventory, not description parsing. A deleted copy has no free restore entitlement; shared file cleanup must preserve all remaining avatar/listing references. See [[01_Domains/Avatar-Marketplace/Avatar-Marketplace-Spec|the approved limits and engineering contract]].
+
+## 6. Interview Behavior Guideline Relationships — Decision 27
+
+| From | To | Cardinality | Integrity |
+|---|---|---|---|
+| Admin (User) | InterviewBehaviorGuideline | One Admin saves many versions | `updated_by` is a plain column, no FK: the audit row outlives the account |
+| InterviewBehaviorGuideline | Interview | One version can be the snapshot of many interviews | `interviews.behavior_guideline_id` is set at session start; NULL means defaults; versions are append-only so a referenced row is never changed |

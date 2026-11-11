@@ -154,7 +154,7 @@ classDiagram
   * **Create Job Posting:** Begin a Job Posting (the company's Job Description) from JD-like content; review and confirm AI-extracted structured requirements.
   * **Configure Job Posting Interview:** Select the company 3D interviewer model and Voice Profile that Candidates must use for that Job Posting's interview.
   * **Manage Question Bank (Blueprint):** Generate the question bank once, then view and edit core questions for own Job Postings while `pending` or `rejected`; explicitly submit (or resubmit) the Posting for review, which requires a non-empty bank.
-  * **Manage Own Scoring Rubrics (agreed 2026-11-07, implementation pending):** Create private reusable rubrics, copy permitted system/own rubrics, assign to own questions, review expected_answer, and edit/archive/delete within lock/reference rules.
+  * **Manage Own Scoring Rubrics (agreed 2026-11-07; management API implemented 2026-11-11, screens pending):** Create private reusable rubrics, copy permitted system/own rubrics, assign to own questions, review expected_answer, and edit/archive/delete within lock/reference rules.
   * **Configure Evaluation Weights:** Optionally select a metric subset totaling 100%, separately from the question bank; otherwise valid equal-split defaults apply (currently five metrics at 20% each). Defaults do not block approval. Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping (Decision 13a).
   * **Update Job Posting:** Modify requirements or description for submitted or active Job Postings.
   * **Close Job Posting Intake:** Close application intake. Halts receiving new Applications; automatically rejects remaining unscreened / not-approved Applications; Candidates already approved for interview remain interview-eligible. There is NO Reopen Intake flow and NO manual End Recruitment command.
@@ -174,8 +174,8 @@ classDiagram
   * **Account Governance:** View and filter user accounts; lock and unlock accounts.
   * **Job Posting Moderation:** View and filter submitted Job Postings; approve and reject Job Postings.
   * **Interview Session Oversight:** Search and filter interview sessions; inspect operational session details.
-  * **Configure Interview Behavior Guidelines:** Mandatory registered capability ratified on **2026-10-20**. Admin configures guidelines influencing the intended behavior of the AI interviewer; Admin authorization is required and completed historical interview results remain unchanged. UI, schema, persistence, guideline fields, versioning, and prompt composition remain TBD; implementation in `main` is not asserted.
-  * **System Scoring Rubric Catalog (agreed 2026-11-07, implementation pending):** Create and curate system templates and their crit-to-metric mappings. Used templates are immutable; this is not authority to edit private recruiter rubrics, posting weights or historical scores.
+  * **Configure Interview Behavior Guidelines:** Mandatory registered capability ratified on **2026-10-20**. Admin configures guidelines influencing the intended behavior of the AI interviewer; Admin authorization is required and completed historical interview results remain unchanged. Fields, persistence, versioning and prompt composition are settled by Decision 27 and implemented (KAN-276).
+  * **System Scoring Rubric Catalog (agreed 2026-11-07; management API implemented 2026-11-11, screens pending):** Create and curate system templates and their crit-to-metric mappings. Used templates are immutable; this is not authority to edit private recruiter rubrics, posting weights or historical scores.
   * **Voice Profile Catalog Management:** Manage Voice Profiles (view voice profiles, fetch voice profiles from external TTS providers, delete obsolete profiles). `Manage Voice Profiles` serves as an uncounted grouping capability; its child use cases are counted.
   * **Financial Audit & Reporting:** View unified payment transactions (PayOS orders and internal ledger movements); generate revenue reports.
 * **Boundary Invariant:**
@@ -197,7 +197,7 @@ classDiagram
 
 ---
 
-> [!note] Rubric authoring extension — agreed, not implemented
+> [!note] Rubric authoring extension — agreed; backend foundation implemented 2026-11-11, screens and live grading pending
 > Admin manages system rubrics. Recruiters create/copy/manage private rubrics and assign allowed templates to own questions; each question has a private expected_answer. Criteria reference metrics; posting metric weights still determine overall. Candidate recruitment access is status-only. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]]. These are new capability requirements; the frozen formal UC count/IDs are not silently changed.
 
 ---
@@ -309,7 +309,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
   * View and filter user accounts; lock and unlock accounts
   * View and filter job postings; approve and reject job postings
   * Search and filter interview sessions; inspect operational session details
-  * Configure Interview Behavior Guidelines (Admin authorization required, intended AI interviewer behavior, historical completed results unchanged; implementation details TBD)
+  * Configure Interview Behavior Guidelines (Admin authorization required, intended AI interviewer behavior, historical completed results unchanged; settled by Decision 27)
   * Manage Voice Profiles (view voice profiles, fetch from TTS providers, delete obsolete profiles)
 
 ---

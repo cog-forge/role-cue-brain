@@ -15,7 +15,7 @@ aliases:
 RoleCue turns interview answers into criterion evidence, metric assessments and an overall score for human review. Scores have no automated hiring authority.
 
 > [!important] Product direction vs implementation
-> Decision 24, agreed 2026-11-07, retains metrics/weights and introduces reusable rubrics plus question-specific expected answers. **The rubric feature is not implemented yet.** Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]] for the worked example and proposed technical details. The five seeded metrics remain the baseline catalog, not an immutable list.
+> Decision 24, agreed 2026-11-07, retains metrics/weights and introduces reusable rubrics plus question-specific expected answers. **Status (2026-11-11):** the rubric tables, system templates, pure score calculator and management API are on `main`; generation, readiness and locking are built and pending merge; live grading, result storage, reports and screens are not implemented. Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]] for the worked example and proposed technical details. The five seeded metrics remain the baseline catalog, not an immutable list.
 
 ## 1. Core distinctions
 
@@ -52,7 +52,7 @@ Decision 13a remains effective: custom subsets total 100%; absent custom rows us
 ## 4. Rubric authoring and lifecycle
 
 - Admin curates system templates. Recruiter may create private templates from scratch or copy permitted templates, then assign to own questions.
-- Generation proposes allowed rubric_id and expected_answer alongside question text. Recruiter reviews in groups, changes exceptions and confirms preparation before submission.
+- Generation proposes allowed rubric_id and expected_answer alongside question text (about 20 questions per generation and an answer of about 80 words, settled 2026-11-11). Recruiter reviews in groups, changes exceptions and confirms preparation before submission; a question without an allowed rubric or valid answer is grading-incomplete and blocks submission. A rubric is locked as soon as any question references it (Decision 24).
 - Two new configuration tables are agreed: rubrics and rubric_criteria. A separate criterion-result table is an engineering proposal needed for durable score/evidence detail, not another configuration/snapshot table.
 - No snapshot/version system is in MVP. Definitions, question content, expected answers and bindings become immutable when referenced by an approved posting or started interview. Changing a used template means authoring another template for eligible drafts.
 - Hard-delete only unreferenced data; archive prevents new assignments and preserves existing ones. Private templates are scoped by owner, never shared by guessing UUIDs.

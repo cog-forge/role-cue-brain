@@ -83,7 +83,7 @@ flowchart TD
         BP1 --> SIM1["3D Virtual Interviewer (WebGL)"]
         SIM1 <--> SIM2["Real-Time Speech Interaction (STT / TTS)"]
         SIM2 <--> SIM3["Question Loop: Random x Core + Bounded Follow-ups"]
-        GUIDE["Admin Interview Behavior Guidelines<br/>(Ratified requirement, implementation TBD)"] -.->|"Influences intended interviewer behavior"| SIM3
+        GUIDE["Admin Interview Behavior Guidelines<br/>(Ratified 2026-10-20; implemented, Decision 27)"] -.->|"Influences intended interviewer behavior"| SIM3
     end
 
     subgraph Evaluation["4. Multi-Dimensional Evaluation"]
@@ -123,7 +123,7 @@ flowchart TD
 6. **Personal 3D Avatar Inventory & Coin Wallets:**
    Every Candidate and Recruiter starts with **3 personal avatar storage slots** (Decision 7, ratified 2026-10-20); Admin has no inventory. Creating an avatar is free while a slot is available; when full, users delete an avatar or purchase additional capacity with wallet coins (1 coin per slot), and the frontend reads actual capacity from the authoritative API. RoleCue embeds the free Avaturn iframe experience (capture, validation, preview, customization, final GLB), then converts and persists a usable VRM. There is no separate generation fee; capacity purchases are charged separately. The agreed Marketplace extension adds seller-priced avatar purchases (Decision 26; implementation pending). Coin wallets for Candidates and Recruiters manage internal coin movements and real-money package orders via PayOS under a unified transaction model.
 
-**Admin Interview Behavior Guidelines (ratified 2026-10-20):** `Configure Interview Behavior Guidelines` is mandatory registered Admin scope, requires Admin authorization, and influences the intended behavior of the AI interviewer while preserving completed historical results. UI, guideline fields, schema, persistence, versioning, and prompt composition remain TBD. This capability does not authorize unrestricted raw LLM system-prompt editing, editing posting weights or historical evaluation results, runtime toggles, LLM provider configuration, or coin package pricing administration (Decision 16). Its absence from the active formal UC diagram is recorded in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the frozen 62 count and IDs remain unchanged.
+**Admin Interview Behavior Guidelines (ratified 2026-10-20):** `Configure Interview Behavior Guidelines` is mandatory registered Admin scope, requires Admin authorization, and influences the intended behavior of the AI interviewer while preserving completed historical results. Fields, persistence, versioning and prompt composition are settled by Decision 27 and implemented (KAN-276). This capability does not authorize unrestricted raw LLM system-prompt editing, editing posting weights or historical evaluation results, runtime toggles, LLM provider configuration, or coin package pricing administration (Decision 16). Its absence from the active formal UC diagram is recorded in [[00_Project/Actors-and-Capabilities|Actors and Capabilities]]; the frozen 62 count and IDs remain unchanged.
 
 **Authentication deployment:** Better Auth 1.7.7 runs in RoleCue's standalone authentication service, deployed independently of the Next.js frontend and the Go API. It remains the single Better Auth session authority, and Go keeps business authorization (Decision 17); see [[01_Domains/Auth/README|Auth Domain]].
 
