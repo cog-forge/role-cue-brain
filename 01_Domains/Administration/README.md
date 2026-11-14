@@ -50,7 +50,7 @@ Empower platform administrators with centralized governance tools to enforce acc
 
 ### System Scoring Rubric Catalog — new agreed scope
 
-Decision 24 explicitly adds Admin curation of structured system rubrics/criteria and metric mappings, subject to reference/immutability rules. Recruiters manage their own private rubrics. This narrowly supersedes the old exclusion on system rubric templates; Admin still cannot edit posting weights, private recruiter templates or historical AI scores by inference. UI implementation is pending; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+Decision 24 explicitly adds Admin curation of structured system rubrics/criteria and metric mappings, subject to reference/immutability rules. Recruiters manage their own private rubrics. This narrowly supersedes the old exclusion on system rubric templates; Admin still cannot edit posting weights, private recruiter templates or historical AI scores by inference. The Admin screens and API are implemented (2026-11-11); see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
 
 
 ## 3. Actors Involved
@@ -72,7 +72,7 @@ flowchart TD
     CONSOLE --> SESS["Session Operational Oversight<br/>(Search/Filter Sessions, Inspect Metadata)"]
     CONSOLE --> GUIDE["Configure Interview Behavior Guidelines<br/>(Admin authorization required, Decision 27)"]
     GUIDE -.->|"Influences intended behavior"| INTERVIEW["AI Interviewer<br/>(fixed prompt sentences for follow-ups, Decision 27)"]
-    CONSOLE --> RUBRIC["System Scoring Rubric Catalog<br/>(Decision 24, implementation pending)"]
+    CONSOLE --> RUBRIC["System Scoring Rubric Catalog<br/>(Decision 24, implemented 2026-11-11)"]
     CONSOLE --> VOICE["Voice Profile Management<br/>(View Profiles, Fetch from TTS Provider, Delete)"]
     CONSOLE --> FIN["Financial Audit<br/>(Inspect Transactions, Generate Revenue Report)"]
 ```

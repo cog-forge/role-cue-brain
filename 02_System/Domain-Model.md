@@ -353,9 +353,9 @@ classDiagram
 
 ---
 
-## 3. Rubric Extension — Decision 24 (Configuration Tables Applied 2026-11-11; Result Tables Not Yet Implemented)
+## 3. Rubric Extension — Decision 24 (Applied: migrations 000032 and 000034)
 
-Two configuration tables are agreed and applied by migration 000032: rubrics and rubric_criteria. core_questions adds rubric_id and expected_answer TEXT. Metrics and metrics_percentage remain. Actual per-criterion results require separate result storage; interview_criterion_scores and interview_questions.score are proposed engineering additions, not snapshot/configuration tables.
+Two configuration tables are applied by migration 000032: rubrics and rubric_criteria. core_questions adds rubric_id and expected_answer TEXT. Metrics and metrics_percentage remain. Per-criterion results are stored by migration 000034 (applied 2026-11-12): the interview_criterion_scores table plus the result columns listed below; they are engineering additions, not snapshot/configuration tables. Status note (2026-11-14): the implemented shape follows; the original proposals that differ are called out inline.
 
 ```mermaid
 erDiagram
@@ -364,7 +364,7 @@ erDiagram
     METRICS ||--o{ RUBRIC_CRITERIA : classifies
     RUBRICS o|--o{ CORE_QUESTIONS : "assigned while drafting"
     CORE_QUESTIONS ||--o{ INTERVIEW_QUESTIONS : assigned
-    INTERVIEW_QUESTIONS ||--o{ INTERVIEW_CRITERION_SCORES : "proposed criterion results"
+    INTERVIEW_QUESTIONS ||--o{ INTERVIEW_CRITERION_SCORES : "criterion results"
     RUBRIC_CRITERIA ||--o{ INTERVIEW_CRITERION_SCORES : assessed
     INTERVIEWS ||--o{ SCORE_DETAILS : "session metric scores"
     METRICS ||--o{ SCORE_DETAILS : dimension
@@ -373,18 +373,22 @@ erDiagram
 - rubrics: id, name, question_type, scope(system/recruiter), owner_id, is_active; optional description/timestamps follow normal conventions. Admin manages system scope; Recruiter owns private scope.
 - rubric_criteria: id, rubric_id, metric_id, name, max_points, scoring_guide and ordering. Exactly one metric per criterion.
 - core_questions: expected_answer is private reference content; rubric_id links a reusable guide. Neither is candidate-editable or a new Blueprint table.
-- Proposed interview_criterion_scores: one earned-points/evidence result per interview, assigned core position and criterion. Composite FK targets interview_questions; a follow-up turn position is not assumed to equal its core assignment position.
-- Proposed interview_questions.score: explanatory normalized whole-question total.
-- score_details.score: session metric aggregate, not criterion score. Numeric precision change is proposed if metric decimals are retained.
-- interviews.score: weighted overall of session metrics, not mean of whole-question totals.
+- interview_criterion_scores (000034): primary key (interview_id, question_position, rubric_criterion_id); points (0..max_points, CHECK >= 0; the service checks the maximum), evidence (verbatim quote) with evidence_turn_position, and feedback. Composite FK to interview_questions(interview_id, position) ON DELETE CASCADE and to conversation_turns for the evidence turn; FK to rubric_criteria is RESTRICT. A follow-up turn position is not assumed to equal its core assignment position. Evidence is required unless the points are 0.
+- interview_questions.score: numeric(5,2), explanatory normalized whole-question total (100 x earned / max over the question's criteria); NULL for a question that was not graded.
+- score_details.score: numeric(5,2), session metric aggregate, not criterion score; NULL for a weighted metric no graded question assessed (listed, never counted as 0). 000034 also adds score_details.weight (the weight the overall used, including the equal-split defaults that are stored nowhere else) and question_count (graded questions that assessed the metric).
+- interviews.score: numeric(5,2), weighted overall of session metrics, not mean of whole-question totals; NULL when withheld. interviews.score_outcome is complete, partial or withheld (NULL for evaluations made before rubric grading); interviews.score_withheld_reason is one of missing_metric_coverage, partial_session, no_answers, no_gradable_questions, set exactly when the outcome is withheld (CHECK constraints keep outcome, score and reason consistent).
+- Seed (000032 + 000034): 4 system rubrics with 14 + 5 = 19 criteria. 000034 added cross-cutting criteria (Answer Relevance and Communication Clarity) to the system templates so a practice session weighted equally over the catalog is not withheld only for those two metrics; template totals are now 14 / 14 / 12 / 10 points, so the first rubric no longer equals the worked example R01 of the spec.
 
 No snapshot/version tables or separate expected-points table. Lock referenced definitions/question metadata at approval/start; archive prevents new use and preserves valid existing references. Expected-answer/criteria points are never backfilled into historical sessions. Disposable dev DB reset is allowed at implementation time, not executed by this document.
 
-For formulas, worked rows, proposed precision and unresolved engineering choices, use [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the rubric spec]] instead of inferring behavior from this diagram. The formal ERD/report must be reconciled during implementation; this target diagram does not claim its source artifact has already changed.
+For formulas, worked rows and the implementation notes, use [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the rubric spec]] (section 13) instead of inferring behavior from this diagram. The formal ERD/report still needs owner reconciliation; this diagram does not claim its source artifact has been changed.
 
-## 4. Planned Learning Roadmap Extension — Decision 25 (Not Yet Implemented)
+## 4. Learning Roadmap Extension — Decision 25 (Applied by migration 000035, 2026-11-13)
 
-Target extension, not applied migrations: one role_profiles row owns one roadmaps row; ordered roadmap_items hold topics; roadmap_assessments links a topic to a graded interview_questions assignment. Add nullable core_questions.roadmap_item_id and interviews.focus_item_id. Ownership is through the Role Profile; no independent user/goal linkage or snapshot/version tables. generation_status is stored, learning_status/topic score/progress are derived. No archived_at or topic editor in MVP.
+> [!note] Status 2026-11-14
+> Backend implemented and merged; UI in progress; acceptance pending KAN-357 (not released). The structure below is what migration 000035 applied. Details and decisions: [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|spec section 13]].
+
+One role_profiles row owns one roadmaps row; ordered roadmap_items hold topics; roadmap_assessments links a topic to a graded interview_questions assignment. core_questions.roadmap_item_id (FK, ON DELETE SET NULL) and interviews.focus_item_id (FK RESTRICT; CHECK: only practice sessions may have a focus) are the two nullable columns added. Ownership is through the Role Profile; no independent user/goal linkage or snapshot/version tables. generation_status is stored, learning_status/topic score/progress are derived. No archived_at or topic editor in MVP.
 
 ```mermaid
 erDiagram
@@ -396,7 +400,7 @@ erDiagram
     ROADMAP_ITEMS o|--o{ INTERVIEWS : practice_focus
 ```
 
-Cross-profile/recruitment mappings are forbidden. Regeneration before any practice session replaces topic/bank mapping together; used structure is preserved. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed approved spec]] for all fields, five-question/80 threshold, examples, resume/charge, and privacy behavior. Formal SRS/ERD/UC reconciliation happens during implementation without silently renumbering frozen artifacts.
+Cross-profile/recruitment mappings are forbidden: the database enforces it with two plpgsql triggers (a question's topic must belong to the profile of the question's JD; a session's focus must belong to the session's Role Profile) and a CHECK that only practice sessions carry a focus. roadmap_assessments has UNIQUE(interview_id, question_position), composite FK to interview_questions ON DELETE CASCADE and RESTRICT FK to the topic. Existing Role Profiles got a pending Roadmap row from the migration. A generation is fenced by roadmaps.updated_at. Regeneration before any practice session replaces topic/bank mapping together; used structure is preserved. The new job roadmap.catchup (System Handler) links evaluated practice results that the evaluation hook missed; Roadmap generation is a new use of the question-bank AI route, with no new AI task. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed approved spec]] for all fields, five-question/80 threshold, examples, resume/charge, and privacy behavior. Formal SRS/ERD/UC reconciliation is a documentation-owner task and does not silently renumber frozen artifacts.
 
 ## 5. Planned Minimal Avatar Marketplace — Decision 26 (Not Yet Implemented)
 

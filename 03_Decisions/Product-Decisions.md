@@ -152,6 +152,7 @@ This document records the ratified, long-lived product decisions that govern the
   * **Approval:** Admin may approve a Posting without Recruiter-customized weights because the fallback provides a valid evaluation configuration.
   * **Editing Boundary:** Recruiters may edit weights while the Posting is `pending` or `rejected`. Weights are locked in `open`, `intake_closed`, and `closed`. Because Admin approval sets `open` (Decision 13 persistence mapping, settled 2026-10-29), weights are locked from approval onward, including while an approved Posting awaits funding; no additional editable state is implied.
   * **Scoring Consistency:** KAN-61 scoring must use the same equal-split fallback when custom weights are absent.
+  * *Implementation note (2026-11-12, KAN-377, PR #136; no change to the decision):* a posting whose question bank cannot cover every active metric within the question limit cannot be submitted or approved (409 `METRIC_COVERAGE_INCOMPLETE`, Recruiter/Admin only). Saving, replacing or clearing weights re-checks coverage under the posting lock; if a pending, submitted posting is left uncovered, the submission is withdrawn (`review_submitted = false`, `submission_withdrawn` in the answer). Equal-split defaults still do not block approval by themselves. See Decision 24.
 
 ---
 
@@ -216,13 +217,14 @@ The following entries distinguish ratified scope from unresolved implementation 
    * Exception/refund policies for technical interview disruptions.
    * Maximum permitted interview attempts per application.
 3. **Question Bank Sampling & Runtime Policy:**
-   * Core-question coverage algorithms and difficulty balancing beyond the random sample.
+   * Core-question coverage algorithms and difficulty balancing beyond the random sample. *(Implementation note 2026-11-12: metric-coverage-aware sampling is built — see Decision 24; difficulty balancing remains open.)*
    * Whether a bank smaller than $x$ is acceptable (today the whole bank is used).
    * A dedicated external follow-up decision vendor (Jev remains unselected; backlog KAN-274).
    * Question difficulty (easy / medium / hard) and duration-based question counts: moved back to the backlog on 2026-11-03 (KAN-216) for the team to revisit.
    * *(Settled 2026-11-03 and no longer open: $x$ = `interview.question_limit` 8, follow-up limit 1 (0–3), decision timeout 5 s, skip-on-failure fallback and the `FollowUpDecider` seam; Decision 14.)*
    * *(Settled: Recruiters edit the question bank only while the Posting is `pending` or `rejected`; it is locked during active recruitment; Decision 13.)*
 4. **Evaluation Dimensions & Formulas:**
+   * *(Implementation note 2026-11-14: curated system templates are seeded and rubric grading is live; the grader is **not calibrated** — the reference set, accepted deviation thresholds and the domain owner are still open; see Decision 24.)*
    * Metric catalog baseline remains in Decision 13a; rubric criteria may now reference it under Decision 24. Exact curated templates/scoring guides and domain calibration still require review.
    * Criterion-driven metric aggregation and the meaning of question/metric/overall scores are now settled by Decision 24. Recruitment passing/failing thresholds, calibration acceptance thresholds, partial-session policies and the engineering details flagged in the new spec remain to be confirmed. Practice Roadmap topic threshold (five distinct questions, mean >=80), reversible learning progress and delivered-skip/unasked rules are settled separately by Decision 25; they do not establish recruitment thresholds.
 5. **Recruitment Recording Retention & Post-Recruitment Policies:**
@@ -284,6 +286,7 @@ The following entries distinguish ratified scope from unresolved implementation 
   * An accidental disconnect is not a leave; reconnecting resumes the same session.
   * Abandoned means no delivered question and no stored answer for 15 minutes, derived from existing timestamps.
   * Recording upkeep jobs: see Decision 18. All jobs run in-process with a PostgreSQL advisory lock per job.
+  * *Implementation note (2026-11-14, Decision 25):* for a practice session, a core question that was delivered and has no stored answer when the session ends counts 0 for its Roadmap topic whether it ended as `left` or `abandoned`; a never-delivered core is not counted. This applies only to the Roadmap's per-topic score; the report and overall keep Barem's rule. A System Handler job `roadmap.catchup` (settings `JOBS_ROADMAP_CATCHUP_*`) links evaluated practice results the evaluation hook missed.
 
 ---
 
@@ -316,7 +319,7 @@ The following entries distinguish ratified scope from unresolved implementation 
 
 ---
 
-## 24. Reusable Rubrics, Question Expected Answers and Metric-Based Overall (Agreed 2026-11-07; Foundation Implemented 2026-11-11, KAN-325/326/332, PR #127; Generation, Readiness and Locks Built, Pending Merge; Live Grading, Results and Reports Pending)
+## 24. Reusable Rubrics, Question Expected Answers and Metric-Based Overall (Agreed 2026-11-07; Implemented 2026-11-11 to 2026-11-12, KAN-325..337 and KAN-377/378, PRs #127 to #136; Grader Calibration Open)
 
 * **Decision:** Keep metrics and posting weights. Add reusable rubrics by question type, criteria linked to metrics, and question-specific expected_answer. AI proposes criterion points/evidence; Go calculates question metric scores, session metric scores and weighted overall.
 * **Reason:** Generic metric names leave too much grading discretion to AI. Shared scoring structures reduce recruiter setup across a large bank, while a private expected answer grounds each question in its own content. Rubrics improve explainability; they do not certify AI correctness or authorize automatic hiring.
@@ -335,10 +338,21 @@ The following entries distinguish ratified scope from unresolved implementation 
   * *Readiness and withdrawal (RB-07):* submitting or resubmitting a posting whose bank has grading-incomplete questions is refused with 409 `GRADING_CONFIG_INCOMPLETE` (a rubric archived after assignment counts as incomplete); Admin approval re-checks under the same posting lock. Adding, editing the text of, or deleting a question clears `review_submitted`; saving identical text does not.
   * *Lock rule:* a rubric and its criteria are locked as soon as any question references it, not only after approval or a started session. Locked data is not edited or hard-deleted (even by Admin for system templates); archive stays allowed and keeps references; copy is the way to change. A relaxed rule (lock only when approved or used) was rejected because it needs a submission-time column and creates a lock-ordering deadlock risk between bank edits and rubric edits.
   * *Question bank lock:* once the posting is approved the bank, including each question's rubric and expected answer, is locked (Decision 13).
-* **Implementation review items still open:** result-table DDL and numeric storage, metric-coverage sampling, practice activation, calibration thresholds and owner. The 2-decimal and withhold rules above settle only the calculator-level behavior.
+* **Implementation review items:** *(status 2026-11-14)* result-table DDL and numeric storage, metric-coverage sampling and practice activation are now implemented (see the implementation note below). Still open: grader calibration (reference set, accepted deviation, domain owner), recruitment passing/failing thresholds, and the product confirmations listed in the spec's section 13.7.
+* **Implementation note (2026-11-14; the decision text above is unchanged):**
+  * *Merged:* foundation, authoring API and calculator (PR #127); generation, readiness and locks (PR #129); Admin/Recruiter rubric screens (PR #130); coverage-aware sampler (KAN-333, PR #131); bank review screen (KAN-330, PR #132); rubric grading, result storage, report API and report screens (KAN-334..337, PR #133, migration 000034); `features/account` moved to sqlc (KAN-379, PR #135); metric-coverage gates and practice best effort (KAN-377/378, PR #136).
+  * *Result storage:* `interview_criterion_scores` plus numeric(5,2) scores and the outcome columns of migration 000034; criterion points, evidence quote and feedback are stored per interview, assigned core position and criterion. See Domain-Model section 3.
+  * *Sampling (KAN-333):* if any bank question has rubric criteria, every active metric must be covered by the sampled questions' criteria (cover set first, then random fill) or a recruitment start is refused with 409 `QUESTION_BANK_COVERAGE_INSUFFICIENT` before anything is created or charged. Archived rubrics still count. Zero active metrics or a bank without any criterion falls back to a plain random sample.
+  * *Gates (KAN-377):* generation retries a proposal that cannot cover inside the existing retry budget and, when attempts run out, saves the best proposal with the coverage report as the warning; submission, Admin approval and weight changes enforce the same rule (see Decision 13a).
+  * *Practice (KAN-378):* practice banks are generated from system rubrics only, with the whole metric catalog as active metrics; practice starts never refuse for coverage (best-effort widest cover, then random fill). A metric no sampled question covers is withheld from the report, never scored 0.
+  * *Report:* each completed evaluation reports `scoring.method` (`rubric` or `legacy` for evaluations made before rubric grading) and `scoring.outcome` (`complete`, `partial`, `withheld`) with a reason (`missing_metric_coverage`, `no_answers`, `no_gradable_questions`; `partial_session` is reserved and unused). Overall and metric scores have two decimals. Questions never graded are left out of the report and the overall (the Roadmap reads them differently, Decision 25).
+  * *Not done:* the grader is not calibrated against human experts. Practice banks written before rubric generation (old dev/demo data) have no rubric, so practice on them ends withheld (`no_gradable_questions`); how to clean that data is the team's call. Recruitment pass/fail thresholds remain unset.
 * **Source:** [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Detailed Vietnamese spec with the full 2/2 → metric → overall example]]. The new management capabilities require formal SRS/UC/ERD reconciliation; existing frozen IDs/count are not automatically renumbered here.
 
 ## 25. Per-Role-Profile Learning Roadmap (Agreed 2026-11-07; Implementation Pending)
+
+> [!note] Implementation status 2026-11-14 (the decision text below is not rewritten)
+> Backend implemented and merged 2026-11-13 (migration 000035; read API, generation, retry/regenerate, practice start with `focus_item_id`, assessment linking, `roadmap.catchup` job, privacy handling). UI is in progress and end-to-end acceptance is pending KAN-357, so the feature is **not released**. The heading text is kept so existing links stay valid. Implementation notes, the decisions recorded on 2026-11-13 and the spec → task → test traceability are in [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the spec, section 13]]. The closing sentence of the Source bullet ("agreed future behavior, not applied migrations") described the state on 2026-11-07 and is superseded by this note.
 
 * **Decision:** Each Candidate Role Profile owns one private Roadmap. Create its row with the profile; generate ordered knowledge topics only after the Candidate confirms requirements. FE renders topics linearly by position, without sequential unlock gates.
 * **Evidence and math:** Only completed, successfully evaluated practice contributes. Take the latest result for each distinct core question in a topic, then the five most recent distinct questions; average their normalized Barem question scores. Fewer than five is provisional; five with average >=80 is achieved. Roadmap progress is achieved-topic count / total-topic count; all nonempty ready topics must be achieved for completed. New lower results can return achieved/completed to in_progress. These product thresholds are not a validated Senior certification.

@@ -100,7 +100,7 @@ flowchart TD
 
 ## Planned Durable Roadmap Extension to Flow A — Decision 25
 
-Agreed 2026-11-07; implementation pending. Create one Roadmap row with each Role Profile. Once requirements are confirmed, generate ordered topics and a topic-mapped bank. Candidate views the linear path and starts general practice or focuses on one topic (default 8 core questions,5 coins/start, same-session resume free). After finalized successful Barem evaluation, link each evaluated core result to its topic and compute the latest-five-distinct-question window. Five results with mean>=80 achieves that topic; all topics must be achieved to complete the Roadmap. Lower new results can lower status. Explicit skips receive 0, unasked/technical-error cases do not. Existing unfinished sessions retain their original focus. No recruitment evidence feeds this flow; no Candidate question-bank preview is introduced. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the full schema, formulas, regeneration and catch-up rules]].
+Agreed 2026-11-07; backend implemented and merged 2026-11-13, UI in progress, end-to-end acceptance pending KAN-357 (not released). Create one Roadmap row with each Role Profile. Once requirements are confirmed, generate ordered topics and a topic-mapped bank. Candidate views the linear path and starts general practice or focuses on one topic (default 8 core questions,5 coins/start, same-session resume free). After finalized successful Barem evaluation, link each evaluated core result to its topic and compute the latest-five-distinct-question window. Five results with mean>=80 achieves that topic; all topics must be achieved to complete the Roadmap. Lower new results can lower status. Explicit skips receive 0, unasked/technical-error cases do not. Existing unfinished sessions retain their original focus. No recruitment evidence feeds this flow; no Candidate question-bank preview is introduced. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the full schema, formulas, regeneration and catch-up rules]].
 
 ---
 
@@ -265,9 +265,9 @@ sequenceDiagram
 
 ---
 
-## Planned rubric extension to recruitment preparation and evaluation
+## Rubric extension to recruitment preparation and evaluation
 
-Agreed 2026-11-07; tables, calculator and management API on `main` since 2026-11-11, generation and readiness built and pending merge, live grading and reports not yet implemented. Generate proposes question + allowed rubric_id + expected_answer. Recruiter reviews by shared rubric, adjusts exceptions or creates a private rubric, keeps posting metric weights/defaults, and submits valid grading configuration with the posting. Runtime grades each core and its follow-ups against that rubric; backend aggregates crits → question metrics → session metrics → weighted overall. Question totals are diagnostic, not averaged into overall. Candidate recruitment response stays status-only. Used definitions are locked instead of snapshotted; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+Agreed 2026-11-07; implemented and merged 2026-11-11 to 2026-11-12 (PRs #127 to #136); grader calibration still open (spec section 13). The Recruiter also sees a metric-coverage warning on the bank and cannot submit or approve a bank that cannot cover every weighted metric within the question limit. Generate proposes question + allowed rubric_id + expected_answer. Recruiter reviews by shared rubric, adjusts exceptions or creates a private rubric, keeps posting metric weights/defaults, and submits valid grading configuration with the posting. Runtime grades each core and its follow-ups against that rubric; backend aggregates crits → question metrics → session metrics → weighted overall. Question totals are diagnostic, not averaged into overall. Candidate recruitment response stays status-only. Used definitions are locked instead of snapshotted; see [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
 
 ---
 

@@ -158,4 +158,7 @@ To maintain focus on interview simulation and delivery excellence, RoleCue estab
 
 ## Agreed Learning Roadmap Extension (2026-11-07; Implementation Pending)
 
+> [!note] Status 2026-11-14
+> Backend implemented and merged 2026-11-13; UI in progress; acceptance pending KAN-357. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|spec section 13]]. The heading is kept so existing links stay valid.
+
 Each Candidate Role Profile gains a private linear learning Roadmap generated from confirmed requirements, with general/focused practice and progress driven by Barem question results. Each topic uses the latest five distinct core-question results after deduplicating repeated attempts; five with mean>=80 is achieved. All topics must be achieved to complete the Roadmap, and lower new results may lower the status. This remains separate from metric-weighted interview overall and excludes recruitment evidence. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the approved specification]] and Decision 25.

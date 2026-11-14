@@ -1,7 +1,7 @@
 ---
 title: Roadmap học tập theo Role Profile — đặc tả
 date: 2026-11-07
-status: business-approved-implementation-pending
+status: backend-implemented-ui-in-progress-acceptance-pending
 tags:
   - domain
   - roadmap
@@ -13,8 +13,11 @@ aliases:
 
 # Roadmap học tập theo Role Profile
 
-> [!important] Trạng thái và phạm vi
-> Product owner đã chốt thiết kế và business rule ngày 2026-11-07. Đây là **tính năng cần triển khai**, không phải mô tả tính năng đã có trên application main. Chi tiết contract/DDL được đánh dấu là thiết kế kỹ thuật để review khi triển khai; không tự thêm bảng snapshot/version hoặc thay đổi business rule đã duyệt.
+> [!important] Trạng thái và phạm vi (cập nhật 2026-11-14)
+> Product owner đã chốt thiết kế và business rule ngày 2026-11-07. **Backend đã triển khai và merge vào application main (2026-11-13; migration 000035, KAN-342..352 và KAN-356). UI đang làm (KAN-353..355). Nghiệm thu end-to-end (KAN-357) chưa xong, nên tính năng chưa được coi là released.** Các mục 1–4, 6–8 là business rule và không đổi. Mục 5, 9.2 vốn là thiết kế kỹ thuật nay đã được hiện thực; chi tiết đã làm, các quyết định ngày 13/11 và truy vết spec → task → test nằm ở **mục 13 (Implementation notes)**. Không tự thêm bảng snapshot/version hoặc thay đổi business rule đã duyệt.
+
+> [!warning] Acceptance: pending KAN-357
+> Chưa có bằng chứng nghiệm thu E2E. Khi KAN-357 xong và có bằng chứng release, cập nhật dòng này (không tự suy ra từ trạng thái code).
 
 ## 1. Mục tiêu và ví dụ xuyên suốt
 
@@ -133,7 +136,7 @@ Ví dụ SQL 82 (đủ 5 câu, achieved), Go 72 (đủ 5 câu, in_progress), Sys
 
 ## 5. Thiết kế dữ liệu: đúng ba bảng mới
 
-Đây là target schema để review migration, chưa phải schema đã áp dụng. ID dùng UUID theo quy ước hiện tại; các timestamp là timestamptz. Không có bảng skill catalog toàn cục, activity checklist, prerequisite graph hoặc snapshot/version.
+Schema dưới đây đã được áp dụng bằng migration 000035 (xem mục 13.1 cho các khác biệt/chi tiết hiện thực). ID dùng UUID theo quy ước hiện tại; các timestamp là timestamptz. Không có bảng skill catalog toàn cục, activity checklist, prerequisite graph hoặc snapshot/version.
 
 ### 5.1. `roadmaps`
 
@@ -212,7 +215,7 @@ erDiagram
     ROADMAP_ITEMS o|--o{ INTERVIEWS : optional_focus
 ```
 
-Diagram là target extension. Quan hệ focus/assessment chỉ áp dụng practice; các FK và check/transaction mới phải được review trong migration.
+Diagram mô tả schema đã áp dụng ở migration 000035. Quan hệ focus/assessment chỉ áp dụng practice.
 
 ## 6. Flow tạo, retry và sinh lại
 
@@ -286,7 +289,7 @@ UI vi/en theo locale hiện có; không tự dịch nội dung chuyên môn do m
 
 ### 9.2. Contract kỹ thuật dự kiến
 
-Các route/DTO dưới là đề xuất engineering để chốt cùng Swagger khi triển khai, không phải endpoint đã có:
+Các route dưới đã được hiện thực (hợp đồng chi tiết, ví dụ JSON và bảng lỗi nằm trong `api/docs/roadmap-api.md` của repo ứng dụng, cùng Swagger tag `roadmap`); bảng này giữ lại làm ranh giới nghiệp vụ:
 
 | Operation | Boundary |
 |---|---|
@@ -341,10 +344,121 @@ Các command kiểm chứng khi implementation: từ `api`, chạy `go test ./in
 
 ## 12. Quyết định và tài liệu liên quan
 
-- [[03_Decisions/Product-Decisions#25. Per-Role-Profile Learning Roadmap (Agreed 2026-11-07; Implementation Pending)|Decision 25]]
+- [[03_Decisions/Product-Decisions#25. Per-Role-Profile Learning Roadmap (Agreed 2026-11-07; Implementation Pending)|Decision 25]] (heading giữ nguyên để link không gãy; trạng thái hiện hành nằm ở callout dưới heading)
 - [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem điểm và metric]]
 - [[01_Domains/Job-Description/README|JD review/confirmation]]
 - [[01_Domains/Interview/README|Practice session và charging]]
 - [[02_System/Data-Relationships|Quan hệ dữ liệu]]
 
 Task execution thuộc repo ứng dụng/Jira sau khi user duyệt plan, không ghi trạng thái sprint hay dependency ticket vào Brain. Thay đổi business rule sau này cần cập nhật spec và Decision 25, không sửa ngầm trong implementation.
+
+## 13. Implementation notes (cập nhật 2026-11-14)
+
+> [!info] Phạm vi của mục này
+> Mô tả **những gì đã được hiện thực trên main** và các quyết định ngày 13/11. Không đổi business rule ở mục 1–12; nếu có khác biệt giữa spec và code thì code là nguồn sự thật cho hành vi, và khác biệt được ghi ở đây. Hợp đồng chi tiết (field, ví dụ JSON, bảng lỗi, runbook) ở `api/docs/roadmap-api.md` trong repo ứng dụng. Trạng thái: backend merged 2026-11-13; UI đang làm; **Acceptance: pending KAN-357**.
+
+### 13.1. Schema (migration 000035)
+
+- Ba bảng `roadmaps`, `roadmap_items`, `roadmap_assessments` và hai cột `core_questions.roadmap_item_id` (FK, `ON DELETE SET NULL`), `interviews.focus_item_id` (FK `RESTRICT`, CHECK `focus_item_id IS NULL OR type = 'practice'`) đúng như mục 5.
+- `roadmaps.role_profile_id` UNIQUE, FK `ON DELETE CASCADE`; `roadmap_items.roadmap_id` FK `ON DELETE CASCADE`; index `(roadmap_id, position, id)`, `position` không unique. `roadmap_assessments`: `UNIQUE (interview_id, question_position)` + composite FK tới `interview_questions` `ON DELETE CASCADE`; `roadmap_item_id` FK `RESTRICT`; index `(roadmap_item_id, interview_id, question_position)`.
+- **Hai trigger plpgsql** (đầu tiên của repo) vì FK không chứng minh được "cùng profile": `core_questions.roadmap_item_id` phải thuộc profile của `jd_id` của câu; `interviews.focus_item_id` phải thuộc `role_profile_id` của phiên. Chỉ chạy khi cột mới khác NULL; vi phạm là `check_violation 23514`. Quyết định giữ cả hai (13/11).
+- Migration tạo sẵn một Roadmap `pending` cho **mọi Role Profile đã có**, không sinh nội dung. Role Profile mới tạo Roadmap row cùng transaction (CTE trong `CreateRoleProfile`).
+- Không có cột score/status/progress/snapshot/version. Fence của một lần sinh là `roadmaps.updated_at` (đặt bằng `clock_timestamp()`); Claim/Fail/Publish chỉ ghi khi giá trị đã đọc không đổi.
+- Không thêm index trên `interviews.completed_at` (xem 13.8).
+
+### 13.2. Endpoints
+
+| Operation | Ghi chú hiện thực |
+|---|---|
+| `GET /role-profiles/{id}/roadmap` | Candidate + owner. Tính mọi score/status khi đọc. Trả thêm `practice_started`, `update_state` (`up_to_date`/`updating`/`delayed`), `pending_result_count`, `window_size` (5), `achieved_threshold` (80). `progress_percent` 2 chữ số thập phân, `null` nếu chưa `ready` hoặc rỗng. |
+| `GET /role-profiles/{id}/roadmap/items/{item_id}/history` | Phân trang `limit`/`offset`, mới nhất trước, đánh dấu `in_current_window`; `result` là `scored` hoặc `skipped` (skipped có `question_text = null`, score 0). Lỗi mới `ROADMAP_ITEM_NOT_FOUND` (404). Profile lạ/không tồn tại là `JD_NOT_FOUND`. |
+| `POST /role-profiles/{id}/confirm` | Nay **sinh luôn Roadmap**, đồng bộ (mục 13.3). |
+| `POST /role-profiles/{id}/roadmap/retry` | Chỉ khi `pending`/`failed` và requirements đã confirm; idempotent (Roadmap `ready` là no-op 200). |
+| `POST /role-profiles/{id}/roadmap/regenerate` | Chỉ khi profile **chưa có interview nào**, kể cả phiên đã kết thúc không điểm/abandoned. |
+| `POST /interviews` | Thêm `focus_item_id`; response phiên có `focus_item_id` (focus thực lưu) và `resumed` (chỉ ở câu trả lời của start); lịch sử cũng có `focus_item_id`. 201 = tạo mới, 200 = phiên có sẵn. |
+
+### 13.3. Luồng sinh nội dung
+
+1. Tạo Role Profile → Roadmap `pending`. Chưa sinh gì trước khi user duyệt requirements.
+2. **Confirm sinh đồng bộ**: bước 1 sinh topic (4–8 topic, tiêu đề ≤80 ký tự, mô tả ≤400 ký tự; model chỉ trả `title`/`description`, backend cấp id và `position`), bước 2 sinh bank ánh xạ vào topic id đó, rồi publish topic + bank + `ready` cùng nhau. Mất khoảng 40–50 giây; **deadline phía server của confirm, retry, regenerate và start có focus là 200 giây** (một hằng số chung).
+3. Kích thước bank Roadmap = `max(QUESTION_BANK_SIZE, 5 × số topic)`; `QUESTION_BANK_SIZE` mặc định hiện là **20** (xem 13.9), nên bank 20–40 câu. Bank sinh theo batch, mỗi batch phải trả đủ phần còn thiếu của từng topic; mỗi topic cần ≥5 câu khác nhau.
+4. Sinh có **fence**: Claim chuyển `pending/failed → generating` (hoặc nhận lại `generating` quá **5 phút** — lease), Publish/Fail chỉ ghi nếu fence còn khớp, nên worker cũ không ghi đè lần sinh mới. Không giữ DB transaction qua lúc gọi model.
+5. **Lỗi**: confirm lỗi để profile ở `review`, Roadmap `failed`, không topic/bank; confirm lại chính là retry. Hai confirm đồng thời chỉ một lần sinh, bên kia nhận `ROADMAP_GENERATING` (409).
+6. **Retry** không bao giờ reset Roadmap `ready`. **Regenerate** giữ `roadmap_id`, thay topic (id mới) và toàn bộ bank trong **một transaction**, dưới advisory lock của profile (cùng khóa với practice start); sinh thất bại thì bộ cũ còn nguyên và trạng thái về `ready` (từ `failed`/`pending` thì vẫn `failed`). Nếu một start thắng race lúc commit thì regenerate trả `ROADMAP_REGENERATE_NOT_ALLOWED`.
+7. Mỗi lần sinh trừ 1 đơn vị LLM budget (middleware); lỗi `RATE_LIMITED`/`LLM_BUDGET_EXCEEDED` đều 429.
+
+### 13.4. Start, focus, resume và top-up
+
+- **Focus** chỉ cho practice; topic phải thuộc profile (kiểm tra cả khi đã có phiên mở) — sai là `VALIDATION_ERROR`. Roadmap chưa `ready` là `ROADMAP_NOT_READY` (409). Start tổng quát (focus null) trên profile cũ không có Roadmap vẫn chạy như trước.
+- **Idempotency**: cùng key + cùng intent trả phiên đầu (200, `resumed: true`, một lần trừ coin). Cùng key + focus khác (kể cả topic ↔ tổng quát) là `INTERVIEW_START_INTENT_CONFLICT` (409), không tạo gì.
+- **Resume**: nếu profile đã có phiên practice dở (không key hoặc key khác), start trả **chính phiên đó** (200, `resumed: true`) với focus của nó, bất kể focus được yêu cầu; không trừ phí, không đổi gì. UI phải so `focus_item_id` trả về với điều đã yêu cầu. *Quyết định 13/11:* resume với focus khác trả phiên đang mở kèm metadata (không phải 409).
+- **Sampling**: tổng quát lấy từ cả bank; focus chỉ lấy câu của topic. Barem metric cover (best effort, không từ chối, KAN-378) áp dụng **trước**; xếp hạng quyết định phần còn lại và các hòa: hạng 0 = câu chưa đánh giá ở topic chưa đạt, 1 = đã đánh giá ở topic chưa đạt, 2 = chưa đánh giá ở topic đã đạt, 3 = đã đánh giá ở topic đã đạt; câu cũ chưa map topic coi như thuộc topic chưa đạt. Trong cùng hạng thứ tự ngẫu nhiên, nên không có bộ 5 câu cố định vĩnh viễn.
+- **Top-up (rule 8)**: khi start có focus vào topic có ít câu hơn `question_limit` và không có phiên nào được resume, hệ thống thực hiện **đúng một lần gọi model** (số câu yêu cầu nâng lên tối thiểu 5 của một topic; câu đã có được đưa vào như dữ liệu và bị loại nếu lặp). Thứ tự: **sau khi giữ budget LLM, trước khi trừ coin, trước khi kiểm tra ví**, ngoài mọi transaction. Câu thêm vào trong transaction ngắn dưới practice start lock và chỉ khi topic vẫn còn thiếu; không đổi id/rubric/mapping của câu hiện có. Top-up lỗi thì không có phiên, không trừ coin (`QUESTION_GENERATION_FAILED`/`INVALID_QUESTION_GENERATION_OUTPUT`, 502); topic vẫn thiếu sau top-up là `QUESTION_BANK_NOT_READY` (409), không bao giờ mượn câu topic khác. Tốn thêm một đơn vị LLM budget (hoàn lại nếu lỗi) và vài giây đến vài chục giây; client cần timeout ≥120 s.
+- **Giới hạn đã biết của top-up** (hành vi hiện tại, chưa có quyết định đổi): vì top-up chạy trước kiểm tra ví, Candidate không đủ 5 coin vẫn có thể kích hoạt một top-up rồi nhận `INSUFFICIENT_BALANCE` (câu thêm vẫn hợp lệ, chỉ tốn một lần gọi model); nhiều start focus đồng thời vào cùng topic ngắn có thể mỗi bên sinh một lần (chỉ lần thêm đầu được giữ).
+- Start và regenerate loại trừ nhau bằng `pg_advisory_xact_lock(hash("<candidate>:<profile>"))`, cùng khóa với `LockPracticeStart` của interview; có integration test chứng minh.
+
+### 13.5. Ghi nhận kết quả và khôi phục
+
+- **Điều kiện hợp lệ duy nhất** nằm ở `SessionFacts.Eligible()`: phiên `practice`, đã `completed_at`, `evaluation_status = completed`, và **không** `injection_flagged`. Read model, assessment writer và catch-up đều gọi hàm này; SQL lọc trước của catch-up phản chiếu nó và một test fail nếu hai bên lệch.
+- **Điểm câu** đọc từ `interview_questions.score` (numeric(5,2), kết quả Barem), qua `roadmap_assessments`. Lấy latest per core question rồi 5 câu khác nhau gần nhất theo `interviews.completed_at` (không dùng `created_at` của assessment). Điểm trung bình so với 80 **trước làm tròn**: tính chính xác bằng phần trăm số nguyên (hundredths), nên 79,996 hiển thị `80` nhưng **chưa đạt**. `ScoreTopic` là nơi duy nhất có cửa sổ 5 câu và ngưỡng 80.
+- **Phân loại một core** (`ClassifyCore`): `scored` (đã trả lời và có điểm câu), `skipped` (đã hiển thị tức `asked_at` có giá trị, nhưng phiên không lưu turn nào cho vị trí đó → 0), `not_asked` (chưa hiển thị → không tính), `ungraded` (đã trả lời nhưng không có điểm → không tính). "Đã trả lời" được suy từ **sự tồn tại của turn**, không từ nội dung câu trả lời, để retention xóa text không biến câu đã trả lời thành 0.
+- **Hook sau evaluation**: evaluator được bọc bởi `EvaluateThenLink`; sau khi evaluation thành công, các core đủ điều kiện (kể cả core `skipped`, vì điểm câu NULL và Roadmap tự dựng số 0) được insert vào `roadmap_assessments`, idempotent nhờ UNIQUE. Lỗi link không làm mất kết quả interview.
+- **Catch-up job `roadmap.catchup`** (System Handler): mỗi `JOBS_ROADMAP_CATCHUP_INTERVAL` (mặc định 1 phút) lấy tối đa `JOBS_ROADMAP_CATCHUP_BATCH_SIZE` (mặc định 100, 1–1000) phiên eligible còn thiếu link, cũ nhất trước, và link lại. Không gọi AI, không giữ queue, advisory lock theo job; lỗi từng phiên có back-off trong bộ nhớ (1 phút nhân đôi tới 1 giờ). Runbook: `api/docs/roadmap-api.md` mục 11.
+- **`update_state`**: `up_to_date` khi mọi câu đã đánh giá đều đã link; `updating` khi có câu chưa link và phiên cũ nhất kết thúc <10 phút trước; `delayed` khi quá **10 phút** tính từ `completed_at` (cũng là trạng thái khi job bị tắt). Roadmap hiển thị chỉ tính từ các dòng đã link. *Quyết định 13/11: ngưỡng 10 phút giữ nguyên.*
+
+### 13.6. Quyết định ghi nhận ngày 13/11
+
+| # | Quyết định | Hệ quả |
+|---|---|---|
+| 1 | Core đã hiển thị nhưng chưa trả lời khi kết thúc phiên = **0**, cả khi `left` lẫn `abandoned`; **không thêm cột đánh dấu** | Hệ thống không phân biệt được bỏ qua có chủ đích với lỗi kỹ thuật (STT/TTS) ở câu hiển thị cuối cùng; tối đa 1 câu/phiên. Đây là **giới hạn được chấp nhận**. |
+| 2 | Phiên có `injection_flagged` bị loại khỏi Roadmap (qua `Eligible()`) | Evaluation không tin cậy không phải bằng chứng (rule 12 và mục 8). Đổi chính sách = sửa `Eligible()` và một dòng SQL catch-up. |
+| 3 | Role Profile đã luyện practice **trước** khi có Roadmap không có Roadmap; retry trả `ROADMAP_NOT_RETRYABLE` (409); không có bước map bank cũ | Lối đi là Role Profile mới. |
+| 4 | Resume với focus khác trả phiên đang mở (200 + metadata), key dùng lại với focus khác mới là 409 | Xem 13.4. |
+| 5 | Ngưỡng `delayed` là 10 phút | Hằng số `UpdateDelayAfter`. |
+| 6 | Không thêm index `completed_at` | Truy vấn catch-up giới hạn output theo batch nhưng quét mọi phiên practice đã hoàn tất có core đã map; chấp nhận ở quy mô hiện tại. Nếu cần: partial index `interviews(completed_at) WHERE type='practice' AND evaluation_status='completed'` (cần migration). |
+| 7 | Giữ hai trigger ở migration 000035 | Xem 13.1. |
+| 8 | Sinh topic dùng chung route AI `question_bank` | Không có AI task riêng; cấu hình qua `AI_QUESTION_BANK_*`. |
+| 9 | Một hằng số deadline 200 giây cho confirm/retry/regenerate/start có focus; regenerate lỗi từ `ready` quay về `ready` | |
+
+Điểm cần lưu ý: Barem giữ nguyên chính sách "câu không trả lời bị bỏ khỏi report và overall của phiên" (partial-session policy của Barem), trong khi Roadmap cho cùng câu đó 0 ở **điểm theo topic**. Hai consumer khác nhau; số 0 này không đổi report hay overall.
+
+### 13.7. Privacy
+
+Chi tiết ở `docs/privacy-controls.md` (repo ứng dụng). Tóm tắt: ba bảng và hai cột không chứa score, transcript, câu trả lời hay expected answer. Erasure xóa assessment trước, rồi interview, rồi Roadmap của tài khoản (topic đi theo), rồi Role Profile và JD; câu bank mất con trỏ topic rồi bị xóa cùng JD. Xóa Role Profile vẫn bị từ chối (`JD_IN_USE`) khi profile có interview. Export `GET /account/export` thêm `roadmap` cho từng Role Profile (status, topic, kết quả: topic id, interview id, số câu, điểm câu, thời điểm link); không có recruitment, text câu hỏi, câu trả lời hay rubric. Retention không ảnh hưởng điểm Roadmap. Log chỉ có interview id, số lượng và lớp lỗi.
+
+### 13.8. Giới hạn đã biết
+
+- Không phân biệt bỏ qua với lỗi kỹ thuật ở câu hiển thị cuối (13.6 #1).
+- Đường REST `POST /interviews/:id/turns` (route vẫn tồn tại, frontend không dùng) không đặt `asked_at` (chỉ lần phát câu hỏi trực tiếp mới đặt); theo ghi chú bàn giao RM-08/RM-11, phiên trả lời qua đó có core chưa trả lời bị coi là `not_asked`, không phải 0. Chưa kiểm bằng test riêng trong lượt tài liệu này.
+- Catch-up không có index `completed_at` (13.6 #6).
+- Calibration của grader Barem chưa có (xem [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem]] mục 13); ngưỡng 5 câu/80 là quyết định product, không phải chứng nhận năng lực.
+- Back-off của catch-up nằm trong bộ nhớ, mất khi restart (mọi phiên lỗi được thử lại ngay).
+
+### 13.9. Khác biệt giữa spec và hiện thực (code là nguồn sự thật)
+
+- Rule 7/8 ghi "bank mặc định 50". Giá trị mặc định hiện hành của `question_bank.size` là **20** (hạ ngày 2026-11-11, xem Barem 3.1) và bank Roadmap là `max(size, 5 × topic)`. Rule 8 (mỗi topic ≥5 câu) vẫn đúng và được kiểm tra/top-up ở mục 13.4.
+- Mục 9.1: UI Roadmap chưa có trên main ở thời điểm ghi (KAN-353..355 đang làm). Timeout frontend của `confirmRoleProfile`/`analyze` hiện còn 150 000 ms, trong khi server cần tới 200 giây; phải nâng lên ≥200 000 ms khi làm UI.
+- `frontend/src/features/interview-setup/api/start-session.ts`: `confirmedStartCodes` chưa có `ROADMAP_NOT_READY`, `INTERVIEW_START_INTENT_CONFLICT`, `QUESTION_BANK_COVERAGE_INSUFFICIENT` — việc của lane UI/setup.
+- `LLM_BUDGET_EXCEEDED` trả 429 (một ghi chú bàn giao ghi nhầm 409); `INSUFFICIENT_BALANCE` trả 422.
+
+### 13.10. Truy vết: spec → task → test
+
+Mã task: RM-n tương ứng KAN-(341 + n). Đường dẫn tính từ `api/` trong repo ứng dụng; riêng các đường dẫn bắt đầu bằng tên feature (ví dụ `roadmap/...`, `interview/...`) nằm dưới `api/internal/features/`. File trong `tests/` là integration test (`make test-integration`, DB dùng riêng).
+
+| Mục spec | Task | Code chính | Test / package |
+|---|---|---|---|
+| 5, 6 (schema, Roadmap row cùng profile) | RM-01 / KAN-342 | `migrations/000035_*`, `roadmap/domain/roadmap.go`, `roadmap/repository` | `roadmap/tests/roadmap_schema_integration_test.go`, `roadmap_generation_integration_test.go`, `roadmap_assessment_erasure_integration_test.go` |
+| 6 (sinh topic từ requirements đã duyệt) | RM-02 / KAN-343 | `roadmap/service/generation.go`, `topics_validation.go`, `roadmap/provider/eino.go` | `roadmap/service/topics_validation_test.go`, `generation_test.go`, `roadmap/provider/eino_test.go`, `roadmap/tests/roadmap_confirm_integration_test.go` |
+| 2 rule 8, 6 (bank có topic mapping, coverage) | RM-03 / KAN-344 | `questionbank/domain`, `questionbank/service`, `internal/pkg/ai/tasks.go` | `questionbank/service/generate_topics_test.go`, `validation_topics_test.go`, `internal/pkg/ai/tasks_topics_test.go` |
+| 2 rule 5, 6 (retry, regenerate) | RM-04 / KAN-345 | `roadmap/service/generation.go`, `internal/handler/roadmap_generation_handler.go` | `roadmap/service/retry_test.go`, `internal/handler/roadmap_generation_handler_test.go`, `roadmap/tests/roadmap_retry_regenerate_integration_test.go` |
+| 3, 4, 11 (điểm topic, cửa sổ 5, ngưỡng 80) | RM-05 / KAN-346 | `roadmap/domain/scoring.go` | `roadmap/domain/scoring_test.go` |
+| 2 rule 6, 8, 9; 7 (sampling tổng quát/focus, top-up) | RM-06 / KAN-347 | `interview/domain/sampling_preferring.go`, `roadmap_sampling.go`, `roadmap/service/topup.go` | `interview/domain/sampling_preferring_test.go`, `roadmap_sampling_test.go`, `roadmap/service/topup_test.go`, `interview/tests/roadmap_start_integration_test.go`, `roadmap/tests/roadmap_topup_integration_test.go` |
+| 7 (start/resume, idempotency, charge một lần) | RM-07 / KAN-348 | `interview/service/service.go`, `interview/repository`, `internal/handler/interview_handler.go` | `interview/service/focus_test.go`, `interview/tests/roadmap_start_integration_test.go` |
+| 2 rule 11; 8 mục 1 (kết quả Barem từng câu cho practice) | RM-08 / KAN-349 | `roadmap/domain/practice_result.go`, `evaluation/repository` | `roadmap/domain/practice_result_test.go`, `evaluation/tests/core_result_facts_integration_test.go` |
+| 8 mục 2–5 (ghi assessment) | RM-09 / KAN-350 | `roadmap/service/assessment.go`, `roadmap/repository/assessment.go` | `roadmap/service/assessment_test.go`, `roadmap/tests/roadmap_link_integration_test.go` |
+| 8 mục 4–6 (catch-up, update_state) | RM-10 / KAN-351 | `roadmap/service/catchup.go`, `internal/config/jobs.go`, `roadmap/domain/read_model.go` | `roadmap/service/catchup_test.go`, `roadmap/tests/roadmap_catchup_integration_test.go`, `internal/config/jobs_test.go` |
+| 9.2 (read API, history, quyền owner) | RM-11 / KAN-352 | `roadmap/service/read.go`, `internal/handler/roadmap_handler.go` | `roadmap/service/read_test.go`, `internal/handler/roadmap_handler_test.go`, `roadmap/tests/roadmap_read_integration_test.go` |
+| 9.1 (UI) | RM-12..14 / KAN-353..355 | — | **UI chưa merge vào main** |
+| 5.5, 11 (erasure/export/retention) | RM-15 / KAN-356 | `account/repository`, `docs/privacy-controls.md` | `account/tests/account_roadmap_integration_test.go` |
+| 11 (scenarios nghiệm thu) | RM-16 / KAN-357 | — | **Acceptance: pending KAN-357** |
+| Đồng bộ tài liệu | RM-17 / KAN-358 | Brain + `api/docs/roadmap-api.md` + runbook | Review tài liệu với product/tech owner |

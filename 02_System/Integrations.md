@@ -82,8 +82,8 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
 
 ---
 
-> [!note] Planned evaluation payload — Decision 24
-> Rubric-aware evaluation sends a core question, its own answers/follow-ups, structured criteria/scoring guides and question-specific expected_answer to the grading provider. AI proposes criterion points/evidence; Go validates and calculates metrics/overall. Preserve task routing, per-core isolation, budgets, redaction and candidate privacy. Rubric text is untrusted data, not a raw-prompt administration channel. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
+> [!note] Evaluation payload — Decision 24 (implemented 2026-11-12, KAN-334)
+> Rubric-aware evaluation sends a core question, its own answers/follow-ups, structured criteria/scoring guides and question-specific expected_answer to the grading provider. AI proposes criterion points/evidence; Go validates and calculates metrics/overall. Preserve task routing, per-core isolation, budgets, redaction and candidate privacy. Rubric text is untrusted data, not a raw-prompt administration channel. Implemented: one routed call per core question (its follow-ups included), criteria sent as short keys, replies that miss, repeat or invent a criterion or quote text from another question are refused as invalid output (retried or sent to the fallback by the route). The grader is **not calibrated** against human experts. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
 
 
 ## 3. Provider Specifications
@@ -114,6 +114,10 @@ The RoleCue browser embeds the free Avaturn iframe directly. Avaturn owns captur
   * Groq uses the OpenAI-compatible API in JSON mode. A 429 falls through immediately to the next entry, and the existing validators decide acceptance.
   * The bank is generated in batches of at most 10 to fit the Groq Free limits (30 requests/min, 8K tokens/min, 200K tokens/day per model).
   * Bedrock and Jev (KAN-274, TypeSafe) are deferred. Details: `api/docs/ai-routing.md` in the code repository.
+* **Learning Roadmap generation (KAN-343/344/347, merged 2026-11-13; Decision 25):**
+  * Topic generation (one call, 4–8 topics from confirmed requirements, seniority and the refinement note), the Roadmap bank (batches that owe each topic its quota) and the focused-practice top-up (one call before the charge) all use the **question bank route** (`AI_QUESTION_BANK_*`); there is no separate Roadmap AI task and no new provider.
+  * Prompts follow the existing untrusted-data rules: free text is cleaned, capped and fenced, replies are decoded strictly, and the backend assigns ids and positions. No candidate answer or score is sent to the topic step. Scoring and progress are computed in Go, with no AI call after a session.
+  * A generation takes about 40–50 s; the server deadline of confirm, retry, regenerate and a focused start is 200 s. Each request spends one unit of the user's daily LLM budget (a top-up one more). Data sent is inventoried in `docs/compliance/llm-processors.md`.
 
 ### 3.2. Speech-to-Text (STT) Provider
 * **Purpose:**

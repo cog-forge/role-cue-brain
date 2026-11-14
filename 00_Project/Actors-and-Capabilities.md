@@ -154,7 +154,7 @@ classDiagram
   * **Create Job Posting:** Begin a Job Posting (the company's Job Description) from JD-like content; review and confirm AI-extracted structured requirements.
   * **Configure Job Posting Interview:** Select the company 3D interviewer model and Voice Profile that Candidates must use for that Job Posting's interview.
   * **Manage Question Bank (Blueprint):** Generate the question bank once, then view and edit core questions for own Job Postings while `pending` or `rejected`; explicitly submit (or resubmit) the Posting for review, which requires a non-empty bank.
-  * **Manage Own Scoring Rubrics (agreed 2026-11-07; management API implemented 2026-11-11, screens pending):** Create private reusable rubrics, copy permitted system/own rubrics, assign to own questions, review expected_answer, and edit/archive/delete within lock/reference rules.
+  * **Manage Own Scoring Rubrics (agreed 2026-11-07; API and screens implemented 2026-11-11):** Create private reusable rubrics, copy permitted system/own rubrics, assign to own questions, review expected_answer, and edit/archive/delete within lock/reference rules.
   * **Configure Evaluation Weights:** Optionally select a metric subset totaling 100%, separately from the question bank; otherwise valid equal-split defaults apply (currently five metrics at 20% each). Defaults do not block approval. Editable in `pending`/`rejected`, locked in `open`/`intake_closed`/`closed`, subject to the finalized technical state mapping (Decision 13a).
   * **Update Job Posting:** Modify requirements or description for submitted or active Job Postings.
   * **Close Job Posting Intake:** Close application intake. Halts receiving new Applications; automatically rejects remaining unscreened / not-approved Applications; Candidates already approved for interview remain interview-eligible. There is NO Reopen Intake flow and NO manual End Recruitment command.
@@ -175,7 +175,7 @@ classDiagram
   * **Job Posting Moderation:** View and filter submitted Job Postings; approve and reject Job Postings.
   * **Interview Session Oversight:** Search and filter interview sessions; inspect operational session details.
   * **Configure Interview Behavior Guidelines:** Mandatory registered capability ratified on **2026-10-20**. Admin configures guidelines influencing the intended behavior of the AI interviewer; Admin authorization is required and completed historical interview results remain unchanged. Fields, persistence, versioning and prompt composition are settled by Decision 27 and implemented (KAN-276).
-  * **System Scoring Rubric Catalog (agreed 2026-11-07; management API implemented 2026-11-11, screens pending):** Create and curate system templates and their crit-to-metric mappings. Used templates are immutable; this is not authority to edit private recruiter rubrics, posting weights or historical scores.
+  * **System Scoring Rubric Catalog (agreed 2026-11-07; API and Admin screens implemented 2026-11-11):** Create and curate system templates and their crit-to-metric mappings. Used templates are immutable; this is not authority to edit private recruiter rubrics, posting weights or historical scores.
   * **Voice Profile Catalog Management:** Manage Voice Profiles (view voice profiles, fetch voice profiles from external TTS providers, delete obsolete profiles). `Manage Voice Profiles` serves as an uncounted grouping capability; its child use cases are counted.
   * **Financial Audit & Reporting:** View unified payment transactions (PayOS orders and internal ledger movements); generate revenue reports.
 * **Boundary Invariant:**
@@ -197,7 +197,7 @@ classDiagram
 
 ---
 
-> [!note] Rubric authoring extension — agreed; backend foundation implemented 2026-11-11, screens and live grading pending
+> [!note] Rubric authoring extension — agreed; implemented and merged 2026-11-11 to 2026-11-12 (PRs #127 to #136); grader calibration still open
 > Admin manages system rubrics. Recruiters create/copy/manage private rubrics and assign allowed templates to own questions; each question has a private expected_answer. Criteria reference metrics; posting metric weights still determine overall. Candidate recruitment access is status-only. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]]. These are new capability requirements; the frozen formal UC count/IDs are not silently changed.
 
 ---
@@ -333,7 +333,7 @@ RoleCue's finalized capabilities are organized semantically into ten cohesive do
 
 ## Planned Learning Roadmap Extension — Decision 25
 
-Agreed 2026-11-07; implementation pending. Candidate views the private linear Roadmap belonging to their Role Profile, chooses general/focused practice, reviews topic evidence/history and may regenerate only before the first practice session. There is no direct topic/score/threshold editor. System Handler creates the Roadmap row with the profile, generates content after requirement confirmation, updates progress from valid practice results and reconciles missed updates. Recruiter/Admin gain no access to Candidate Roadmaps. Existing formal UC IDs/count remain unchanged pending documentation reconciliation. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed spec]].
+Agreed 2026-11-07; backend implemented and merged 2026-11-13, UI in progress, end-to-end acceptance pending KAN-357 (not released). Candidate views the private linear Roadmap belonging to their Role Profile, chooses general/focused practice, reviews topic evidence/history and may regenerate only before the first practice session. There is no direct topic/score/threshold editor. System Handler creates the Roadmap row with the profile, generates content after requirement confirmation, updates progress from valid practice results and reconciles missed updates. Recruiter/Admin gain no access to Candidate Roadmaps. Existing formal UC IDs/count remain unchanged pending documentation reconciliation. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|the detailed spec]].
 
 ## Agreed Minimal Marketplace Extension — Decision 26 (Implementation Pending)
 

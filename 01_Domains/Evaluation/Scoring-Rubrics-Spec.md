@@ -1,7 +1,7 @@
 ---
 title: Barem điểm và tổng hợp metric — đặc tả
 date: 2026-11-07
-status: agreed-direction-implementation-pending
+status: implemented-calibration-open
 tags:
   - domain
   - evaluation
@@ -14,8 +14,8 @@ aliases:
 
 # Barem điểm và tổng hợp metric
 
-> [!important] Phạm vi và trạng thái
-> Hướng sản phẩm dưới đây được chốt qua thảo luận ngày 2026-11-07. Đây là **thiết kế cần triển khai**, không phải tuyên bố tính năng đã có trên application main. Các chi tiết kỹ thuật được ghi rõ là đề xuất để review. Spec này thay bản đề xuất trước đó có nhiều bảng snapshot/version và phương án overall chỉ lấy trung bình điểm câu.
+> [!important] Phạm vi và trạng thái (cập nhật 2026-11-14)
+> Hướng sản phẩm dưới đây được chốt qua thảo luận ngày 2026-11-07 và **đã được triển khai trên application main** (2026-11-11 đến 2026-11-12, PR #127 đến #136; mục 13 liệt kê trạng thái hiện thực, traceability và việc còn mở). **Chưa làm: kiểm chuẩn (calibration) grader với chuyên gia; spec này không tuyên bố độ chính xác của AI.** Các chi tiết kỹ thuật ở các mục 4.2, 10, 12 vốn là đề xuất nay đã có hiện thực, xem mục 13 khi có khác biệt. Spec này thay bản đề xuất trước đó có nhiều bảng snapshot/version và phương án overall chỉ lấy trung bình điểm câu.
 
 ## 1. Đọc phần này trước: hệ thống thực sự tính gì?
 
@@ -155,17 +155,17 @@ Phần authoring MVP tập trung recruiter/recruitment. Đề xuất dùng chung
 
 - **Chính sách tính điểm (RB-08):** điểm metric và overall giữ 2 chữ số thập phân; thiếu coverage của một metric đang hoạt động thì không xuất overall (không coi là 0); phiên dở dang vẫn được chấm nếu mọi metric đang hoạt động đều có đủ bằng chứng. Ngưỡng đạt/rớt tuyển dụng vẫn chưa chốt.
 - **Giới hạn kỹ thuật (RB-02):** 1–10 criteria mỗi barem; `max_points` là số nguyên 1–10; tên barem ≤120 ký tự, mô tả ≤1000, tên criterion ≤160, scoring_guide ≤2000. Sửa đồng thời dùng `updated_at` làm token, không thêm cột revision. Mã lỗi ổn định: `RUBRIC_NOT_FOUND` (404), `RUBRIC_LOCKED`, `RUBRIC_IN_USE`, `RUBRIC_STALE` (409).
-- **Mẫu hệ thống ban đầu:** 4 mẫu, 14 criteria, mỗi criteria 10 điểm, seed trong migration 000032.
+- **Mẫu hệ thống ban đầu:** 4 mẫu, 14 criteria, mỗi mẫu 10 điểm, seed trong migration 000032. *(Cập nhật 2026-11-12: migration 000034 thêm 5 criteria xuyên suốt, nên hiện là 19 criteria với tổng điểm mẫu 14 / 14 / 12 / 10; mẫu đầu không còn bằng ví dụ R01 ở mục 2. Xem 13.2.)*
 - **Generate (RB-05):** bank mặc định 20 câu (trước đây 50); một call duy nhất trả câu hỏi cùng `rubric_id` và `expected_answer`. Tập barem được phép là barem system đang hoạt động cộng barem đang hoạt động của chủ posting, tối đa 20 barem × 8 criteria, chữ do người dùng viết được làm sạch và đóng gói như dữ liệu không tin cậy. `expected_answer` tối đa khoảng 80 từ (server nhận tới 100 từ và 1000 ký tự). `rubric_id` ngoài tập cho phép làm cả batch bị từ chối để retry; barem đã archive hoặc không còn thuộc quyền lúc lưu thì câu được lưu không có barem; `expected_answer` trông như injection thì lưu null. Câu thiếu barem hoặc đáp án hợp lệ được đánh dấu chưa đủ cấu hình chấm, không tự xác nhận. DTO của Recruiter có các trường chấm điểm; DTO runtime và Candidate không bao giờ có.
 - **Readiness và thu hồi (RB-07):** gửi duyệt hoặc gửi lại bị 409 `GRADING_CONFIG_INCOMPLETE` nếu còn câu chưa đủ cấu hình chấm (barem bị archive sau khi gán cũng tính là thiếu); Admin approve kiểm tra lại dưới cùng khóa posting. Thêm, sửa chữ hoặc xóa câu hỏi đặt lại `review_submitted`; lưu lại đúng chữ cũ thì không thu hồi.
 - **Luật khóa barem:** chỉ cần một câu hỏi nào đó đang tham chiếu, barem và criteria của nó bị khóa (không sửa, không hard-delete, kể cả Admin với mẫu system); archive vẫn được và giữ reference; muốn đổi thì sao chép. Bản nới (chỉ khóa khi posting đã approve hoặc đã có session) bị bác vì cần cột thời điểm nộp duyệt và tạo nguy cơ deadlock giữa sửa bank và sửa barem.
-- **Trạng thái triển khai:** nền (hai bảng, seed, bộ tính điểm thuần Go, API `/rubrics`) đã nằm trong `main`; generate, readiness và khóa đã code và chờ merge; UI quản lý barem và duyệt bank, chọn câu theo coverage, AI chấm từng crit, bảng kết quả, báo cáo và kiểm chuẩn chưa làm.
+- **Trạng thái triển khai (cập nhật 2026-11-14):** toàn bộ phần trên đã nằm trong `main`: nền, generate, readiness và khóa, UI quản lý barem và duyệt bank, chọn câu theo coverage, AI chấm từng crit, bảng kết quả, báo cáo và UI kết quả. **Kiểm chuẩn chưa làm.** Chi tiết ở mục 13. *(Dòng gốc ngày 2026-11-11 ghi các phần này là chưa làm hoặc chờ merge; nó đã lỗi thời.)*
 
 ## 4. DB: cấu hình và kết quả là hai loại dữ liệu khác nhau
 
 ### 4.1. Hai bảng cấu hình mới
 
-Hai bảng cấu hình và hai cột của `core_questions` đã được áp dụng ở migration 000032 (2026-11-11); bảng kết quả ở 4.2 vẫn là đề xuất.
+Hai bảng cấu hình và hai cột của `core_questions` đã được áp dụng ở migration 000032 (2026-11-11); bảng kết quả ở 4.2 đã được áp dụng ở migration 000034 (2026-11-12, xem 13.2).
 
 | Bảng | Trường chính | Ý nghĩa |
 |---|---|---|
@@ -185,7 +185,7 @@ Loại câu có thể suy từ rubric.question_type/đề xuất generate; khôn
 
 ### 4.2. Kết quả chấm phải được lưu, ngoài hai bảng cấu hình
 
-**“Hai bảng mới” là số bảng cấu hình barem, không có nghĩa toàn bộ thay đổi lưu trữ chỉ có hai bảng.** Một score câu không đủ tái dựng điểm từng metric/crit. Đề xuất thêm một bảng kết quả relational:
+**“Hai bảng mới” là số bảng cấu hình barem, không có nghĩa toàn bộ thay đổi lưu trữ chỉ có hai bảng.** Một score câu không đủ tái dựng điểm từng metric/crit. Đã thêm (migration 000034; khác biệt so với đề xuất ghi ở 13.2) một bảng kết quả relational:
 
 `interview_criterion_scores`:
 
@@ -299,7 +299,7 @@ Giữ cờ nghi ngờ injection và kiểm tra evidence hiện có; quote không
 
 ## 10. API, codebase và phạm vi triển khai
 
-Các route `/rubrics` dưới đây đã tồn tại trong `main` từ 2026-11-11 (RB-02); các route bank/posting/report còn lại là hợp đồng đề xuất hoặc đã được mở rộng theo 3.1:
+Các route `/rubrics` dưới đây đã tồn tại trong `main` từ 2026-11-11 (RB-02); các route bank/posting/report còn lại đã được mở rộng và hiện thực (xem 13.3 đến 13.6):
 
 - GET /rubrics: Admin/Recruiter được đọc catalog theo scope system/own, phân trang/lọc loại câu và trạng thái; không mặc định mở authoring API cho Candidate.
 - POST /rubrics: tạo private với recruiter hoặc system với Admin; validation crit/metric/điểm/guide.
@@ -353,7 +353,7 @@ bun run build
 bun run test:e2e tests/e2e/recruiter-question-bank.spec.ts tests/e2e/recruiter-evaluation-criteria.spec.ts tests/e2e/recruiter-application-detail.spec.ts tests/e2e/admin-moderation.spec.ts tests/e2e/candidate-report.spec.ts
 ```
 
-## 12. Các điểm kỹ thuật cần xác nhận khi review plan
+## 12. Các điểm kỹ thuật cần xác nhận khi review plan (trạng thái hiện thực ở 13.7)
 
 1. Tên/DDL bảng kết quả crit và kiểu lưu số. Làm tròn 2 chữ số ở mức bộ tính điểm đã chốt (3.1). Đây là phần thêm để lưu căn cứ tính toán, khác hai bảng cấu hình đã chốt.
 2. Sampling đảm bảo metric coverage, chính sách skip và trạng thái report tương ứng (quy tắc thiếu coverage và phiên dở dang ở mức bộ tính điểm đã chốt ở 3.1).
@@ -365,3 +365,97 @@ Không tạo/cập nhật backlog Jira mới trước khi user duyệt bản chi
 ## Phần sử dụng điểm câu đã chốt sau spec Barem: Roadmap
 
 [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Decision 25 — Roadmap theo Role Profile]] dùng normalized question score của practice để theo dõi topic qua nhiều phiên. Cửa sổ 5 câu khác nhau (mỗi câu lấy lần mới nhất), mean >= 80 và đủ 5 câu thì topic đạt. Đây là consumer riêng, không thay công thức metric-weighted overall của spec này và không đưa recruitment evidence cho Candidate. Practice activation/per-core persistence là dependency phải triển khai trước cập nhật tiến độ; không giả đã có trên main. Skip/no-answer đã hiển thị là 0 khi hoàn tất; unasked/technical-error không tự thành 0. Các chính sách này đã được duyệt cho Roadmap practice, không tự chốt threshold hoặc partial-session rule cho recruitment.
+
+## 13. Implementation notes (cập nhật 2026-11-14)
+
+> [!info] Cách đọc mục này
+> Ghi **những gì đã có trên main** và các khác biệt với đề xuất ở trên. Không đổi business rule hay công thức ở mục 1 đến 12; khi code khác spec thì code là nguồn sự thật cho hành vi. Các quyết định gốc: Decision 13a, 14, 16, 20, 24 trong [[03_Decisions/Product-Decisions|Product Decisions]] (có implementation note, không viết lại). Không có tuyên bố calibration.
+
+### 13.1. Đã triển khai
+
+| Phần | Task | PR | Trạng thái |
+|---|---|---|---|
+| Schema, mẫu hệ thống (migration 000032) | RB-01 / KAN-325 | #127 | Merged |
+| API `/rubrics` (CRUD, copy, archive, `RUBRIC_STALE`) | RB-02 / KAN-326 | #127 | Merged |
+| UI mẫu hệ thống (Admin) và thư viện riêng (Recruiter) | RB-03, RB-04 / KAN-327, 328 | #130 | Merged |
+| Generate câu hỏi kèm `rubric_id` + `expected_answer` | RB-05 / KAN-329 | #129 | Merged |
+| UI duyệt bank theo barem, sửa `expected_answer` | RB-06 / KAN-330 | #132 | Merged |
+| Readiness, khóa sửa/xóa, đồng bộ moderation | RB-07 / KAN-331 | #129 | Merged |
+| Bộ tính điểm crit → metric → overall (Go thuần) | RB-08 / KAN-332 | #127 | Merged |
+| Chọn câu theo metric coverage, map follow-up về core | RB-09 / KAN-333 | #131 | Merged |
+| AI chấm từng crit; lưu kết quả; API báo cáo; UI kết quả | RB-10..13 / KAN-334..337 | #133 | Merged (migration 000034) |
+| Kiểm tra độ phủ bank: sinh, chỉnh, gửi duyệt, Admin duyệt | RB-17 / KAN-377 | #136 | Merged |
+| Practice: bank phủ catalog, sampler cố phủ không từ chối | RB-18 / KAN-378 | #136 | Merged |
+| `features/account` chuyển sang sqlc (nợ kỹ thuật) | KAN-379 | #135 | Merged |
+| Đối chiếu tài liệu chính thức và nghiệm thu flow | RB-16 / KAN-340 | — | Chưa làm (do owner tài liệu) |
+| Kiểm chuẩn grader | — | — | **Chưa làm** (cần bộ tham chiếu do chuyên gia chấm) |
+
+### 13.2. Schema đã áp dụng
+
+- **Migration 000032:** `rubrics`, `rubric_criteria`, `core_questions.rubric_id` và `expected_answer`; 4 mẫu hệ thống, 14 criteria.
+- **Migration 000034:** bảng `interview_criterion_scores` với khóa chính `(interview_id, question_position, rubric_criterion_id)`; `points` (số nguyên >= 0), `evidence` kèm `evidence_turn_position` (bắt buộc trừ khi 0 điểm), `feedback`; FK ghép tới `interview_questions` và `conversation_turns` đều `ON DELETE CASCADE`, FK tới `rubric_criteria` `RESTRICT`. Thêm: `interview_questions.score` numeric(5,2); `score_details.score` đổi sang numeric(5,2) và **cho phép NULL** (metric có trọng số nhưng không câu nào đánh giá, không bao giờ coi là 0), thêm `score_details.weight` (trọng số overall đã dùng, kể cả mặc định chia đều vốn không lưu ở đâu) và `question_count`; `interviews.score` numeric(5,2), NULL khi withheld, cùng `score_outcome` (`complete`/`partial`/`withheld`, NULL cho evaluation trước khi có rubric grading) và `score_withheld_reason` (`missing_metric_coverage`, `partial_session`, `no_answers`, `no_gradable_questions`); CHECK giữ outcome, score và reason nhất quán.
+- **Khác biệt với đề xuất 4.2:** đề xuất ban đầu chưa có `weight`, `question_count`, `score_outcome`, `score_withheld_reason` và cho `score_details.score` NOT NULL. Chúng được thêm để báo cáo giải thích được overall; chưa có quyết định product riêng cho các cột này (xem 13.7).
+- **Overall có 2 chữ số thập phân** (đã chốt ở 3.1), khác đề xuất làm tròn half-up về số nguyên ở mục 2.5; mục 2.5 giữ nguyên để làm ví dụ, hiện thực theo 3.1.
+- **Seed:** 000034 thêm 5 criteria xuyên suốt (Answer Relevance, Communication Clarity) vào các mẫu hệ thống (quyết định product 2026-11-12) để phiên practice dùng catalog chia đều không bị withheld chỉ vì hai metric đó. Tổng điểm mẫu hiện 14 / 14 / 12 / 10; Depth vẫn thiếu ở mẫu đầu, Problem-Solving thiếu ở mẫu thứ tư. Đây là thay đổi dữ liệu hệ thống bằng migration nên luật `RUBRIC_LOCKED` không áp dụng; chưa câu nào từng được chấm trước đó nên không có kết quả lưu bị đổi.
+- Không snapshot/version table, không manual override; criteria bị khóa ngay khi có câu tham chiếu nên criterion id đủ để đọc metric và điểm tối đa.
+
+### 13.3. Authoring, generate, readiness (RB-02, 05, 07)
+
+- Giới hạn, mã lỗi và luật khóa như ở 3.1. Generate dùng route AI `question_bank`; bank mặc định 20 câu; câu hỏi có barem và đáp án hợp lệ mới được tính là đủ cấu hình chấm.
+- Gửi duyệt/gửi lại bị 409 `GRADING_CONFIG_INCOMPLETE` nếu còn câu thiếu cấu hình chấm; Admin approve kiểm tra lại dưới cùng khóa posting; thêm, sửa chữ hoặc xóa câu thu hồi `review_submitted`.
+
+### 13.4. Chọn câu theo coverage (KAN-333, KAN-378)
+
+- **Active metrics** = metric đang dùng khi chấm: trọng số đã lưu có `percentage > 0`; không có trọng số thì cả catalog `metrics` (practice luôn dùng cả catalog); mọi trọng số bằng 0 thì không có metric đang hoạt động và mẫu là ngẫu nhiên thuần.
+- **Recruitment (`SampleQuestions`):** nếu có câu nào trong bank có criteria thì mọi active metric phải được phủ bởi criteria của các câu được chọn, nếu không start bị từ chối bằng 409 `QUESTION_BANK_COVERAGE_INSUFFICIENT` (không tạo gì, không trừ). Thứ tự: bộ phủ trước (xếp theo mức phủ mới, rộng nhất trước), rồi lấp ngẫu nhiên; vị trí 1..k (k = kích thước bộ phủ, tối đa `question_limit`) phủ mọi active metric. Barem chỉ tính theo criteria của các câu **được gán**; rubric đã archive vẫn tính.
+- **Practice (`SampleQuestionsBestEffort`, KAN-378):** không bao giờ từ chối vì coverage: chọn bộ phủ rộng nhất trong limit rồi lấp ngẫu nhiên; lỗi tìm kiếm thì rơi về ngẫu nhiên. Metric không được phủ bị withheld khỏi báo cáo (`withheld_reason = missing_metric_coverage`, metric đó `score = null`, không overall), không bao giờ là 0. Roadmap xếp hạng câu **sau** bước cover này (xem [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec 13.4]]).
+- Một thuật toán dùng chung (`AnalyzeCoverage`/`CheckCoverage`): greedy ngẫu nhiên rồi BFS chính xác trên tập metric đã phủ; `Passes` đúng bằng tính khả thi của sampler.
+- Phiên kết thúc trước k câu đầu có thể thiếu bằng chứng cho một metric: metric đó bị withheld, không chấm 0.
+- Ánh xạ turn → core: mỗi turn lưu có `question_number` bằng `interview_questions.position` của core mà nó thuộc về; follow-up dùng chung số của core cha và không làm lệch số câu. `Repository.TurnCoreQuestions` (interview) mở ánh xạ này cho phía hệ thống; việc chấm điểm dựa vào cùng quy ước qua `ListEvaluationTurns`, nên nếu start đổi cách gán thì phải sửa truy vấn đó.
+
+### 13.5. Kiểm tra độ phủ ở gửi duyệt/duyệt (KAN-377)
+
+- Mã lỗi `METRIC_COVERAGE_INCOMPLETE` (409), chỉ Recruiter/Admin, message chung (không lộ tên metric); mã Candidate `QUESTION_BANK_COVERAGE_INSUFFICIENT` giữ nguyên.
+- Gửi duyệt và Admin approve (`Decide(open)`) kiểm tra coverage dưới khóa posting, sau kiểm tra readiness, cùng transaction; reject không cần.
+- DTO `CoverageReport` (`passes, assessed, covered, total, question_limit, missing_metrics[{id,name,suggested_rubrics}], exceeds_limit, min_questions`) có ở bank Recruiter, kết quả generate/apply-rubric/add/edit, `PostingWeights.coverage` và dossier Admin.
+- Generate: đề xuất hợp lệ nhưng không phủ được là "output không thành công": thử lại trong ngân sách retry hiện có; hết lượt thì lưu đề xuất tốt nhất và `coverage` trong response là cảnh báo.
+- **Quyết định 2026-11-12:** đổi trọng số (PUT/DELETE) khiến bank không còn phủ thì **thu hồi submission** của posting đang `pending` + `review_submitted` (`submission_withdrawn`); thay đổi mà bank vẫn phủ thì giữ nguyên.
+- Vận hành: đổi `INTERVIEW_QUESTION_LIMIT` sau khi duyệt có thể làm bank cũ không còn phủ và không chặn trước được; khi đó recruitment start sẽ bị từ chối bằng `QUESTION_BANK_COVERAGE_INSUFFICIENT`.
+
+### 13.6. Chấm bằng barem và báo cáo (KAN-334..337)
+
+- Mỗi core question (cùng follow-up) được chấm bằng **một call** qua route AI `evaluation`, tối đa 4 call song song. Criteria gửi dưới dạng khóa ngắn; mô hình không thấy trọng số và không tính metric hay overall (Go tính). Backend từ chối phản hồi thiếu, lặp hoặc bịa criterion, điểm ngoài 0..max, hoặc quote không nằm trong chính câu trả lời của câu đó; phản hồi bị từ chối là output không hợp lệ, được retry hoặc chuyển fallback, không bao giờ sửa lại. Evidence được kiểm nghiêm ngặt: quote phải xuất hiện nguyên văn trong câu trả lời của chính câu đó; một quote rút gọn bằng dấu ba chấm (`...`, `…`, `[...]`) chỉ được nhận khi từng đoạn đều là trích nguyên văn đủ dài và các đoạn xuất hiện đúng thứ tự trong cùng một câu trả lời (`locateEvidence` trong `evaluation/service/grading.go`); quote được lưu đúng như mô hình viết, không được sửa.
+- Chấm cả recruitment lẫn practice; practice dùng system rubrics. Bank practice được sinh rubric-complete từ system rubrics.
+- Kết quả lưu cùng transaction (criterion, điểm câu, `score_details`, feedback, `interviews.score`/outcome); replay phiên đã completed không ghi lại và không gọi AI lại.
+- **Báo cáo:** `scoring.method` (`rubric` hoặc `legacy` cho evaluation trước khi có rubric grading), `scoring.outcome` (`complete`, `partial`, `withheld`), `withheld_reason`, số câu được giao/được chấm, `decimals = 2`; breakdown theo metric kèm trọng số đã dùng và số câu; từng câu có trạng thái `graded`/`not_answered`/`not_gradable` cùng điểm criterion. Quyền xem giữ như mục 7.3 (Candidate recruitment chỉ thấy trạng thái).
+- **Câu không trả lời** bị bỏ khỏi báo cáo và overall của phiên (partial-session policy của Barem). Riêng Roadmap của Candidate đếm câu đã hiển thị nhưng không trả lời là 0 cho điểm theo topic (quyết định 2026-11-13); hai consumer khác nhau, số 0 đó không đổi báo cáo hay overall.
+- Phiên không có câu trả lời nào nay kết thúc `completed` với overall withheld (`no_answers`) thay vì `failed`; mọi câu không có kết quả hợp lệ là `no_gradable_questions`.
+- Privacy: erasure tombstone rồi xóa `interview_criterion_scores`; export mang criteria của practice. **Retention transcript chưa xóa `evidence`/`feedback` của criterion** (xem 13.7).
+
+### 13.7. Việc còn mở và điểm cần xác nhận
+
+- **Calibration chưa làm:** cần bộ tham chiếu do chuyên gia chấm, ngưỡng sai lệch chấp nhận và owner chuyên môn trước khi release; không tuyên bố độ chính xác. Promptfoo suite chưa chạy trong lượt kiểm tra KAN-334 (cần key trả phí).
+- **Retention:** `RETENTION_TRANSCRIPT_DAYS` chưa xóa quote và feedback của criterion (TODO được ghi trong tài liệu privacy của repo ứng dụng). Spec 11 yêu cầu "retention purge quotes/feedback mới, không chỉ transcript cũ" nên đây là khoảng trống so với spec. Khoảng trống này hiện chưa có hạng mục theo dõi riêng.
+- **Bank practice cũ không có rubric:** practice trên các bank đó kết thúc withheld (`no_gradable_questions`); việc dọn dữ liệu dev do team quyết định.
+- **Cấu hình mặc định:** giá trị mặc định `INTERVIEW_QUESTION_LIMIT` 8 và bank 20.
+- **Các lựa chọn thiết kế của lane chấm điểm chưa có xác nhận product riêng:** các cột bổ sung ở 13.2; kết thúc `completed + withheld(no_answers)` thay vì `failed`; lý do `no_gradable_questions`; evidence nghiêm ngặt; summary phiên = ghép summary từng câu.
+- **Hiển thị cho Recruiter:** Candidate bị từ chối start do `QUESTION_BANK_COVERAGE_INSUFFICIENT` chỉ thấy thông báo chung; chưa có cờ "posting này không thể bắt đầu phỏng vấn" cho Recruiter (đề xuất, chưa làm). Sau KAN-377 lỗi này chỉ còn xảy ra khi `INTERVIEW_QUESTION_LIMIT` đổi sau khi duyệt.
+- **Frontend glue chưa làm:** `QUESTION_BANK_COVERAGE_INSUFFICIENT` chưa có trong `confirmedStartCodes` của setup (`frontend/src/features/interview-setup/api/start-session.ts`), nên UI hiện thông báo chung.
+- **Decision 14** (lấy mẫu không còn ngẫu nhiên thuần khi có rubric) cần được chủ sở hữu Brain cập nhật; lượt này chỉ thêm implementation note vào Decision 13a, 16, 20, 24, 25.
+- **Cần reconcile tài liệu chính thức** (SRS/UC/ERD/UI): xem bảng "Needs owner reconciliation" trong báo cáo của lượt KAN-358.
+
+### 13.8. Truy vết: spec → task → test (tóm tắt)
+
+Đường dẫn dưới `api/internal/features/` trong repo ứng dụng.
+
+| Mục spec | Task | Test / package chính |
+|---|---|---|
+| 2.5, 3.1 RB-08 (công thức, làm tròn, withhold) | KAN-332 | `evaluation/service/rubric_calculator_test.go`, `score_test.go` |
+| 3, 8 (CRUD, lock, copy, `RUBRIC_*`) | KAN-325, 326 | `evaluation/service/rubric_service_test.go`, `evaluation/tests/rubric_schema_integration_test.go`, `rubric_api_integration_test.go` |
+| 6 (generate với barem + expected_answer) | KAN-329 | `questionbank/service/generate_grading_test.go`, `questionbank/tests/repository_grading_integration_test.go` |
+| 7.2 (readiness, khóa, edit bank, moderation) | KAN-330, 331 | `questionbank/tests/readiness_integration_test.go`, `edit_integration_test.go`, `admin/moderation` (approve gate) |
+| 9 (coverage khi chọn câu) | KAN-333 | `interview/tests/sampling_integration_test.go`, `interview/tests/coverage_agreement_integration_test.go`, `interview/domain/sampling_test.go` |
+| 9 (chấm, lưu, báo cáo) | KAN-334..337 | `evaluation/service/grading_test.go`, `report_test.go`, `evaluation/tests/scoring_integration_test.go`, `interview/tests/lifecycle_regression_integration_test.go` |
+| 6, 9 (gate độ phủ, practice best effort) | KAN-377, 378 | `evaluation/domain/coverage_test.go`, `coverage_report_test.go`, `questionbank/tests/coverage_integration_test.go`, `questionbank/service/generate_coverage_test.go`, `generate_practice_coverage_test.go`, `interview/domain/sampling_besteffort_test.go` |
+| 11 (privacy: erasure, export) | KAN-334 (một phần), KAN-379 | `interview/tests/privacy_integration_test.go`, `account/tests`; retention còn mở |
+| 11 (calibration) | — | **Chưa làm** |

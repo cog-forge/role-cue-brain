@@ -71,7 +71,9 @@ Orchestrate a lifelike, conversational technical interview simulation. Executes 
 
 ---
 
-### Planned rubric grading metadata
+### Rubric grading metadata (implemented 2026-11-12)
+
+*Status 2026-11-14: per-core rubric grading, coverage-aware sampling (recruitment: refuse when a weighted metric cannot be covered; practice: best-effort cover, never refuse) and practice activation are implemented; see spec section 13. Grader calibration is open.*
 
 The bank remains the pool of core questions, not an embedded grading matrix. Decision 24 adds core_questions.rubric_id and expected_answer as private grading metadata and keeps rubric definitions relationally separate. Generation proposes both for recruiter review. Core-plus-follow-up isolation remains; used definitions are locked without snapshots. Metric coverage-aware sampling and practice activation are engineering decisions to confirm in [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]].
 
@@ -184,7 +186,7 @@ The live runtime (KAN-52) implements this loop over a WebSocket; the authoritati
 
 ## Planned Roadmap Practice Extension — Decision 25
 
-Agreed 2026-11-07; implementation pending. Practice may be general (focus_item_id=NULL) or focused on one owned Roadmap topic. Focus does not change the profile's target/seniority. Sample only that topic, prioritize unseen questions/unachieved topics while preserving Barem metric coverage, and validate/top up topic coverage before start. Default8 core questions and5 coins/start remain; resume is free and retains the original focus. A new focus request cannot rewrite an unfinished session or double-charge. Recruitment has no Roadmap focus/evidence. After finalized successful Barem evaluation, question results update topic history; question-level scores must first be available for practice. Explicit skips are0, unasked/evaluation-error cases are not. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]].
+Agreed 2026-11-07; backend implemented and merged 2026-11-13, UI in progress, end-to-end acceptance pending KAN-357 (not released). Practice may be general (focus_item_id=NULL) or focused on one owned Roadmap topic. Focus does not change the profile's target/seniority. Sample only that topic, prioritize unseen questions/unachieved topics while preserving Barem metric coverage, and validate/top up topic coverage before start. Default8 core questions and5 coins/start remain; resume is free and retains the original focus. A new focus request cannot rewrite an unfinished session or double-charge. Recruitment has no Roadmap focus/evidence. After finalized successful Barem evaluation, question results update topic history; question-level scores must first be available for practice. Explicit skips are0, unasked/evaluation-error cases are not. Implemented: `POST /interviews` accepts `focus_item_id`; the answer carries the stored `focus_item_id` and `resumed`; an open practice session of the profile is returned (200) with its own focus. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec, section 13.4]].
 
 ## Planned Purchased Avatar Eligibility — Decision 26
 

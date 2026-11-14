@@ -109,9 +109,9 @@ flowchart LR
 
 ---
 
-## 3. Rubric Relationships — Decision 24 (Configuration Applied 2026-11-11; Results Proposed)
+## 3. Rubric Relationships — Decision 24 (Applied: migrations 000032 and 000034)
 
-These rows describe agreed configuration relationships and proposed result storage; the configuration tables and the two core_questions columns are applied by migration 000032, while the result table remains proposed. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]].
+These rows describe the applied configuration relationships (migration 000032) and the result storage (migration 000034, 2026-11-12). See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]].
 
 | Parent | Child | Cardinality / constraint | Delete/edit rule |
 |---|---|---|---|
@@ -119,25 +119,27 @@ These rows describe agreed configuration relationships and proposed result stora
 | Rubric | RubricCriterion | One rubric contains multiple crits | Used definitions immutable; do not delete referenced crits |
 | Metric | RubricCriterion | Exactly one metric per crit | No arbitrary metric creation from AI/recruiter input |
 | Rubric | CoreQuestion | One selected rubric per ready question; many questions share a rubric | Missing while drafting only; RESTRICT referenced hard deletion; archive stops new assignment |
-| InterviewQuestion | InterviewCriterionScore (proposed) | Composite interview/assigned-core-position FK | Delete result evidence before removing interview during erasure |
-| RubricCriterion | InterviewCriterionScore (proposed) | One result per interview/core/criterion | Criterion points belong to a particular answer/session, not the reusable question |
+| InterviewQuestion | InterviewCriterionScore | Composite interview/assigned-core-position FK | Delete result evidence before removing interview during erasure |
+| RubricCriterion | InterviewCriterionScore | One result per interview/core/criterion | Criterion points belong to a particular answer/session, not the reusable question |
 
-The two new configuration tables are rubrics/rubric_criteria; core_questions adds rubric_id and expected_answer TEXT. A separate results table is proposed because a single question total cannot reconstruct crit or metric points. Score detail remains one session metric row; interviews.score remains the weighted overall. No extra point budget is awarded for expected_answer. Follow-ups belong to their core question.
+The two new configuration tables are rubrics/rubric_criteria; core_questions adds rubric_id and expected_answer TEXT. A separate results table (interview_criterion_scores, migration 000034) exists because a single question total cannot reconstruct crit or metric points; its primary key is (interview_id, question_position, rubric_criterion_id) and the FK to rubric_criteria is RESTRICT. Score detail remains one session metric row; interviews.score remains the weighted overall. No extra point budget is awarded for expected_answer. Follow-ups belong to their core question.
 
-Without snapshots, rubric definitions are locked as soon as any question references them, and question content/expected_answer/bindings are locked once the posting is approved or a session started (Decision 24, 2026-11-11). Archive retains old references; making a new template is the way to change used definitions for new drafts. No ordinary delete/update may masquerade as privacy erasure. Retention must cover criterion evidence and explanations, including private answer fragments copied outside conversation_turns.
+Without snapshots, rubric definitions are locked as soon as any question references them, and question content/expected_answer/bindings are locked once the posting is approved or a session started (Decision 24, 2026-11-11). Archive retains old references; making a new template is the way to change used definitions for new drafts. No ordinary delete/update may masquerade as privacy erasure. Retention must cover criterion evidence and explanations, including private answer fragments copied outside conversation_turns. **Implemented state (2026-11-14):** account erasure tombstones and then deletes interview_criterion_scores before the interview's questions and turns, and the data export carries criterion results for practice only. The transcript retention pass (RETENTION_TRANSCRIPT_DAYS) still clears only conversation_turns text; it does **not** yet clear the evidence quotes and feedback of interview_criterion_scores (a TODO is noted in the application repo's privacy document).
 
-## 4. Planned Roadmap Relationships — Decision 25 (Not Yet Implemented)
+## 4. Roadmap Relationships — Decision 25 (Applied by migration 000035, 2026-11-13)
+
+Backend implemented and merged; UI in progress; acceptance pending KAN-357. Rows below are applied constraints. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|spec section 13.1]].
 
 | Parent | Child/reference | Cardinality / constraint | Meaning |
 |---|---|---|---|
-| role_profiles | roadmaps |1:1, UNIQUE(role_profile_id) | Create row together; owner through candidate_id |
-| roadmaps | roadmap_items |1:N, zero while pending/failed | Ordered knowledge topics; no archived_at |
-| roadmap_items | core_questions.roadmap_item_id |1:N, nullable for non-Roadmap questions | One primary topic per practice question |
-| roadmap_items | interviews.focus_item_id |1:N optional | NULL=general, topic ID=focused practice; recruitment NULL |
+| role_profiles | roadmaps |1:1, UNIQUE(role_profile_id), ON DELETE CASCADE | Row created with the profile (existing profiles got a pending row from the migration); owner through candidate_id |
+| roadmaps | roadmap_items |1:N, zero while pending/failed, ON DELETE CASCADE | Ordered knowledge topics (index roadmap_id, position, id); no archived_at |
+| roadmap_items | core_questions.roadmap_item_id |1:N, nullable, ON DELETE SET NULL | One primary topic per practice question; trigger requires the topic to belong to the profile of the question's JD |
+| roadmap_items | interviews.focus_item_id |1:N optional, RESTRICT | NULL=general, topic ID=focused practice; CHECK keeps recruitment NULL; trigger requires the topic to belong to the session's Role Profile |
 | interview_questions | roadmap_assessments |1:0..1 | UNIQUE(interview_id,question_position), composite assignment FK |
 | roadmap_items | roadmap_assessments |1:N | Evidence links, no duplicate score/transcript |
 
-FKs alone do not establish same owner/profile; validate transactionally. Topic/bank regeneration is permitted only before any practice session, under the same profile guard as start. Do not delete/relabel used topics; account/profile erasure remains a coordinated deletion flow. Points/status/progress are derived from valid practice results; event time controls the latest-five distinct-question window. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|field-level schema and worked examples]].
+FKs alone do not establish same owner/profile; two plpgsql triggers (the first in this schema) and the service's transactional checks do. Topic/bank regeneration is permitted only before any practice session, under the same profile guard as start. Do not delete/relabel used topics; account erasure deletes assessments, then interviews, then the Roadmaps (topics cascade), then profiles and JDs; deleting a Role Profile is refused (JD_IN_USE) while it has any interview. Points/status/progress are derived from valid practice results; event time controls the latest-five distinct-question window. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|field-level schema and worked examples]].
 
 ## 5. Planned Marketplace Relationships — Decision 26 (Not Yet Implemented)
 

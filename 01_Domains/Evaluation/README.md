@@ -15,7 +15,7 @@ aliases:
 RoleCue turns interview answers into criterion evidence, metric assessments and an overall score for human review. Scores have no automated hiring authority.
 
 > [!important] Product direction vs implementation
-> Decision 24, agreed 2026-11-07, retains metrics/weights and introduces reusable rubrics plus question-specific expected answers. **Status (2026-11-11):** the rubric tables, system templates, pure score calculator and management API are on `main`; generation, readiness and locking are built and pending merge; live grading, result storage, reports and screens are not implemented. Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]] for the worked example and proposed technical details. The five seeded metrics remain the baseline catalog, not an immutable list.
+> Decision 24, agreed 2026-11-07, retains metrics/weights and introduces reusable rubrics plus question-specific expected answers. **Status (2026-11-14):** implemented and merged to `main` (PRs #127 to #136, migrations 000032 and 000034): rubric tables and management API, system templates, generation with rubric and expected answer, readiness and locks, coverage-aware sampling, metric-coverage gates, rubric grading per criterion, result storage, report API and screens. **Not done: grader calibration against human experts**, and the transcript retention pass does not yet clear criterion evidence/feedback. See section 13 of the spec. Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the detailed spec]] for the worked example and proposed technical details. The five seeded metrics remain the baseline catalog, not an immutable list.
 
 ## 1. Core distinctions
 
@@ -25,7 +25,7 @@ RoleCue turns interview answers into criterion evidence, metric assessments and 
 | Rubric | Reusable scoring guide by question type | rubrics |
 | Criterion / crit | Observable item, max points and scoring guide; belongs to one metric | rubric_criteria.metric_id |
 | Expected answer | Question-specific reference concepts/acceptable alternatives; not exact-match keywords | core_questions.expected_answer TEXT |
-| Question score | Sum of criterion points normalized to 100, for question detail | proposed interview_questions.score |
+| Question score | Sum of criterion points normalized to 100, for question detail | interview_questions.score (numeric 5,2) |
 | Session metric score | Mean of that metric across questions that measure it | score_details.score |
 | Overall | Weighted aggregate of session metric scores | interviews.score |
 
@@ -62,13 +62,13 @@ Decision 13a remains effective: custom subsets total 100%; absent custom rows us
 - interviews.score: one overall per interview; interviews.feedback: summary.
 - score_details: one session metric score per (interview_id, metric_id), never a per-criterion row.
 - conversation_turns.feedback: feedback by turn.
-- Planned criterion results preserve points/evidence; proposed interview_questions.score holds explanatory question totals.
+- interview_criterion_scores preserves points, evidence quote and feedback per criterion (migration 000034); interview_questions.score holds explanatory question totals. interviews.score_outcome (`complete`/`partial`/`withheld`) and score_withheld_reason say how far the overall can be trusted; a withheld result has no overall.
 - Candidate owns full practice report access. For recruitment the Candidate gets **status only**, not even overall, and no crit/metric scores, expected answers, transcripts, recordings or derived roadmap scores. This corrects the older Brain wording to the later product decision and application behavior.
 - Owning Recruiter sees recruitment evidence in Application Detail. Admin system-template curation does not grant access to private recruitment evidence or authority to alter historical scores.
 
 ## 6. Implemented baseline and planned delta
 
-The current application already calls a model per core question plus follow-ups, averages metric outputs, verifies evidence and persists aggregate metric/overall scores. It does not persist per-core numeric outputs. The new feature changes the source of those scores to rubric criteria; it must preserve existing per-core isolation, bounded concurrency/retries, claims, budgets, redaction and final application-decision gates.
+*(Updated 2026-11-14.)* Evaluation now calls a model per core question plus follow-ups, grades every criterion of the question's rubric, and Go computes question, metric and overall scores, persisting per-criterion and per-question results; per-core isolation, bounded concurrency/retries, claims, budgets, redaction and final application-decision gates are preserved. Evaluations completed before rubric grading report as `legacy` (metric scores and overall without a breakdown).
 
 No completed results are recalculated because configurations change. Disposable development data may be reset when implementing this change; no legacy-data backfill/compatibility mode is required. That permission does not itself reset a database or authorize changing unrelated user work.
 
@@ -81,6 +81,6 @@ No completed results are recalculated because configurations change. Disposable 
 - [[02_System/Domain-Model|Domain model]] and [[02_System/Data-Relationships|relationships]]: implemented baseline vs planned schema extension.
 - [[03_Decisions/Product-Decisions|Product decisions]]: Decisions 13a and 24.
 
-## Planned Topic Evidence Consumer — Decision 25
+## Topic Evidence Consumer — Decision 25 (backend implemented 2026-11-13; UI in progress; acceptance pending KAN-357)
 
-The agreed [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap extension]] consumes normalized practice question scores from the Barem result, retaining the latest result per core question then the five most recent distinct questions for each topic. Topic mean>=80 with five questions is achieved; this does not replace the weighted metric overall or reveal recruitment scores. Roadmap integration requires activating Barem per-core persistence for practice. Explicit delivered skips receive 0; unasked or technically failed evidence is excluded. A saved interview result remains valid if Roadmap linking must retry after failure.
+The agreed [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap extension]] consumes normalized practice question scores from the Barem result, retaining the latest result per core question then the five most recent distinct questions for each topic. Topic mean>=80 with five questions is achieved; this does not replace the weighted metric overall or reveal recruitment scores. Roadmap integration activated Barem per-core persistence for practice. Explicit delivered skips receive 0 for the Roadmap's topic score only (the report and overall leave unanswered questions out); unasked, ungraded or technically failed evidence and injection-flagged evaluations are excluded. A saved interview result remains valid if Roadmap linking must retry after failure.

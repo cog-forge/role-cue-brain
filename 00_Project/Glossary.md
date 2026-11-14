@@ -118,8 +118,8 @@ Facial morph target blend-shapes corresponding to phonemic sounds, used to anima
 A performance-resilient fallback interface displaying an animated audio waveform in place of the 3D canvas when client hardware lacks GPU acceleration or WebGL support, preserving uninterrupted voice interaction.
 
 
-### Rubric / Barem (Agreed 2026-11-07; Tables and Management API Implemented 2026-11-11)
-A reusable scoring guide by question type, stored in the planned rubrics table. System templates are Admin-curated; private templates are Recruiter-owned. Many questions may share one rubric, while each question has its own expected_answer. Used definitions are locked; no snapshot/version table is part of MVP.
+### Rubric / Barem (Agreed 2026-11-07; Implemented 2026-11-11 to 2026-11-12; Calibration Open)
+A reusable scoring guide by question type, stored in the rubrics table (migration 000032). System templates are Admin-curated; private templates are Recruiter-owned. Many questions may share one rubric, while each question has its own expected_answer. Used definitions are locked; no snapshot/version table is part of MVP.
 
 ### Rubric Criterion / Crit
 One observable scoring item in rubric_criteria, with maximum points and explicit scoring guidance. Each crit references exactly one metric. Awarded criterion points are real calculation inputs; feedback/evidence explains why those points were awarded.
@@ -131,7 +131,7 @@ Private question-specific reference material in core_questions.expected_answer T
 Question score sums/normalizes all criterion points for question detail. Session metric score averages the corresponding question-level metric scores and is stored in score_details. Overall applies posting metric weights to session metrics and is stored in interviews.score. Whole-question scores are not averaged into overall in this design. See [[01_Domains/Evaluation/Scoring-Rubrics-Spec|the worked example: question totals 70/50, session metrics 70/50, overall 62]].
 
 ### Learning Roadmap (Agreed 2026-11-07; Implementation Pending)
-One private learning path per Candidate Role Profile. Its row exists at profile creation; ordered knowledge topics are generated from user-confirmed requirements. A general/focused practice session contributes evidence only to topics actually evaluated. No recruitment results contribute. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]].
+*Status 2026-11-14: backend implemented and merged 2026-11-13; UI in progress; acceptance pending KAN-357.* One private learning path per Candidate Role Profile. Its row exists at profile creation; ordered knowledge topics are generated from user-confirmed requirements. A general/focused practice session contributes evidence only to topics actually evaluated. No recruitment results contribute. See [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]].
 
 ### Roadmap Topic / Item
 A knowledge subject such as SQL or Go concurrency, ordered by position for linear rendering. It is distinct from a rubric question type and an evaluation metric. There is no user-edited activity completion in MVP.

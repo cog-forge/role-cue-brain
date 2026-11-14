@@ -74,7 +74,7 @@ role-cue-brain/
 │   ├── Evaluation/
 │   │   ├── README.md          # Metrics, rubrics, posting weights, result disclosure
 │   │   └── Scoring-Rubrics-Spec.md # Agreed rubric design and worked scoring example
-│   ├── Learning-Roadmap/       # Agreed per-profile Roadmap, topic evidence and progress (implementation pending)
+│   ├── Learning-Roadmap/       # Per-profile Roadmap, topic evidence and progress (backend implemented; UI in progress; acceptance pending)
 │   │   ├── README.md
 │   │   └── Learning-Roadmaps-Spec.md
 │   ├── Payment/README.md       # Coin packages, wallets, transactions, and interview/avatar slot funding
@@ -90,12 +90,12 @@ role-cue-brain/
 
 ---
 
-> [!note] Scoring design agreed 2026-11-07 — implementation pending
-> Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]] for rubric reuse, per-question expected answers, recruiter-owned rubrics and the worked crit → metric → overall example. Metric weights remain authoritative; question totals are explanatory.
+> [!note] Scoring design agreed 2026-11-07 — implemented 2026-11-11 to 2026-11-12; grader calibration open
+> Read [[01_Domains/Evaluation/Scoring-Rubrics-Spec|Barem/metric scoring spec]] for rubric reuse, per-question expected answers, recruiter-owned rubrics and the worked crit → metric → overall example. Metric weights remain authoritative; question totals are explanatory. Spec section 13 lists what is on `main` and what remains open (calibration, criterion-evidence retention).
 
 ---
 
-> [!note] Learning Roadmap agreed 2026-11-07 — implementation pending
+> [!note] Learning Roadmap agreed 2026-11-07 — backend implemented 2026-11-13, UI in progress, acceptance pending KAN-357
 > Read [[01_Domains/Learning-Roadmap/Learning-Roadmaps-Spec|Roadmap spec]] for the three-table design, linear topics, focused practice, five-question window, threshold 80 and reversible learning status. One Roadmap belongs to one Role Profile; only practice results contribute.
 
 > [!note] Avatar Marketplace agreed 2026-11-07 — implementation pending
